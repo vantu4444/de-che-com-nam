@@ -782,10 +782,17 @@ export class OnigiriServer {
             if (this.pendingPvpInvites.has(inviteId)) {
                 this.pendingPvpInvites.delete(inviteId);
                 const targetName = target ? (target.brandName || target.name) : 'Đối thủ';
-                this.sendEventToUser(sender.id, 'pvp:declined', {
-                    reason: `[${targetName}] đã từ chối lời mời thách đấu`
-                });
+                const declineMsg = {
+                    reason: `[${targetName}] đã từ chối hoặc hết thời gian phản hồi lời mời thách đấu.`
+                };
+                this.sendEventToUser(sender.id, 'pvp:declined', declineMsg);
+                if (sender.playerId && sender.playerId !== sender.id) {
+                    this.sendEventToUser(sender.playerId, 'pvp:declined', declineMsg);
+                }
                 this.sendEventToUser(target.id, 'pvp:invite_expired', { inviteId });
+                if (target.playerId && target.playerId !== target.id) {
+                    this.sendEventToUser(target.playerId, 'pvp:invite_expired', { inviteId });
+                }
             }
         }, 15000);
 
@@ -804,8 +811,8 @@ export class OnigiriServer {
             createdAt: Date.now()
         });
 
-        // Gửi thông báo nổi tới riêng Người chơi B
-        this.sendEventToUser(target.id, 'pvp:invite', {
+        // Gửi thông báo nổi tới riêng Người chơi B (gửi cả socketId lẫn playerId bền vững)
+        const invitePayload = {
             inviteId,
             fromId: sender.id,
             fromPlayerId: sender.playerId || sender.id,
@@ -815,7 +822,11 @@ export class OnigiriServer {
             gameType,
             betAmount,
             timeoutSeconds: 15
-        });
+        };
+        this.sendEventToUser(target.id, 'pvp:invite', invitePayload);
+        if (target.playerId && target.playerId !== target.id) {
+            this.sendEventToUser(target.playerId, 'pvp:invite', invitePayload);
+        }
     }
 
     // [PVP 1V1] Người chơi B bấm Từ Chối
@@ -830,10 +841,14 @@ export class OnigiriServer {
         const target = this.resolvePlayer(targetId) || this.players.get(targetId);
         const targetName = target ? (target.brandName || target.name) : 'Đối thủ';
 
-        // Báo cho Người chơi A
-        this.sendEventToUser(inv.fromId, 'pvp:declined', {
+        // Báo cho Người chơi A (gửi cả socketId và playerId)
+        const declineData = {
             reason: `[${targetName}] đã từ chối lời mời thách đấu`
-        });
+        };
+        this.sendEventToUser(inv.fromId, 'pvp:declined', declineData);
+        if (inv.fromPlayerId && inv.fromPlayerId !== inv.fromId) {
+            this.sendEventToUser(inv.fromPlayerId, 'pvp:declined', declineData);
+        }
     }
 
     // [PVP 1V1] Người chơi B bấm Đồng Ý
@@ -871,24 +886,32 @@ export class OnigiriServer {
         this.arenaRooms.set(roomId, roomObj);
 
         // Báo vào trận cho Người chơi A
-        this.sendEventToUser(playerA.id, 'pvp:match_start', {
+        const matchDataA = {
             roomId,
             opponent: { id: playerB.id, playerId: playerB.playerId, name: playerB.brandName || playerB.name, level: playerB.level, city: playerB.city },
             gameType: inv.gameType,
             betAmount: inv.betAmount,
             potMoney,
             timeRemaining: 30
-        });
+        };
+        this.sendEventToUser(playerA.id, 'pvp:match_start', matchDataA);
+        if (playerA.playerId && playerA.playerId !== playerA.id) {
+            this.sendEventToUser(playerA.playerId, 'pvp:match_start', matchDataA);
+        }
 
         // Báo vào trận cho Người chơi B
-        this.sendEventToUser(playerB.id, 'pvp:match_start', {
+        const matchDataB = {
             roomId,
             opponent: { id: playerA.id, playerId: playerA.playerId, name: playerA.brandName || playerA.name, level: playerA.level, city: playerA.city },
             gameType: inv.gameType,
             betAmount: inv.betAmount,
             potMoney,
             timeRemaining: 30
-        });
+        };
+        this.sendEventToUser(playerB.id, 'pvp:match_start', matchDataB);
+        if (playerB.playerId && playerB.playerId !== playerB.id) {
+            this.sendEventToUser(playerB.playerId, 'pvp:match_start', matchDataB);
+        }
 
         // Bộ đếm thời gian trận đấu 30s
         roomObj.timer = setInterval(() => {
@@ -906,7 +929,7 @@ export class OnigiriServer {
                 const isP2Win = p2Score > p1Score;
 
                 // Gửi kết quả cho P1
-                this.sendEventToUser(playerA.id, 'pvp:settlement', {
+                const resP1 = {
                     roomId,
                     isWin: isP1Win,
                     isDraw,
@@ -914,11 +937,15 @@ export class OnigiriServer {
                     rewardRep: isP1Win ? 15 : (isDraw ? 8 : 0),
                     playerScore: p1Score,
                     opponentScore: p2Score,
-                    opponentName: playerB.brandName
-                });
+                    opponentName: playerB.brandName || playerB.name
+                };
+                this.sendEventToUser(playerA.id, 'pvp:settlement', resP1);
+                if (playerA.playerId && playerA.playerId !== playerA.id) {
+                    this.sendEventToUser(playerA.playerId, 'pvp:settlement', resP1);
+                }
 
                 // Gửi kết quả cho P2
-                this.sendEventToUser(playerB.id, 'pvp:settlement', {
+                const resP2 = {
                     roomId,
                     isWin: isP2Win,
                     isDraw,
@@ -926,8 +953,12 @@ export class OnigiriServer {
                     rewardRep: isP2Win ? 15 : (isDraw ? 8 : 0),
                     playerScore: p2Score,
                     opponentScore: p1Score,
-                    opponentName: playerA.brandName
-                });
+                    opponentName: playerA.brandName || playerA.name
+                };
+                this.sendEventToUser(playerB.id, 'pvp:settlement', resP2);
+                if (playerB.playerId && playerB.playerId !== playerB.id) {
+                    this.sendEventToUser(playerB.playerId, 'pvp:settlement', resP2);
+                }
 
                 this.arenaRooms.delete(roomId);
             }
@@ -944,10 +975,10 @@ export class OnigiriServer {
         let p1Score = room.player1.score;
         let p2Score = room.player2.score;
 
-        if (room.player1.id === userId) {
+        if (room.player1.id === userId || (room.player1.playerId && room.player1.playerId === userId)) {
             room.player1.score += 1;
             p1Score = room.player1.score;
-        } else if (room.player2.id === userId) {
+        } else if (room.player2.id === userId || (room.player2.playerId && room.player2.playerId === userId)) {
             room.player2.score += 1;
             p2Score = room.player2.score;
         } else {
@@ -958,16 +989,24 @@ export class OnigiriServer {
         const updateData = {
             roomId,
             p1Id: room.player1.id,
+            p1PlayerId: room.player1.playerId,
             p1Score,
             player1Score: p1Score,
             p2Id: room.player2.id,
+            p2PlayerId: room.player2.playerId,
             p2Score,
             player2Score: p2Score,
             lastTapperId: userId
         };
 
         this.sendEventToUser(room.player1.id, 'pvp:score_update', updateData);
+        if (room.player1.playerId && room.player1.playerId !== room.player1.id) {
+            this.sendEventToUser(room.player1.playerId, 'pvp:score_update', updateData);
+        }
         this.sendEventToUser(room.player2.id, 'pvp:score_update', updateData);
+        if (room.player2.playerId && room.player2.playerId !== room.player2.id) {
+            this.sendEventToUser(room.player2.playerId, 'pvp:score_update', updateData);
+        }
     }
 
     // [HỆ THỐNG KẾT BẠN]

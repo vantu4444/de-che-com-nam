@@ -87,7 +87,20 @@ export class OnlineUIManager {
     bindNetworkEvents() {
         // Đấu trường 1v1
         network.on('onArenaEvent', (event) => {
-            if (['MATCH_STARTED', 'SCORE_UPDATE', 'COUNTDOWN_DONE', 'MATCH_FINISHED'].includes(event.type)) {
+            if (event.type === 'MATCH_STARTED') {
+                // Tự động ẩn phím ảo Mobile
+                const virt = document.getElementById('virtualTouchControls');
+                if (virt) virt.classList.add('hidden');
+                // Tự động đóng modal hồ sơ nếu đang mở
+                this.closePlayerProfile();
+                // Đưa cả 2 người chơi vào màn hình Đấu trường 1v1
+                if (window.game?.questManager) {
+                    window.game.questManager.open('online');
+                    this.activeSubTab = 'arena';
+                    window.game.questManager.render();
+                }
+                this.updateArenaUI();
+            } else if (['SCORE_UPDATE', 'COUNTDOWN_DONE', 'MATCH_FINISHED'].includes(event.type)) {
                 this.updateArenaUI();
             }
         });
@@ -1021,10 +1034,12 @@ export class OnlineUIManager {
         if (!this.pvpInviteElement) return;
 
         try {
-            audio.playBellNotification();
-        } catch(e) {
-            audio.playClick();
-        }
+            if (typeof audio.playBellNotification === 'function') {
+                audio.playBellNotification();
+            } else if (typeof audio.playClick === 'function') {
+                audio.playClick();
+            }
+        } catch(e) {}
 
         const virtualControls = document.getElementById('virtualTouchControls');
         if (virtualControls) virtualControls.classList.add('hidden');
@@ -1081,7 +1096,10 @@ export class OnlineUIManager {
         if (btnAccept) {
             btnAccept.onclick = () => {
                 clearInterval(interval);
-                audio.playCoin();
+                try {
+                    if (typeof audio.playCoin === 'function') audio.playCoin();
+                    else if (typeof audio.playCoinKeng === 'function') audio.playCoinKeng();
+                } catch(e) {}
                 this.hidePvpInviteNotification();
                 network.acceptPvpInvite(data.inviteId);
                 // Mở điện thoại tab Đấu trường
@@ -1097,7 +1115,9 @@ export class OnlineUIManager {
         if (btnDecline) {
             btnDecline.onclick = () => {
                 clearInterval(interval);
-                audio.playClick();
+                try {
+                    if (typeof audio.playClick === 'function') audio.playClick();
+                } catch(e) {}
                 this.hidePvpInviteNotification();
                 network.declinePvpInvite(data.inviteId);
             };
@@ -1119,10 +1139,12 @@ export class OnlineUIManager {
         if (!this.friendInviteElement) return;
 
         try {
-            audio.playBellNotification();
-        } catch(e) {
-            audio.playClick();
-        }
+            if (typeof audio.playBellNotification === 'function') {
+                audio.playBellNotification();
+            } else if (typeof audio.playClick === 'function') {
+                audio.playClick();
+            }
+        } catch(e) {}
 
         const virtualControls = document.getElementById('virtualTouchControls');
         if (virtualControls) virtualControls.classList.add('hidden');

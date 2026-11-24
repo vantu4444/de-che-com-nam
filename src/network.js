@@ -299,6 +299,7 @@ export class NetworkManager {
                 id: data.roomId,
                 gameType: data.gameType,
                 opponentId: data.opponent?.id,
+                opponentPlayerId: data.opponent?.playerId,
                 opponentName: data.opponent?.name || 'Đối thủ',
                 status: 'PLAYING',
                 timeRemaining: data.timeRemaining || 30,
@@ -308,12 +309,21 @@ export class NetworkManager {
                 potMoney: data.potMoney || 0,
                 result: null
             };
+
+            // Trừ tiền cược khi bước vào trận đấu chính thức
+            if (data.betAmount > 0) {
+                state.money = Math.max(0, (state.money || 0) - Number(data.betAmount));
+                state.notify();
+            }
+
             this.emitEvent('onArenaEvent', { type: 'MATCH_STARTED', arena: this.activeArena });
         });
 
         this.socket.on('pvp:score_update', (data) => {
             if (this.activeArena && this.activeArena.id === data.roomId) {
-                if (data.p1Id === this.selfId) {
+                const myPlayerId = this.playerId || (typeof localStorage !== 'undefined' ? localStorage.getItem('onigiri_player_id') : null);
+                const isP1 = (data.p1Id === this.selfId) || (data.p1PlayerId && data.p1PlayerId === myPlayerId);
+                if (isP1) {
                     this.activeArena.playerScore = data.p1Score;
                     this.activeArena.opponentScore = data.p2Score;
                 } else {
