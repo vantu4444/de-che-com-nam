@@ -4,6 +4,28 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.1-PROD (CHÍNH THỨC XUẤT XƯỞNG: ĐỒNG BỘ TỌA ĐỘ Ô VẠCH XANH TRƯỜNG HỌC & MIỄN TRỪ TRẬT TỰ ĐÔ THỊ 100%)
+- **Ngày ghi nhận:** 24/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (138/138 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Nguồn Tọa Độ Ô Vạch Xanh Duy Nhất (Single Source of Truth - `src/world.js`, `src/selling.js`):**
+     - Thiết lập hằng số `LEGAL_SELLING_ZONES` chứa đầy đủ 24 ô vạch xanh chuẩn hóa trên toàn bộ 4 chi nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội), bao gồm các cụm Trường Tiểu học, THCS, THPT, Công Viên / Làng Đại Học, Chợ Bến Thành / Văn Phòng và Phố Đi Bộ.
+     - Hàm kiểm tra `isInsideLegalZone(x, y, cityId)` mở rộng biên độ an toàn thêm **`+20px`** tính từ tâm nhân vật/xe, đảm bảo người chơi chỉ cần đỗ xe chạm mép vạch xanh là được nhận diện hợp lệ 100%.
+     - Đồng bộ dùng chung một nguồn tọa độ cho cả Canvas 2D, 3D Scene, Minimap và logic bán hàng của `SellingManager`.
+  2. **Vùng An Toàn Tuyệt Đối – Miễn Trừ Trật Tự Đô Thị 100% Trong Ô Vạch Xanh (`src/selling.js`):**
+     - Khắc phục triệt để lỗi phạt `isSchoolOvertime`: khi người chơi đứng trong Ô Vạch Xanh Trường Học, hệ thống tuyệt đối không tính vi phạm dù ngoài giờ cao điểm hay bất kỳ thời điểm nào trong ngày.
+     - Khi `inGreenSpot === true`: cấm tuyệt đối cảnh báo, cấm tăng mức nhiệt (`heatLevel`), cấm phạt tiền 150.000đ và cấm trừ danh vọng.
+     - Cơ chế Hủy Truy Đuổi Tự Động: Người chơi đang bị truy đuổi từ ngoài đường nếu chạy lọt vào Ô Vạch Xanh sẽ được xóa sạch cảnh báo ngay lập tức (`heatLevel = 0`, `urbanWarning = 0`).
+  3. **Huy Hiệu Trực Quan & Trải Nghiệm Mở Sạp Thông Minh (`index.html`, `style.css`, `src/main.js`):**
+     - Thẻ huy hiệu `#stallLegalTag` phát sáng nhẹ nhàng `🟢 Điểm Bán Hợp Pháp (An toàn 100%)` định vị ngay trên nút Mở Sạp `#btnTouchStall` và bảng tương tác `#proximityPrompt`.
+     - Nhận diện mở sạp thông minh: chỉ cần người chơi đứng trong vạch xanh, bấm nút Mở Sạp hoặc nhấn phím E sẽ tự động nhận diện và mở sạp trơn tru không cần căn đúng tâm khu vực.
+  4. **Kiểm Thử Thực Tế Tự Động 10 Giây E2E (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Bổ sung kịch bản kiểm thử 5.7: Đặt nhân vật tại tâm Ô Vạch Xanh Trường Học Hoa Mai (`x: 790, y: 625`), mở sạp và bán nhanh liên tục trong 600 frames (10 giây thực tế ở 60fps).
+     - Kết quả kiểm chứng: Huy hiệu xanh hiển thị chuẩn, tiền bán hàng tăng chuẩn xác theo giá niêm yết (20k/22k/25k), **0 lần bị phạt**, **0 lỗi console**, đạt 100% PASS.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: ĐỊNH DANH NGƯỜI CHƠI BỀN VỮNG, CHẠM NHÂN VẬT HITBOX 56PX, NÚT QUANH ĐÂY, KHO BẾP 4 TẦNG STUDIO NẤU NHANH & NẤU ĐẦY THÙNG, CỔNG DATA LEADS & TRANG QUẢN TRỊ /admin)
 - **Ngày ghi nhận:** 24/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (137/137 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT TOÀN BỘ"**.
