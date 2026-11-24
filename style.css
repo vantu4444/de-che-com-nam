@@ -1,0 +1,5463 @@
+/* style.css - Giao diện HUD, Canvas và Popup toàn màn hình Bếp ASMR */
+
+:root {
+    --bg-dark: #0f172a;
+    --text-light: #f8fafc;
+    --primary: #f97316;
+    --success: #22c55e;
+    --blue: #2563eb;
+    --card-bg: rgba(30, 41, 59, 0.92);
+    --border-color: rgba(255, 255, 255, 0.15);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Quy tắc ẩn phần tử toàn cục an toàn tuyệt đối */
+.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Be Vietnam Pro', -apple-system, sans-serif;
+    color: var(--text-light);
+    touch-action: none;
+}
+
+#gameContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ===================================================
+   1. CANVAS 2D TOP-DOWN
+   =================================================== */
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* ===================================================
+   2. THANH TRẠNG THÁI (HUD) TRÊN CÙNG
+   =================================================== */
+#topHUD {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.hud-item {
+    pointer-events: auto;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.hud-icon {
+    font-size: 20px;
+}
+
+.hud-val {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.hud-money-card .hud-val {
+    color: #4ade80;
+}
+
+.hud-clock-card {
+    border-color: rgba(56, 189, 248, 0.4);
+    min-width: 140px;
+}
+
+.hud-clock-card .hud-val {
+    color: #38bdf8;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    letter-spacing: 0.5px;
+}
+
+.hud-clock-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.hud-subval {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.hud-inventory-card .hud-val {
+    color: #facc15;
+}
+
+/* Đèn báo trạng thái kết nối Online / Offline */
+.hud-online-card {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    padding: 6px 12px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.hud-online-status {
+    white-space: nowrap;
+    color: #94a3b8;
+    transition: color 0.3s ease;
+}
+
+.hud-online-status.is-connecting {
+    color: #fbbf24;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+    animation: pulseConnecting 2s infinite ease-in-out;
+}
+
+@keyframes pulseConnecting {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.65;
+    }
+}
+
+.hud-online-status.is-online {
+    color: #4ade80;
+    text-shadow: 0 0 8px rgba(74, 222, 128, 0.4);
+}
+
+.hud-online-status.is-offline {
+    color: #94a3b8;
+}
+
+/* Level & Thanh EXP */
+.hud-level-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 12px;
+}
+
+.hud-exp-track {
+    width: 140px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.hud-exp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    transition: width 0.3s ease;
+}
+
+/* ===================================================
+   3. THÔNG BÁO TƯƠNG TÁC GẦN KHU VỰC
+   =================================================== */
+.proximity-banner {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(12px);
+    border: 2px solid #f97316;
+    border-radius: 30px;
+    padding: 12px 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
+    cursor: pointer;
+    animation: floatBounce 2s infinite ease-in-out;
+}
+
+.proximity-banner.hidden {
+    display: none !important;
+}
+
+.prompt-icon {
+    font-size: 24px;
+}
+
+.prompt-msg {
+    font-size: 15px;
+    color: #f8fafc;
+}
+
+.prompt-msg strong {
+    color: #fb923c;
+}
+
+@keyframes floatBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* ===================================================
+   4. CỬA SỔ POPUP TOÀN MÀN HÌNH BẾP ASMR
+   =================================================== */
+.kitchen-modal-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kitchen-modal-layer.hidden {
+    display: none !important;
+}
+
+.kitchen-fullscreen-backdrop {
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.kitchen-modal-panel {
+    background: #1e293b;
+    border: 2px solid #f97316;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 780px;
+    height: 92vh;
+    max-height: 700px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+}
+
+.kitchen-topbar {
+    background: #0f172a;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.kitchen-tag {
+    background: #f97316;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.kitchen-heading h2 {
+    font-size: 18px;
+    color: #f8fafc;
+}
+
+.btn-exit-kitchen {
+    background: #334155;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-exit-kitchen:hover {
+    background: #ef4444;
+}
+
+/* Thanh chọn 15 vị nhân & bộ lọc */
+.fillings-selector {
+    background: #0b1329;
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    max-height: 180px;
+    overflow-y: auto;
+    min-height: 0;
+    touch-action: pan-y;
+    flex-shrink: 0;
+}
+
+.fillings-selector::-webkit-scrollbar {
+    width: 5px;
+}
+.fillings-selector::-webkit-scrollbar-thumb {
+    background: #f97316;
+    border-radius: 4px;
+}
+.fillings-selector::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+}
+
+.selector-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.fillings-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-filling-tab {
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    color: #cbd5e1;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-filling-tab.active {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: #f97316;
+    color: #fb923c;
+}
+
+/* Thanh Breadcrumbs Bước 1 -> 2 -> 3 */
+.step-breadcrumbs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #111827;
+    padding: 10px;
+}
+
+.step-chip {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.step-chip span {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #374151;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.step-chip.current {
+    color: #f8fafc;
+}
+
+.step-chip.current span {
+    background: #f97316;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.6);
+}
+
+.step-chip.done {
+    color: #4ade80;
+}
+
+.step-chip.done span {
+    background: #16a34a;
+    color: #fff;
+}
+
+.chip-divider {
+    color: #374151;
+    font-size: 11px;
+}
+
+/* Vùng Arena Tương Tác Bếp */
+.kitchen-arena {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    overflow-y: auto;
+}
+
+.step-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.step-instruction h3 {
+    font-size: 17px;
+    color: #f8fafc;
+    margin-bottom: 6px;
+}
+
+.step-instruction p {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+/* Bước 1: Thanh lực */
+.power-gauge-wrapper {
+    width: 100%;
+    max-width: 380px;
+}
+
+.power-gauge-track {
+    width: 100%;
+    height: 32px;
+    background: #334155;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.power-gauge-target {
+    position: absolute;
+    left: 65%;
+    width: 20%;
+    height: 100%;
+    background: rgba(34, 197, 94, 0.5);
+    border-left: 2px dashed #4ade80;
+    border-right: 2px dashed #4ade80;
+}
+
+.power-gauge-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #f59e0b, #22c55e);
+    transition: width 0.05s linear;
+}
+
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 6px;
+}
+
+.target-label {
+    color: #4ade80;
+    font-weight: 800;
+}
+
+.mold-wood-box {
+    width: 160px;
+    height: 140px;
+    background: #d97706;
+    border: 6px solid #78350f;
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.rice-fill-preview {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: height 0.05s linear;
+}
+
+.btn-hold-scoop {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 16px 32px;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+    transition: 0.15s;
+}
+
+.btn-hold-scoop.holding {
+    transform: scale(0.96);
+    background: #ea580c;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.6);
+}
+
+/* Bước 2: Nhấn ép 3 lần */
+.press-mold-arena {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    height: 180px;
+    justify-content: center;
+}
+
+.press-cap {
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.12s ease-in;
+}
+
+.cap-handle {
+    width: 24px;
+    height: 36px;
+    background: #78350f;
+    border-radius: 6px;
+}
+
+.cap-plate {
+    width: 160px;
+    height: 24px;
+    background: #b45309;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+
+.press-cap.active-slam {
+    transform: translateY(30px);
+}
+
+.press-base {
+    width: 160px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.triangle-rice-blob {
+    width: 0;
+    height: 0;
+    border-left: 50px solid transparent;
+    border-right: 50px solid transparent;
+    border-bottom: 70px solid #f8fafc;
+}
+
+.btn-press-action {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 16px 36px;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    transition: 0.15s;
+}
+
+.btn-press-action:active {
+    transform: scale(0.95);
+}
+
+/* Bước 3: Vuốt bọc rong biển */
+.wrap-workbench {
+    width: 280px;
+    height: 180px;
+    background: #334155;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: grab;
+}
+
+.nori-flat-sheet {
+    width: 160px;
+    height: 90px;
+    background: #064e3b;
+    border: 2px solid #022c22;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+}
+
+.nori-flat-sheet.nori-folded {
+    width: 100px;
+    height: 100px;
+    background: #022c22;
+    border-radius: 16px;
+    transform: rotate(5deg);
+}
+
+.onigiri-tri-core {
+    width: 0;
+    height: 0;
+    border-left: 36px solid transparent;
+    border-right: 36px solid transparent;
+    border-bottom: 54px solid #ffffff;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+}
+
+.onigiri-core-icon {
+    position: absolute;
+    bottom: -46px;
+    font-size: 16px;
+}
+
+.swipe-hint-arrow {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #fcd34d;
+    animation: swipePulse 1.5s infinite;
+}
+
+@keyframes swipePulse {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+}
+
+.wrap-status-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4ade80;
+}
+
+/* Màn hình thành phẩm */
+.result-banner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.result-stars {
+    font-size: 28px;
+    letter-spacing: 4px;
+}
+
+.result-icon-large {
+    font-size: 64px;
+    margin: 6px 0;
+}
+
+.result-desc {
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.result-reward-badges {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+}
+
+.badge-item {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid #22c55e;
+    color: #4ade80;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.result-actions-row {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-cook-more {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.btn-finish-kitchen {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* Animations */
+.animate-fade {
+    animation: fadeIn 0.3s ease;
+}
+
+.animate-pop {
+    animation: popUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popUp {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* ===================================================
+   5. BỘ NHẬN DIỆN THƯƠNG HIỆU (START SCREEN, AVATAR, MASCOT)
+   =================================================== */
+
+/* 5.1. Màn hình bắt đầu (Start Screen) */
+.start-screen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background: radial-gradient(circle at center, #1e293b 0%, #090d16 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.start-screen-overlay.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none !important;
+}
+
+.start-card {
+    background: rgba(15, 23, 42, 0.92);
+    border: 2px solid rgba(249, 115, 22, 0.6);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(249, 115, 22, 0.25);
+    padding: 32px 40px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1000;
+    animation: startCardPop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes startCardPop {
+    from { opacity: 0; transform: scale(0.92) translateY(18px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.start-logo-box {
+    width: 110px;
+    height: 110px;
+    border-radius: 24px;
+    padding: 6px;
+    background: linear-gradient(135deg, #f97316, #fb923c);
+    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.start-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 18px;
+    display: block;
+}
+
+.start-title {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #fb923c, #fdba74);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-top: -4px;
+}
+
+.start-subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+    margin-top: -10px;
+}
+
+.start-showcase {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 6px 0;
+}
+
+.start-mascot-frame {
+    width: 130px;
+    height: 184px; /* Tỷ lệ ~0.707 chuẩn linh_vat_1 */
+    filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.5));
+    animation: mascotFloat 3s infinite ease-in-out;
+}
+
+.start-mascot-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+@keyframes mascotFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.btn-start-game {
+    width: 100%;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 15px 24px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(249, 115, 22, 0.45);
+    cursor: pointer;
+    pointer-events: auto;
+    position: relative;
+    z-index: 1001;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-start-game:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(249, 115, 22, 0.6);
+}
+
+.btn-start-game:active {
+    transform: translateY(1px);
+}
+
+.start-audio-tip {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* 5.2. Avatar thương hiệu trên thanh HUD */
+.hud-avatar-card {
+    padding: 6px 14px 6px 8px;
+    gap: 10px;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.hud-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    border: 2px solid #f97316;
+    background: #0f172a;
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.4);
+}
+
+.hud-avatar-text {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.hud-avatar-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fdba74;
+    line-height: 1.2;
+}
+
+.hud-avatar-role {
+    font-size: 10.5px;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* 5.3. Linh vật đồng hành trong Bếp ASMR */
+.kitchen-mascot-box {
+    position: absolute;
+    right: 24px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.kitchen-mascot-img {
+    width: 65px;
+    height: 92px; /* Tỷ lệ ~0.707 */
+    object-fit: contain;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+    transition: transform 0.2s ease;
+}
+
+.kitchen-mascot-box.celebrate-jump {
+    animation: mascotJumpCelebration 0.6s infinite alternate ease-in-out;
+}
+
+@keyframes mascotJumpCelebration {
+    0% { transform: translateY(0) scale(1) rotate(0deg); }
+    50% { transform: translateY(-24px) scale(1.12) rotate(-6deg); }
+    100% { transform: translateY(-30px) scale(1.15) rotate(6deg); }
+}
+
+.mascot-speech-bubble {
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 12px;
+    border: 1px solid #f97316;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    position: relative;
+    animation: popUp 0.3s ease;
+}
+
+.mascot-speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px 6px 0;
+    border-style: solid;
+    border-color: #ffffff transparent;
+    display: block;
+    width: 0;
+}
+
+/* Responsive Mobile */
+@media (max-width: 640px) {
+    .start-card {
+        padding: 24px 20px;
+        gap: 12px;
+    }
+    .start-logo-box {
+        width: 85px;
+        height: 85px;
+    }
+    .start-title {
+        font-size: 21px;
+    }
+    .start-mascot-frame {
+        width: 100px;
+        height: 142px;
+    }
+    .btn-start-game {
+        font-size: 14.5px;
+        padding: 13px 20px;
+    }
+    #topHUD {
+        gap: 6px;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+    .hud-item {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    .hud-avatar-text {
+        display: none;
+    }
+    .hud-exp-track {
+        width: 80px;
+    }
+    .kitchen-mascot-box {
+        right: 12px;
+        bottom: 12px;
+    }
+    .kitchen-mascot-img {
+        width: 50px;
+        height: 70px;
+    }
+}
+
+
+/* ==========================================================================
+   BƯỚC 4: HỆ THỐNG SMARTPHONE IGIRI OS (GTA STYLE) & ĐẾ CHẾ TYCOON
+   ========================================================================== */
+
+/* Nút biểu tượng Điện Thoại nổi ở góc dưới bên phải màn hình */
+.phone-trigger-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 95;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.phone-trigger-btn:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 12px 30px rgba(2, 132, 199, 0.7);
+    border-color: #ffffff;
+}
+
+.phone-trigger-btn:active {
+    transform: scale(0.95);
+}
+
+.phone-trigger-icon {
+    font-size: 22px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.phone-trigger-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Chấm đỏ thông báo (Notification Badge) */
+.phone-notify-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 16px;
+    height: 16px;
+    background: #ef4444;
+    border: 2.5px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.9);
+    animation: notifyPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes notifyPulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Layer Popup toàn màn hình Smartphone */
+.phone-modal-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.phone-modal-layer.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+.phone-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+/* Vỏ khung Smartphone GTA / iPhone 15 Pro */
+.phone-frame {
+    width: 390px;
+    max-width: 95vw;
+    height: 720px;
+    max-height: 80vh;
+    background: #090d16;
+    border-radius: 44px;
+    border: 4px solid #334155;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    overscroll-behavior: contain;
+    animation: phoneSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes phoneSlideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Dynamic Island & Loa thoại */
+.phone-notch {
+    width: 105px;
+    height: 25px;
+    background: #000000;
+    border-radius: 18px;
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+.notch-speaker {
+    width: 44px;
+    height: 3px;
+    background: #1e293b;
+    border-radius: 2px;
+}
+
+.notch-camera {
+    width: 9px;
+    height: 9px;
+    background: #0284c7;
+    border-radius: 50%;
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Màn hình hiển thị chính bên trong điện thoại */
+.phone-screen {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #0b132b 0%, #111a33 100%);
+    padding-top: 36px;
+    position: relative;
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+
+/* Thanh Status Bar */
+.phone-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 18px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.phone-clock {
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.phone-brand {
+    font-size: 9.5px;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.phone-battery {
+    font-size: 10px;
+}
+
+/* Header App */
+.phone-app-header {
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.phone-header-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.phone-app-avatar {
+    font-size: 24px;
+    background: rgba(2, 132, 199, 0.2);
+    border: 1px solid #0284c7;
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.phone-app-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.phone-app-subtitle {
+    margin: 0;
+    font-size: 11px;
+    color: #38bdf8;
+    font-weight: 600;
+}
+
+.btn-phone-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-phone-close:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+/* Tab điều hướng iGiri OS */
+.phone-tab-bar {
+    display: flex;
+    background: rgba(15, 23, 42, 0.95);
+    padding: 6px;
+    gap: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.phone-tab-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.phone-tab-btn {
+    flex: 0 0 auto;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.phone-tab-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+/* Vùng chứa cuộn chuẩn cho các Tab Smartphone */
+.phone-tab-content-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+}
+
+/* Nội dung Tab bên trong */
+.phone-tab-body,
+.tab-content,
+.quests-view,
+.contracts-view,
+.achievements-view,
+.delivery-view,
+.vehicles-view,
+.tycoon-view {
+    flex: 1;
+    min-height: 0;
+    padding: 12px 14px 24px 14px;
+    display: flex;
+    flex-direction: column;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+}
+
+/* Thanh cuộn (scrollbar) nổi bật, dễ nhìn cho Smartphone */
+.phone-tab-content-wrapper::-webkit-scrollbar,
+.phone-tab-body::-webkit-scrollbar,
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.phone-tab-content-wrapper::-webkit-scrollbar-track,
+.phone-tab-body::-webkit-scrollbar-track,
+.tab-content::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.7);
+    border-radius: 4px;
+}
+
+.phone-tab-content-wrapper::-webkit-scrollbar-thumb,
+.phone-tab-body::-webkit-scrollbar-thumb,
+.tab-content::-webkit-scrollbar-thumb {
+    background: #0284c7;
+    border-radius: 4px;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.phone-tab-content-wrapper::-webkit-scrollbar-thumb:hover,
+.phone-tab-body::-webkit-scrollbar-thumb:hover,
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+}
+
+.phone-tab-content-wrapper,
+.phone-tab-body,
+.tab-content {
+    scrollbar-width: thin;
+    scrollbar-color: #0284c7 rgba(15, 23, 42, 0.7);
+}
+
+.tab-banner-hint {
+    background: rgba(2, 132, 199, 0.15);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: #bae6fd;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+/* --- TAB 1: QUEST CARDS --- */
+.quests-list,
+.quest-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+}
+
+.quest-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.quest-card.ready {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
+}
+
+.quest-card.in-progress {
+    border-color: #38bdf8;
+    background: rgba(2, 132, 199, 0.12);
+}
+
+.quest-card.completed {
+    opacity: 0.65;
+    background: rgba(15, 23, 42, 0.4);
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.quest-card.locked {
+    opacity: 0.45;
+}
+
+.quest-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quest-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quest-badge-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.quest-badge-pill.ready {
+    background: #22c55e;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.quest-badge-pill.in-progress {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.quest-badge-pill.completed {
+    background: rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+}
+
+.quest-badge-pill.locked {
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+}
+
+.quest-title {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.quest-desc {
+    margin: 0;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.quest-progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+.quest-prog-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #94a3b8;
+}
+
+.quest-prog-info strong {
+    color: #f8fafc;
+}
+
+.quest-prog-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.quest-prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #22c55e);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.quest-bottom-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.quest-reward-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.reward-item {
+    font-size: 10px;
+    font-weight: 700;
+    color: #facc15;
+    background: rgba(250, 204, 21, 0.12);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.reward-item.title-tag {
+    color: #f472b6;
+    background: rgba(244, 114, 182, 0.15);
+    border-color: rgba(244, 114, 182, 0.4);
+}
+
+.btn-quest-claim {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 7px 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    transition: all 0.2s;
+}
+
+.btn-quest-claim:hover {
+    transform: scale(1.05);
+}
+
+.btn-quest-claim.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.quest-claimed-stamp {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #4ade80;
+    padding: 4px 8px;
+    border: 1px solid #4ade80;
+    border-radius: 6px;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.quest-inprogress-note {
+    font-size: 10.5px;
+    color: #38bdf8;
+    font-style: italic;
+}
+
+/* NV3 Urgent Delivery Countdown */
+.nv3-live-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.timer-countdown {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    padding: 3px 8px;
+    border-radius: 6px;
+    animation: timerFlash 1s infinite alternate;
+}
+
+@keyframes timerFlash {
+    from { opacity: 0.8; }
+    to { opacity: 1; }
+}
+
+.timer-guide {
+    font-size: 9.5px;
+    color: #cbd5e1;
+}
+
+.btn-start-nv3, .btn-retry-nv3 {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 10px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(2, 132, 199, 0.3);
+}
+
+.btn-retry-nv3 {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
+}
+
+.nv3-failed-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.failed-msg {
+    font-size: 10px;
+    color: #f87171;
+    font-weight: 700;
+}
+
+/* --- NHÓM 4 GIAI ĐOẠN NHIỆM VỤ CỐT TRUYỆN --- */
+.quest-stage-group {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.quest-stage-group.stage-completed {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.04);
+}
+
+.quest-stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.qsh-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qsh-icon {
+    font-size: 20px;
+}
+
+.qsh-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #f1f5f9;
+}
+
+.qsh-sub {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.qsh-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.qsh-badge.done {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.quest-stage-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* --- TAB MỚI: HỢP ĐỒNG ĐẶT TIỆC LỚN (PARTY CONTRACTS) --- */
+.contracts-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+}
+
+.contract-timer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 8px 12px;
+}
+
+.contract-timer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.contract-timer-info strong {
+    color: #38bdf8;
+}
+
+.contract-timer-info small {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.btn-refresh-contracts {
+    background: rgba(2, 132, 199, 0.25);
+    border: 1px solid rgba(56, 189, 248, 0.5);
+    border-radius: 8px;
+    color: #bae6fd;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-refresh-contracts:hover {
+    background: rgba(2, 132, 199, 0.45);
+    transform: scale(1.03);
+}
+
+.contracts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.contract-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.contract-card.ready {
+    background: rgba(34, 197, 94, 0.08);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.15);
+}
+
+.contract-card.fulfilled {
+    opacity: 0.6;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.contract-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.contract-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.contract-title-row h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.contract-tier-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.contract-freshness-req {
+    font-size: 10px;
+    font-weight: 700;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.contract-desc {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.contract-items-table {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+}
+
+.cit-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 2px;
+}
+
+.cit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #cbd5e1;
+}
+
+.cit-name {
+    flex: 1;
+}
+
+.contract-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.contract-rewards {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.contract-rewards span {
+    font-size: 10px;
+    font-weight: 700;
+    color: #facc15;
+    background: rgba(250, 204, 21, 0.12);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+.btn-contract-deliver {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-contract-deliver.ready:hover {
+    transform: scale(1.05);
+}
+
+.btn-contract-deliver.disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* --- TAB MỚI: BẢNG 12 THÀNH TỰU & DANH HIỆU (ACHIEVEMENTS) --- */
+.achievements-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+}
+
+.ach-summary-card {
+    display: flex;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+.asc-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.asc-number {
+    font-size: 16px;
+    font-weight: 900;
+    color: #38bdf8;
+}
+
+.asc-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.achievement-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.achievement-card.ready {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.achievement-card.claimed {
+    border-color: rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.06);
+}
+
+.ach-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ach-icon {
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 132, 199, 0.2);
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.ach-title-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ach-title-area h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.ach-buff-tag {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+}
+
+.ach-badge-active {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #facc15;
+    background: rgba(250, 204, 21, 0.15);
+    border: 1px solid rgba(250, 204, 21, 0.4);
+    padding: 2px 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.ach-desc {
+    margin: 0;
+    font-size: 11px;
+    color: #cbd5e1;
+    line-height: 1.35;
+}
+
+.ach-progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ach-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #22c55e);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.ach-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.ach-prog-text {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.btn-claim-achievement {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 5px 10px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-claim-achievement:hover {
+    transform: scale(1.05);
+}
+
+.ach-status-stamp {
+    font-size: 10px;
+    font-weight: 700;
+    color: #facc15;
+}
+
+.ach-status-lock {
+    font-size: 10px;
+    color: #64748b;
+}
+.vehicle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+}
+
+.vehicle-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.vehicle-card.active {
+    border-color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.veh-left-icon {
+    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    background: rgba(2, 132, 199, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.veh-center-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.veh-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.veh-title-row h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.veh-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.veh-badge.badge-current {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.15);
+}
+
+.veh-desc {
+    margin: 0;
+    font-size: 10.5px;
+    color: #cbd5e1;
+    line-height: 1.35;
+}
+
+.veh-stats {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.veh-stat-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.veh-price-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #facc15;
+    background: rgba(250, 204, 21, 0.12);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.btn-veh-action {
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.btn-veh-action.current {
+    background: rgba(74, 222, 128, 0.2);
+    color: #4ade80;
+    border: 1px solid #4ade80;
+    cursor: default;
+}
+
+.btn-veh-action.equip {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.btn-veh-action.equip:hover {
+    background: #0369a1;
+}
+
+.btn-veh-action.buy {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(34, 197, 94, 0.4);
+}
+
+.btn-veh-action.buy:hover {
+    transform: scale(1.05);
+}
+
+.btn-veh-action.disabled, .btn-veh-action.locked {
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* --- TAB 3: TYCOON SECTIONS --- */
+.tycoon-section-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.tycoon-sec-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 8px;
+}
+
+.sec-icon {
+    font-size: 26px;
+    width: 40px;
+    height: 40px;
+    background: rgba(2, 132, 199, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tycoon-sec-header h4 {
+    margin: 0;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.tycoon-sec-header small {
+    font-size: 10.5px;
+    color: #94a3b8;
+}
+
+.tycoon-tier-current {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.tycoon-tier-current strong {
+    color: #38bdf8;
+}
+
+.tycoon-upgrade-box {
+    background: rgba(2, 132, 199, 0.12);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.upgrade-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10.5px;
+    color: #cbd5e1;
+}
+
+.upgrade-info strong {
+    color: #ffffff;
+    font-size: 11.5px;
+}
+
+.upgrade-price strong {
+    color: #facc15;
+    font-size: 12px;
+}
+
+.btn-tycoon-upgrade {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border: none;
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 8px 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.btn-tycoon-upgrade:hover {
+    transform: scale(1.05);
+}
+
+.btn-tycoon-upgrade.disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.tycoon-max-badge {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid #4ade80;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.staff-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.staff-tile {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.staff-tile small {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.staff-tile strong {
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.staff-tile .income-val {
+    color: #4ade80;
+}
+
+/* ==========================================================
+   GÓI 4C: NÂNG CẤP XƯỞNG 2 NHÁNH & QUẢN LÝ 4 CHI NHÁNH TOÀN QUỐC
+   ========================================================== */
+.sub-branch-block {
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.55);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 8px;
+}
+
+.sub-branch-block.auto-line {
+    border-color: rgba(56, 189, 248, 0.25);
+    background: rgba(14, 165, 233, 0.06);
+}
+
+.sub-branch-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    font-size: 11.5px;
+    color: #f8fafc;
+    margin-bottom: 4px;
+}
+
+.sub-badge {
+    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.sub-badge.highlight {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.sub-badge.active {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.sub-badge.warn {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.sub-badge.locked {
+    background: rgba(100, 116, 139, 0.2);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.sub-branch-desc {
+    font-size: 10.5px;
+    color: #94a3b8;
+    line-height: 1.35;
+    margin: 0 0 8px 0;
+}
+
+.kitchen-stock-hud {
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stock-info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #cbd5e1;
+}
+
+.stock-info-row strong {
+    color: #38bdf8;
+}
+
+.btn-transfer-stock {
+    background: #0284c7;
+    border: none;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-transfer-stock:hover {
+    background: #0369a1;
+}
+
+.btn-transfer-stock.disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.tycoon-upgrade-box.compact {
+    padding: 6px 10px;
+}
+
+.tycoon-max-badge.compact {
+    padding: 6px;
+    font-size: 10px;
+}
+
+/* QUẢN LÝ 4 CHI NHÁNH */
+.branches-section {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.branch-card-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 24px;
+}
+
+.branch-item-card {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: 0.2s;
+}
+
+.branch-item-card.unlocked {
+    border-color: rgba(74, 222, 128, 0.3);
+    background: rgba(22, 101, 52, 0.08);
+}
+
+.branch-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.branch-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.branch-icon {
+    font-size: 20px;
+}
+
+.branch-title-left h4 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.branch-title-left small {
+    font-size: 9.5px;
+    color: #94a3b8;
+}
+
+.branch-pill {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+}
+
+.branch-pill.headquarter {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.branch-pill.active {
+    background: #22c55e;
+    color: #ffffff;
+}
+
+.branch-pill.locked {
+    background: #475569;
+    color: #cbd5e1;
+}
+
+.branch-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.b-stat small {
+    font-size: 9px;
+    color: #94a3b8;
+    display: block;
+}
+
+.b-stat strong {
+    font-size: 11px;
+    color: #ffffff;
+}
+
+.b-stat strong.income {
+    color: #4ade80;
+}
+
+.b-stat strong.spots {
+    color: #38bdf8;
+}
+
+.branch-travel-box {
+    margin-top: 6px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.branch-travel-tag.current {
+    font-size: 10px;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-branch-travel {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: none;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-branch-travel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
+}
+
+.branch-action-row, .branch-unlock-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.branch-next-hint span, .branch-unlock-info span {
+    font-size: 10.5px;
+    color: #cbd5e1;
+    display: block;
+}
+
+.branch-next-hint small, .branch-unlock-info small {
+    font-size: 9.5px;
+    color: #fbbf24;
+}
+
+.btn-branch-action {
+    border: none;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s;
+    white-space: nowrap;
+}
+
+.btn-branch-action.upgrade {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+}
+
+.btn-branch-action.unlock {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #ffffff;
+}
+
+.btn-branch-action.disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.branch-max-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fbbf24;
+    text-align: center;
+    padding: 4px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 6px;
+}
+
+/* Thanh Home Bar dưới đáy màn hình điện thoại */
+.phone-home-bar {
+    width: 120px;
+    height: 4px;
+    background: #ffffff;
+    border-radius: 4px;
+    margin: 8px auto 6px;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.phone-home-bar:hover {
+    opacity: 0.9;
+}
+
+/* ===================================================
+   GÓI 4A: BẾP ASMR 15 VỊ & LỌC 3 NHÓM GIÁ
+   =================================================== */
+.kitchen-modal-panel {
+    max-height: 820px;
+}
+
+.kitchen-topbar-stats {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.stat-badge {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.selector-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.price-filter-tabs {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-filter-tab {
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    color: #94a3b8;
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-filter-tab:hover {
+    color: #fff;
+    border-color: #f97316;
+}
+
+.btn-filter-tab.active {
+    background: #f97316;
+    border-color: #f97316;
+    color: #ffffff;
+}
+
+.f-price-tag {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 8px;
+    color: #facc15;
+}
+
+.kitchen-alert-box {
+    margin: 10px 0 14px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.alert-error {
+    background: rgba(239, 68, 68, 0.18);
+    border: 1.5px solid #ef4444;
+    color: #fca5a5;
+}
+
+.alert-warning {
+    background: rgba(245, 158, 11, 0.18);
+    border: 1.5px solid #f59e0b;
+    color: #fde68a;
+}
+
+.btn-disabled {
+    background: #334155 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    border-color: #475569 !important;
+    box-shadow: none !important;
+}
+
+.result-price-badge {
+    display: inline-block;
+    background: #f59e0b;
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin: 6px 0 10px;
+}
+
+/* ===================================================
+   GÓI 4A: KHÔNG GIAN BÊN TRONG CHỢ ĐẦU MỐI (src/market.js)
+   =================================================== */
+.market-modal-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.market-modal-layer.hidden {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+.market-fullscreen-backdrop {
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+
+.market-panel {
+    background: #0f172a;
+    border: 2px solid #16a34a;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 940px;
+    height: 94vh;
+    max-height: 720px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(22, 163, 74, 0.25);
+}
+
+.market-topbar {
+    background: #022c22;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #16a34a;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.market-heading h2 {
+    font-size: 16px;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.market-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #4ade80;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.market-inventory-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.m-pill {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.m-pill strong {
+    color: #facc15;
+}
+
+.btn-exit-market {
+    background: #dc2626;
+    border: none;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    transition: 0.15s;
+}
+
+.btn-exit-market:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.market-arena-wrapper {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #090d16;
+    overflow: hidden;
+}
+
+#marketCanvas {
+    max-width: 100%;
+    max-height: calc(94vh - 120px);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    cursor: crosshair;
+}
+
+.market-controls-hint {
+    position: absolute;
+    bottom: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    font-size: 11px;
+    padding: 4px 16px;
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.stall-modal-card {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    width: 320px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 2px solid #22c55e;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(34, 197, 94, 0.3);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.2s ease-out;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.btn-close-stall {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #94a3b8;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.15s;
+    z-index: 10;
+}
+
+.btn-close-stall:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+}
+
+.market-toast-banner {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.96);
+    border: 2px solid #22c55e;
+    color: #4ade80;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 8px 22px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(34, 197, 94, 0.4);
+    z-index: 2000;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease-out;
+    white-space: nowrap;
+}
+
+.market-toast-banner.error {
+    border-color: #ef4444;
+    color: #fca5a5;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.stall-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stall-badge-tag {
+    align-self: flex-start;
+    background: #16a34a;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 8px;
+    text-transform: uppercase;
+}
+
+.stall-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stall-icon-big {
+    font-size: 32px;
+}
+
+.stall-text h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.stall-desc {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.stall-info-row {
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 10px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-block {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+}
+
+.info-block .lbl {
+    color: #94a3b8;
+}
+
+.info-block .val {
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.info-block .val.highlight {
+    color: #4ade80;
+}
+
+.info-block .val.price {
+    color: #facc15;
+    font-size: 12px;
+}
+
+.btn-buy-ingredient {
+    width: 100%;
+    background: #16a34a;
+    border: none;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+    transition: 0.15s;
+}
+
+.btn-buy-ingredient:hover {
+    background: #15803d;
+    transform: translateY(-1px);
+}
+
+.btn-buy-ingredient.disabled {
+    background: #334155;
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================================
+   HỆ THỐNG NHIỆM VỤ PHỤ & CUỘC GỌI ĐƠN HÀNG GẤP GTA STYLE
+   ========================================================== */
+.phone-incoming-call-box {
+    background: linear-gradient(135deg, rgba(22, 101, 52, 0.85), rgba(15, 23, 42, 0.95));
+    border: 2px solid #22c55e;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+    animation: callPulse 1.5s infinite;
+}
+
+@keyframes callPulse {
+    0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+    50% { box-shadow: 0 0 24px rgba(34, 197, 94, 0.7); }
+    100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.3); }
+}
+
+.call-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.call-pulse-icon {
+    font-size: 24px;
+    display: inline-block;
+    animation: phoneRing 0.5s ease infinite alternate;
+}
+
+@keyframes phoneRing {
+    0% { transform: rotate(-15deg); }
+    100% { transform: rotate(15deg); }
+}
+
+.call-header h4 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #4ade80;
+    text-transform: uppercase;
+}
+
+.call-header small {
+    color: #cbd5e1;
+    font-size: 10px;
+}
+
+.call-order-desc {
+    font-size: 12px;
+    color: #f1f5f9;
+    line-height: 1.4;
+    margin: 6px 0 10px 0;
+}
+
+.call-reward-row {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #facc15;
+    margin-bottom: 10px;
+}
+
+.call-action-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-accept-call {
+    flex: 2;
+    background: #22c55e;
+    border: none;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-accept-call:hover {
+    background: #16a34a;
+}
+
+.btn-decline-call {
+    flex: 1;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-decline-call:hover {
+    background: rgba(239, 68, 68, 0.4);
+}
+
+/* Đơn giao gấp đang tiến hành */
+.phone-sidequest-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 2px solid #38bdf8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25);
+}
+
+.sq-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.sq-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #38bdf8;
+    letter-spacing: 0.5px;
+}
+
+.sq-countdown {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fbbf24;
+    font-family: monospace;
+}
+
+.phone-sidequest-card h4 {
+    margin: 4px 0 6px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.sq-stock-info {
+    font-size: 11px;
+    color: #94a3b8;
+    margin: 4px 0 8px 0;
+}
+
+.sq-stock-info strong {
+    color: #38bdf8;
+}
+
+.sq-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.sq-reward {
+    font-size: 10px;
+    font-weight: 700;
+    color: #facc15;
+}
+
+.btn-deliver-sq {
+    background: #0284c7;
+    border: none;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-deliver-sq:hover {
+    background: #0369a1;
+}
+
+.btn-deliver-sq.disabled {
+    background: #334155;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* ==========================================================
+   GÓI 4D: ỨNG DỤNG ĐƠN HỎA TỐC 60S (PHONE APP)
+   ========================================================== */
+.delivery-view {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.express-active-card {
+    background: linear-gradient(135deg, rgba(234, 88, 12, 0.25), rgba(15, 23, 42, 0.9));
+    border: 2px solid #facc15;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 0 16px rgba(250, 204, 21, 0.3);
+}
+
+.exp-active-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.exp-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #facc15;
+    letter-spacing: 0.5px;
+}
+
+.exp-timer {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ef4444;
+    font-family: monospace;
+    animation: pulse 1s infinite;
+}
+
+.express-active-card h4 {
+    margin: 4px 0;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.exp-desc {
+    font-size: 11px;
+    color: #cbd5e1;
+    margin: 2px 0 6px 0;
+}
+
+.exp-stock-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+}
+
+.text-green { color: #4ade80; font-weight: 700; }
+.text-red { color: #f87171; font-weight: 700; }
+.text-orange { color: #fbbf24; font-weight: 700; }
+
+.exp-reward-row {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #facc15;
+    margin-bottom: 8px;
+}
+
+.exp-guide-hint {
+    font-size: 10px;
+    color: #bae6fd;
+    line-height: 1.35;
+    background: rgba(2, 132, 199, 0.15);
+    padding: 6px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.btn-cancel-express {
+    width: 100%;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.btn-cancel-express:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.express-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 0;
+}
+
+.express-header-row h4 {
+    margin: 0;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+.btn-refresh-orders {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.express-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 24px;
+}
+
+.express-order-card {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: 0.15s;
+}
+
+.express-order-card.ready-to-go {
+    border-color: rgba(34, 197, 94, 0.35);
+    background: rgba(22, 101, 52, 0.08);
+}
+
+.eoc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.eoc-dest {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #ffffff;
+}
+
+.eoc-bonus-badge {
+    font-size: 9px;
+    font-weight: 800;
+    color: #ea580c;
+    background: rgba(234, 88, 12, 0.15);
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(234, 88, 12, 0.3);
+}
+
+.eoc-body p {
+    margin: 0;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.eoc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.eoc-reward {
+    font-size: 10px;
+    font-weight: 700;
+    color: #facc15;
+}
+
+.btn-accept-express {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    border: none;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.35);
+    transition: 0.15s;
+    white-space: nowrap;
+}
+
+.btn-accept-express:hover {
+    transform: translateY(-1px);
+}
+
+.btn-accept-express.disabled {
+    background: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================================
+   GÓI 4D: THỬ THÁCH BÓC RONG BIỂN 1-2-3 (MODAL MINI-GAME)
+   ========================================================== */
+.seaweed-modal-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.seaweed-modal-layer.hidden {
+    display: none !important;
+}
+
+.seaweed-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.seaweed-game-card {
+    position: relative;
+    z-index: 2;
+    width: 360px;
+    max-width: 92vw;
+    background: #0f172a;
+    border: 2px solid rgba(250, 204, 21, 0.5);
+    box-shadow: 0 0 35px rgba(250, 204, 21, 0.25);
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    user-select: none;
+}
+
+.sw-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sw-badge-vip {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 2px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+}
+
+.sw-header h4 {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.btn-sw-close-corner {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #94a3b8;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.sw-timer-wrap {
+    background: rgba(30, 41, 59, 0.6);
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+.sw-timer-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+}
+
+.sw-timer-info strong {
+    color: #ef4444;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.sw-timer-track {
+    width: 100%;
+    height: 6px;
+    background: #1e293b;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.sw-timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444, #f59e0b);
+    transition: width 0.05s linear;
+}
+
+.sw-guide-hint {
+    background: rgba(2, 132, 199, 0.15);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 10.5px;
+    color: #bae6fd;
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* SÂN KHẤU CƠM NẮM 3 DẢI */
+.sw-onigiri-stage {
+    height: 220px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+    touch-action: none;
+}
+
+.sw-triangle-body {
+    position: relative;
+    width: 160px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sw-rice-core {
+    font-size: 110px;
+    position: absolute;
+    z-index: 1;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+}
+
+.sw-nori-sheet {
+    position: absolute;
+    bottom: 12px;
+    width: 110px;
+    height: 65px;
+    background: #09090b;
+    border-radius: 8px 8px 16px 16px;
+    z-index: 2;
+    border: 1px solid #18181b;
+}
+
+/* 3 DẢI BÓC TRÊN LỚP MÀNG */
+.sw-strip {
+    position: absolute;
+    z-index: 4;
+    cursor: grab;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
+}
+
+.sw-strip:active {
+    cursor: grabbing;
+}
+
+/* Dải 1: Giữa (Đỏ) */
+.sw-strip.strip-1 {
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 135px;
+    background: rgba(239, 68, 68, 0.75);
+    border: 2px dashed #fca5a5;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+}
+
+.sw-strip.strip-1.peeled {
+    transform: translateX(-50%) translateY(90px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Dải 2: Cánh Phải (Vàng) */
+.sw-strip.strip-2 {
+    top: 30px;
+    right: 5px;
+    width: 65px;
+    height: 95px;
+    background: rgba(245, 158, 11, 0.65);
+    border: 2px dashed #fef08a;
+    border-radius: 0 16px 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.sw-strip.strip-2.peeled {
+    transform: translateX(80px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Dải 3: Cánh Trái (Xanh Lá) */
+.sw-strip.strip-3 {
+    top: 30px;
+    left: 5px;
+    width: 65px;
+    height: 95px;
+    background: rgba(16, 185, 129, 0.65);
+    border: 2px dashed #a7f3d0;
+    border-radius: 16px 0 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.sw-strip.strip-3.peeled {
+    transform: translateX(-80px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.strip-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 9px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.strip-tab .num {
+    background: #000000;
+    color: #ffffff;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+/* KẾT QUẢ POPUP OVERLAY TRONG CARD */
+.sw-result-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    background: #0f172a;
+    border-radius: 14px;
+    padding: 16px;
+    z-index: 10;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.sw-result-box.success {
+    border: 2px solid #22c55e;
+}
+
+.sw-result-box.failed {
+    border: 2px solid #ef4444;
+}
+
+.sw-trophy {
+    font-size: 32px;
+    margin-bottom: 4px;
+}
+
+.sw-failed-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+}
+
+.sw-result-box h3 {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.sw-result-box p {
+    font-size: 11px;
+    color: #94a3b8;
+    margin: 2px 0 10px 0;
+}
+
+.sw-fail-reason {
+    color: #fca5a5 !important;
+    font-weight: 700;
+}
+
+.sw-reward-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.sw-rw-item {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+.sw-rw-item.highlight {
+    color: #fbbf24;
+}
+
+.btn-sw-finish {
+    width: 100%;
+    background: #22c55e;
+    border: none;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+}
+
+.btn-sw-finish.retry {
+    background: #0284c7;
+}
+
+.btn-sw-finish.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+/* ===================================================
+   BƯỚC 5: BỘ ĐIỀU KHIỂN CẢM ỨNG CHUẨN MOBILE & IPAD
+   VÀ CÁC NÚT TIỆN ÍCH HUD
+   =================================================== */
+
+/* Cụm nút tiện ích trên HUD (Bật phím ảo & Chơi lại từ đầu) */
+.hud-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.hud-btn-action {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #f8fafc;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.15s ease;
+    touch-action: manipulation;
+}
+
+.hud-btn-action:hover, .hud-btn-action:active {
+    background: rgba(51, 65, 85, 0.95);
+    transform: translateY(-1px);
+    border-color: #38bdf8;
+}
+
+.hud-btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+.hud-btn-danger:hover, .hud-btn-danger:active {
+    background: rgba(239, 68, 68, 0.4);
+    border-color: #ef4444;
+}
+
+.hud-btn-icon {
+    font-size: 14px;
+}
+
+/* Lớp phủ bộ phím ảo toàn màn hình */
+.virtual-touch-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 110;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+/* Vùng Joystick ảo góc dưới bên trái */
+.touch-joystick-zone {
+    position: absolute;
+    left: calc(24px + env(safe-area-inset-left));
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    width: 140px;
+    height: 140px;
+    pointer-events: auto;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.touch-joystick-base {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.65) 100%);
+    border: 2.5px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.touch-joystick-knob {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fb923c, #ea580c 70%, #9a3412 100%);
+    border: 2.5px solid #ffffff;
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+    will-change: transform;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.touch-joystick-knob::after {
+    content: "🍙";
+    font-size: 18px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.touch-joystick-dir {
+    position: absolute;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 900;
+    pointer-events: none;
+}
+.touch-dir-up { top: 6px; }
+.touch-dir-down { bottom: 6px; }
+.touch-dir-left { left: 8px; }
+.touch-dir-right { right: 8px; }
+
+/* Vùng Action Buttons góc dưới bên phải */
+.touch-action-zone {
+    position: absolute;
+    right: calc(24px + env(safe-area-inset-right));
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: auto;
+    align-items: flex-end;
+    touch-action: manipulation;
+}
+
+.touch-action-btn {
+    min-width: 66px;
+    min-height: 58px;
+    padding: 8px 16px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: transform 0.08s ease, filter 0.08s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.touch-action-btn:active {
+    transform: scale(0.92);
+    filter: brightness(1.2);
+}
+
+.btn-touch-interact {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    border-color: #fdba74;
+}
+
+.btn-touch-stall {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    border-color: #7dd3fc;
+}
+
+.btn-touch-sell {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border-color: #86efac;
+    animation: touchPulse 2s infinite ease-in-out;
+}
+
+@keyframes touchPulse {
+    0%, 100% { box-shadow: 0 6px 18px rgba(22, 163, 74, 0.4); }
+    50% { box-shadow: 0 8px 24px rgba(22, 163, 74, 0.7); }
+}
+
+.touch-btn-icon {
+    font-size: 18px;
+}
+
+.touch-btn-label {
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+/* ===================================================
+   RESPONSIVE DESIGN CHO ĐIỆN THOẠI (375px) & IPAD
+   =================================================== */
+
+/* Màn hình điện thoại chiều rộng nhỏ (Mobile dọc <= 600px) */
+@media (max-width: 600px) {
+    #topHUD {
+        padding: 6px 10px;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .hud-avatar-card {
+        display: none; /* Ẩn bớt để tối ưu không gian cho màn hình 375px */
+    }
+
+    .hud-item {
+        padding: 4px 8px;
+        font-size: 11px;
+        border-radius: 8px;
+    }
+
+    .hud-val {
+        font-size: 12px;
+    }
+
+    .hud-clock-text .hud-subval {
+        display: none; /* Ẩn nhãn khung giờ dài trên mobile */
+    }
+
+    .hud-level-badge {
+        font-size: 11px;
+    }
+
+    .hud-actions-group {
+        gap: 4px;
+    }
+
+    .hud-btn-action {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .hud-btn-text {
+        display: none; /* Chỉ hiển thị icon trên điện thoại hẹp */
+    }
+
+    /* Joystick & Nút cảm ứng co gọn */
+    .touch-joystick-zone {
+        left: calc(12px + env(safe-area-inset-left));
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        width: 120px;
+        height: 120px;
+    }
+
+    .touch-joystick-base {
+        width: 110px;
+        height: 110px;
+    }
+
+    .touch-joystick-knob {
+        width: 44px;
+        height: 44px;
+    }
+
+    .touch-action-zone {
+        right: calc(12px + env(safe-area-inset-right));
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        gap: 8px;
+    }
+
+    .touch-action-btn {
+        min-width: 52px;
+        min-height: 48px;
+        padding: 6px 12px;
+        font-size: 11px;
+        border-radius: 14px;
+    }
+
+    .phone-trigger-btn {
+        right: calc(14px + env(safe-area-inset-right));
+        bottom: calc(190px + env(safe-area-inset-bottom));
+        width: 48px;
+        height: 48px;
+    }
+
+    /* Cửa sổ Bếp & Chợ responsive toàn màn hình điện thoại */
+    .kitchen-modal-panel {
+        width: 96vw;
+        max-height: 94vh;
+        padding: 12px;
+    }
+
+    .kitchen-workbench {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .market-modal-panel {
+        width: 96vw;
+        max-height: 94vh;
+        padding: 12px;
+    }
+
+    .phone-modal-layer .phone-frame {
+        width: 95vw;
+        max-height: 90vh;
+    }
+}
+
+/* Màn hình máy tính bảng iPad / Tablet (601px -> 1024px) */
+@media (min-width: 601px) and (max-width: 1024px) {
+    #topHUD {
+        padding: 8px 16px;
+        gap: 10px;
+    }
+
+    .touch-joystick-zone {
+        left: calc(28px + env(safe-area-inset-left));
+        bottom: calc(28px + env(safe-area-inset-bottom));
+        width: 150px;
+        height: 150px;
+    }
+
+    .touch-joystick-base {
+        width: 140px;
+        height: 140px;
+    }
+
+    .touch-joystick-knob {
+        width: 58px;
+        height: 58px;
+    }
+
+    .touch-action-btn {
+        min-width: 74px;
+        min-height: 64px;
+        font-size: 14px;
+    }
+
+    .kitchen-modal-panel, .market-modal-panel {
+        width: 88vw;
+        max-height: 88vh;
+    }
+}
+
+/* ==========================================================================
+   HÓA ĐƠN CHI PHÍ VẬN HÀNH CUỐI NGÀY (23:55 DAILY BILL MODAL)
+   ========================================================================== */
+.daily-bill-modal-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 110;
+    background: rgba(15, 23, 42, 0.82);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.daily-bill-modal-layer.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.daily-bill-card {
+    background: #1e293b;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(56, 189, 248, 0.25);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 24px;
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: billCardPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes billCardPop {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.bill-header {
+    text-align: center;
+    border-bottom: 1px dashed #475569;
+    padding-bottom: 14px;
+}
+
+.bill-header h3 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.bill-header p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.bill-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.bill-breakdown-box {
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bill-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.bill-row.subtotal {
+    border-top: 1px solid #334155;
+    padding-top: 6px;
+    margin-top: 4px;
+    font-weight: 700;
+}
+
+.bill-row.net-profit {
+    border-top: 2px solid #475569;
+    padding-top: 8px;
+    margin-top: 4px;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.bill-deficit-warning {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid #ef4444;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #fca5a5;
+}
+
+.btn-close-daily-bill {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    transition: transform 0.15s, filter 0.15s;
+    width: 100%;
+}
+
+.btn-close-daily-bill:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+.btn-close-daily-bill:active {
+    transform: translateY(1px);
+}
+
+/* ==========================================================================
+   HỆ THỐNG ONLINE MULTIPLAYER, BẢNG XẾP HẠNG, ĐẤU TRƯỜNG & CO-OP
+   ========================================================================== */
+
+/* 1. Ô nhập tên thương hiệu trên Màn hình bắt đầu */
+.start-brand-input-box {
+    margin: 12px 0 16px 0;
+    width: 100%;
+    text-align: left;
+}
+
+.start-brand-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.start-brand-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid #0284c7;
+    border-radius: 10px;
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.start-brand-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+/* 2. Header Hồ Sơ Online trong iGiri OS */
+.online-view {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.online-profile-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    border: 1.5px solid rgba(56, 189, 248, 0.3);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.opb-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.opb-avatar {
+    font-size: 26px;
+    background: rgba(2, 132, 199, 0.2);
+    border: 1.5px solid #0284c7;
+    border-radius: 12px;
+    padding: 6px;
+}
+
+.opb-name {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.opb-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.opb-tag-lvl {
+    font-size: 11px;
+    font-weight: 700;
+    background: #0284c7;
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.opb-tag-rep {
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    padding: 2px 8px;
+    border-radius: 8px;
+}
+
+.btn-change-brand {
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #94a3b8;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-change-brand:hover {
+    color: #f8fafc;
+    border-color: #38bdf8;
+}
+
+.online-status-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.pill-online {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.pill-offline {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* 3. Thanh chuyển Sub-tab */
+.online-subtab-bar {
+    display: flex;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.online-subtab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.online-subtab-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+/* 4. Subtab 1: Bảng Xếp Hạng Live */
+.lb-header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.lb-toggle-group {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-lb-toggle {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.4);
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-lb-toggle.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.btn-lb-refresh {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.4);
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.lb-table-wrapper {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+.lb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+}
+
+.lb-table th {
+    background: rgba(30, 41, 59, 0.9);
+    color: #94a3b8;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.lb-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.15);
+    color: #cbd5e1;
+}
+
+.lb-table tr:hover {
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.lb-self-row {
+    background: rgba(2, 132, 199, 0.2) !important;
+    font-weight: 700;
+}
+
+.lb-self-row td {
+    color: #38bdf8 !important;
+}
+
+.rank-gold td:first-child {
+    color: #f59e0b;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.rank-silver td:first-child {
+    color: #94a3b8;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.rank-bronze td:first-child {
+    color: #d97706;
+    font-weight: 900;
+    font-size: 14px;
+}
+
+.lb-brand-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.lb-lvl {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.lb-city {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.lb-val {
+    font-weight: 800;
+    color: #fbbf24;
+}
+
+/* 5. Subtab 2: Đấu Trường 1v1 */
+.arena-intro-banner {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.15));
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.arena-intro-banner h4 {
+    margin: 0 0 4px 0;
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.arena-intro-banner p {
+    margin: 0;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.arena-mode-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.arena-mode-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1.5px solid rgba(100, 116, 139, 0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.arena-mode-card.selected {
+    border-color: #0284c7;
+    background: rgba(2, 132, 199, 0.15);
+}
+
+.amc-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.amc-icon {
+    font-size: 24px;
+}
+
+.amc-content h5 {
+    margin: 0 0 2px 0;
+    color: #f8fafc;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.amc-content small {
+    color: #94a3b8;
+    font-size: 10.5px;
+}
+
+.btn-quick-match {
+    width: 100%;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+    margin-bottom: 14px;
+    transition: transform 0.15s;
+}
+
+.btn-quick-match:hover {
+    transform: translateY(-1px);
+}
+
+.arena-list-title {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.arena-opponent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.arena-opponent-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.aoc-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.aoc-avatar {
+    font-size: 20px;
+}
+
+.aoc-left h6 {
+    margin: 0 0 2px 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.aoc-left small {
+    font-size: 10.5px;
+    color: #94a3b8;
+}
+
+.btn-challenge-player {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Đấu trường lúc đang thi đấu */
+.arena-match-container {
+    padding: 16px 8px;
+    text-align: center;
+}
+
+.arena-countdown-overlay {
+    padding: 40px 10px;
+}
+
+.arena-countdown-overlay h3 {
+    font-size: 18px;
+    color: #f59e0b;
+    margin-bottom: 16px;
+}
+
+.arena-countdown-digit {
+    font-size: 72px;
+    font-weight: 900;
+    color: #ef4444;
+    text-shadow: 0 0 24px rgba(239, 68, 68, 0.8);
+    margin-bottom: 16px;
+    animation: pulse 1s infinite;
+}
+
+.arena-battle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1.5px solid rgba(56, 189, 248, 0.3);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 20px;
+}
+
+.abh-fighter {
+    display: flex;
+    flex-direction: column;
+    width: 35%;
+}
+
+.abh-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.abh-score {
+    font-size: 32px;
+    font-weight: 900;
+    color: #f59e0b;
+}
+
+.abh-player .abh-score {
+    color: #38bdf8;
+}
+
+.abh-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.timer-tag {
+    font-size: 10px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.timer-sec {
+    font-size: 24px;
+    font-weight: 900;
+    color: #ef4444;
+}
+
+.btn-arena-action-tap {
+    width: 100%;
+    min-height: 120px;
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    border: 3px solid #38bdf8;
+    border-radius: 20px;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(2, 132, 199, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.btn-arena-action-tap:active {
+    transform: scale(0.97);
+    filter: brightness(1.2);
+}
+
+.action-tap-icon {
+    font-size: 40px;
+}
+
+.action-tap-text {
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.action-tap-hint {
+    margin-top: 12px;
+    font-size: 11.5px;
+    color: #94a3b8;
+}
+
+/* Kết quả Đấu trường */
+.arena-settlement-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid #38bdf8;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.res-win {
+    color: #4ade80;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.res-draw {
+    color: #fbbf24;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.res-loss {
+    color: #f87171;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.arena-score-comparison {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin: 16px 0;
+    background: rgba(30, 41, 59, 0.7);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.asc-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.asc-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.asc-num {
+    font-size: 28px;
+    font-weight: 900;
+    color: #f8fafc;
+}
+
+.asc-vs {
+    font-size: 16px;
+    font-weight: 900;
+    color: #ef4444;
+}
+
+.arena-rewards-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.reward-chip {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+.btn-arena-finish {
+    width: 100%;
+    background: #22c55e;
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* 6. Subtab 3: Co-op Đại Tiệc */
+.coop-event-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+    border: 1.5px solid rgba(245, 158, 11, 0.4);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.cec-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.cec-badge {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.cec-clock {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.cec-title {
+    margin: 0 0 6px 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.cec-desc {
+    margin: 0 0 12px 0;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.coop-progress-section {
+    margin-bottom: 12px;
+}
+
+.coop-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.coop-pct {
+    font-weight: 800;
+    color: #f59e0b;
+}
+
+.coop-progress-track {
+    background: rgba(15, 23, 42, 0.8);
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.coop-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f59e0b, #ef4444);
+    transition: width 0.3s ease;
+}
+
+.coop-my-contrib-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 12px;
+    font-size: 11.5px;
+    color: #38bdf8;
+}
+
+.coop-my-contrib-box small {
+    color: #94a3b8;
+}
+
+.coop-action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-coop-contrib {
+    flex: 1;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-coop-contrib.disabled,
+.btn-coop-contrib:disabled {
+    background: rgba(100, 116, 139, 0.4);
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.coop-contributors-section h5 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.coop-contrib-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.coop-contrib-item {
+    display: flex;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.6);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+}
+
+.cci-rank {
+    width: 24px;
+    font-weight: 800;
+    color: #f59e0b;
+}
+
+.cci-name {
+    flex: 1;
+    color: #f8fafc;
+    font-weight: 600;
+}
+
+.cci-count {
+    color: #38bdf8;
+    font-weight: 700;
+}
+
+/* 7. Menu Tương Tác Nhanh trên Phố (Quick Interaction Menu) */
+.online-quick-menu-layer {
+    position: fixed;
+    z-index: 105;
+    pointer-events: auto;
+}
+
+.quick-menu-card {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1.5px solid #38bdf8;
+    border-radius: 14px;
+    padding: 12px;
+    width: 240px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.6);
+}
+
+.qmc-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.qmc-avatar {
+    font-size: 22px;
+}
+
+.qmc-title-box {
+    flex: 1;
+}
+
+.qmc-name {
+    margin: 0 0 2px 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qmc-sub {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.btn-qmc-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.qmc-emotes-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.btn-emote {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.4);
+    color: #f8fafc;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn-emote:hover {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+}
+
+.qmc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.btn-qmc-action {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(100, 116, 139, 0.4);
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.btn-qmc-challenge {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border: none;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    text-align: center;
+}
+
+/* 8. Modal Đặt Tên Thương Hiệu */
+.brand-name-modal-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.brand-modal-card {
+    background: #0f172a;
+    border: 2px solid #0284c7;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+}
+
+.brand-modal-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.brand-modal-card p {
+    margin: 0 0 14px 0;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+.brand-input-group {
+    margin-bottom: 16px;
+}
+
+.brand-text-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1.5px solid #0284c7;
+    border-radius: 10px;
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+    outline: none;
+}
+
+.brand-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-brand-save {
+    flex: 2;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-brand-cancel {
+    flex: 1;
+    background: rgba(100, 116, 139, 0.3);
+    color: #cbd5e1;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 13px;
+    cursor: pointer;
+}
+

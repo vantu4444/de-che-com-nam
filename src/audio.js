@@ -1,0 +1,351 @@
+// src/audio.js - Bộ tổng hợp âm thanh thủ tục ASMR Native Web Audio API
+
+class AudioManager {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.lastWarningBeepTime = 0;
+        this.lastPoliceSirenTime = 0;
+    }
+
+    init() {
+        if (this.ctx) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.85;
+        this.masterGain.connect(this.ctx.destination);
+    }
+
+    resume() {
+        if (!this.ctx) this.init();
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    // Helper tạo White Noise buffer
+    createNoise(duration = 0.3) {
+        if (!this.ctx) return null;
+        const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    // 0. Tiếng xào xạc múc cơm ấm nóng (ASMR Soft Scoop Rice)
+    playScoopRice() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime || 0;
+        try {
+            const noise = this.ctx.createBufferSource ? this.ctx.createBufferSource() : null;
+            if (noise && this.ctx.createBiquadFilter) {
+                noise.buffer = this.createNoise(0.2);
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(800, now);
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.18, now);
+                if (gain.gain.exponentialRampToValueAtTime) {
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                }
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                noise.start(now);
+                noise.stop(now + 0.2);
+            }
+        } catch (e) {
+            // Audio context safely fallback
+        }
+    }
+
+    // 1. Tiếng nén cơm (Thud trầm ấm + click nén)
+    playRiceMolding() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.16);
+        gain.gain.setValueAtTime(0.45, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.2);
+
+        const click = this.ctx.createOscillator();
+        const clickGain = this.ctx.createGain();
+        click.type = 'triangle';
+        click.frequency.setValueAtTime(800, now);
+        click.frequency.exponentialRampToValueAtTime(150, now + 0.05);
+        clickGain.gain.setValueAtTime(0.2, now);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+        click.connect(clickGain);
+        clickGain.connect(this.masterGain);
+        click.start(now);
+        click.stop(now + 0.07);
+    }
+
+    // 2. Tiếng sột soạt giòn rụm khi bọc lá rong biển Nori
+    playSeaweedCrisp() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.createNoise(0.28);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(2400, now);
+        filter.frequency.linearRampToValueAtTime(3200, now + 0.15);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.01, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+
+        noise.start(now);
+        noise.stop(now + 0.28);
+    }
+
+    // 3. Tiếng "Ting!" leng keng trong trẻo khi hoàn thành 1 nắm cơm
+    playTingComplete() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        const notes = [1046.5, 1318.5]; // C6 & E6
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+            gain.gain.setValueAtTime(0.3, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.55);
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.6);
+        });
+    }
+
+    // 4. Tiếng "Keng!" vui tai khi bán được hàng (Cash register / Đồng xu leng keng)
+    playCoinKeng() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // Hai nốt kim loại cao ngân vang: E6 (1318.5Hz) và B6 (1975.5Hz)
+        const freqs = [1318.5, 1975.5, 2637];
+        freqs.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.04);
+
+            gain.gain.setValueAtTime(0.28, now + i * 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.04 + 0.45);
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start(now + i * 0.04);
+            osc.stop(now + i * 0.04 + 0.5);
+        });
+    }
+
+    playMoneyChime() {
+        return this.playCoinKeng();
+    }
+
+    playCoinClink() {
+        return this.playCoinKeng();
+    }
+
+    // 5. Tiếng Chúc Mừng Lên Cấp (Level Up Fanfare Arpeggio)
+    playLevelUp() {
+        this.resume();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        // Chuỗi hợp âm Đô trưởng thăng hoa C5, E5, G5, C6
+        const arpeggio = [523.25, 659.25, 783.99, 1046.5];
+        arpeggio.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+
+            gain.gain.setValueAtTime(0.25, now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.6);
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 0.65);
+        });
+    }
+
+    // 6. Tiếng Cảnh báo nhẹ khi hết hàng
+    playError() {
+        try {
+            this.resume();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, now);
+            if (typeof osc.frequency.linearRampToValueAtTime === 'function') {
+                osc.frequency.linearRampToValueAtTime(140, now + 0.12);
+            } else if (typeof osc.frequency.exponentialRampToValueAtTime === 'function') {
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.12);
+            }
+
+            gain.gain.setValueAtTime(0.18, now);
+            if (typeof gain.gain.exponentialRampToValueAtTime === 'function') {
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+            }
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } catch (e) {
+            // Không ngắt luồng nếu thiết bị chưa cấp quyền âm thanh
+        }
+    }
+
+    // Tiếng click nút UI nhẹ nhàng
+    playClick() {
+        try {
+            this.resume();
+            if (!this.ctx) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(520, now);
+            if (typeof osc.frequency.exponentialRampToValueAtTime === 'function') {
+                osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+            }
+            gain.gain.setValueAtTime(0.12, now);
+            if (typeof gain.gain.exponentialRampToValueAtTime === 'function') {
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            }
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } catch (e) {
+            // Fallback an toàn
+        }
+    }
+
+    // 7. Tiếng còi cảnh báo Trật Tự Đô Thị (Double Beep) - Có bộ lọc chống spam mỗi khung hình
+    playWarningBeep() {
+        try {
+            const wallNow = Date.now();
+            if (wallNow - this.lastWarningBeepTime < 800) {
+                return; // Chống spam âm thanh nếu gọi dồn dập
+            }
+            this.lastWarningBeepTime = wallNow;
+
+            this.resume();
+            if (!this.ctx || !this.masterGain) return;
+            const now = this.ctx.currentTime || 0;
+
+            [0, 0.14].forEach(delay => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(880, now + delay);
+                gain.gain.setValueAtTime(0.15, now + delay);
+                if (typeof gain.gain.exponentialRampToValueAtTime === 'function') {
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.09);
+                }
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now + delay);
+                osc.stop(now + delay + 0.1);
+            });
+        } catch (e) {
+            // Fallback an toàn tuyệt đối
+        }
+    }
+
+    // 8. Tiếng còi hụ cảnh sát / phạt vi phạm (Police Siren) - Có bộ lọc chống spam
+    playPoliceSiren() {
+        try {
+            const wallNow = Date.now();
+            if (wallNow - this.lastPoliceSirenTime < 1800) {
+                return; // Cooldown 1.8 giây chống kích hoạt lặp
+            }
+            this.lastPoliceSirenTime = wallNow;
+
+            this.resume();
+            if (!this.ctx || !this.masterGain) return;
+            const now = this.ctx.currentTime || 0;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(650, now);
+            if (typeof osc.frequency.linearRampToValueAtTime === 'function') {
+                osc.frequency.linearRampToValueAtTime(950, now + 0.25);
+                osc.frequency.linearRampToValueAtTime(550, now + 0.55);
+                osc.frequency.linearRampToValueAtTime(950, now + 0.85);
+                osc.frequency.linearRampToValueAtTime(600, now + 1.15);
+            }
+
+            gain.gain.setValueAtTime(0.28, now);
+            if (typeof gain.gain.exponentialRampToValueAtTime === 'function') {
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+            }
+
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(now);
+            osc.stop(now + 1.3);
+        } catch (e) {
+            // Fallback an toàn tuyệt đối
+        }
+    }
+
+    // Các hàm alias tương thích phòng thủ cao
+    playWarning() {
+        return this.playWarningBeep();
+    }
+
+    playSiren() {
+        return this.playPoliceSiren();
+    }
+
+    playAlarm() {
+        return this.playPoliceSiren();
+    }
+}
+
+export const audio = new AudioManager();

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đế Chế Cơm Nắm - Onigiri Empire 2D</title>
+    <!-- Google Fonts: Be Vietnam Pro -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- 0. Màn hình bắt đầu (Start Screen) -->
+        <div id="startScreen" class="start-screen-overlay">
+            <div class="start-card">
+                <div class="start-logo-box">
+                    <img src="assets/Bản sao logo.JPG" alt="Logo Thương Hiệu" class="start-logo" onerror="this.onerror=null;this.src=encodeURI('assets/Bản sao logo.JPG');">
+                </div>
+                <h1 class="start-title">ĐẾ CHẾ CƠM NẮM</h1>
+                <p class="start-subtitle">Onigiri Empire 2D • Hành Trình Ẩm Thực Đường Phố</p>
+                <div class="start-showcase">
+                    <div class="start-mascot-frame">
+                        <img src="assets/linh_vat_1.JPG" alt="Linh Vật Cơm Nắm" class="start-mascot-img">
+                    </div>
+                </div>
+                <div class="start-brand-input-box">
+                    <label for="startBrandNameInput" class="start-brand-label">🏷️ Tên Thương Hiệu Của Bạn:</label>
+                    <input type="text" id="startBrandNameInput" class="start-brand-input" maxlength="30" value="Tiệm Cơm Nắm Sài Gòn" placeholder="Nhập tên thương hiệu...">
+                </div>
+                <button type="button" id="btnStartGame" class="btn-start-game">
+                    🍙 BẮT ĐẦU KINH DOANH
+                </button>
+                <div class="start-audio-tip">🔊 Kích hoạt âm thanh ASMR sống động khi vào game</div>
+            </div>
+        </div>
+
+        <!-- 1. Thanh trạng thái (HUD) góc trên cùng -->
+        <header id="topHUD">
+            <!-- Avatar Linh vật nhận diện thương hiệu -->
+            <div class="hud-item hud-avatar-card">
+                <img src="assets/linh_vat_1.JPG" alt="Avatar Bếp Trưởng" class="hud-avatar-img">
+                <div class="hud-avatar-text">
+                    <span class="hud-avatar-title">Bếp Trưởng</span>
+                    <span class="hud-avatar-role">🍙 Onigiri</span>
+                </div>
+            </div>
+
+            <!-- Tiền & Logo -->
+            <div class="hud-item hud-money-card">
+                <span class="hud-icon">💰</span>
+                <span class="hud-val" id="hudMoney">50.000đ</span>
+            </div>
+
+            <!-- Đồng hồ 24h & Khung giờ -->
+            <div class="hud-item hud-clock-card" id="hudClockCard">
+                <span class="hud-icon">⏰</span>
+                <div class="hud-clock-text">
+                    <span class="hud-val" id="hudClockTime">07:00</span>
+                    <span class="hud-subval" id="hudClockStatus">Giờ Vàng Cổng Trường</span>
+                </div>
+            </div>
+
+            <!-- Cấp độ (Level) & Thanh EXP -->
+            <div class="hud-item hud-level-card">
+                <div class="hud-level-badge" id="hudLevel">Cấp 1</div>
+                <div class="hud-exp-track">
+                    <div class="hud-exp-bar" id="hudExpFill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Số cơm nắm đang mang theo (Kho thùng xe) -->
+            <div class="hud-item hud-inventory-card">
+                <span class="hud-icon">🎒</span>
+                <span class="hud-val" id="hudRiceCount">Kho mang theo: 0 / 10 nắm</span>
+            </div>
+
+            <!-- Đèn báo trạng thái kết nối Online / Offline -->
+            <div class="hud-item hud-online-card" id="hudOnlineCard">
+                <span class="hud-online-status is-connecting" id="hudOnlineStatus">🟡 Đang kết nối máy chủ...</span>
+            </div>
+
+            <!-- Các nút tiện ích góc trên: Bật/Tắt Phím Ảo & Chơi Lại Từ Đầu -->
+            <div class="hud-actions-group">
+                <button type="button" id="btnToggleTouch" class="hud-btn-action" title="Bật/Tắt phím ảo cảm ứng (Mobile / Tablet)">
+                    <span class="hud-btn-icon">🎮</span>
+                    <span class="hud-btn-text">Phím Ảo</span>
+                </button>
+                <button type="button" id="btnResetGame" class="hud-btn-action hud-btn-danger" title="Xóa dữ liệu và chơi lại từ đầu">
+                    <span class="hud-btn-icon">🔄</span>
+                    <span class="hud-btn-text">Chơi Lại</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 2. Canvas bản đồ thành phố 2D (GTA Top-down) -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 2.1. Bộ điều khiển cảm ứng chuẩn Mobile & iPad (Virtual Touch Controls) -->
+        <div id="virtualTouchControls" class="virtual-touch-layer hidden">
+            <!-- Vùng Joystick ảo góc dưới bên trái -->
+            <div id="touchJoystickZone" class="touch-joystick-zone">
+                <div id="touchJoystickBase" class="touch-joystick-base">
+                    <div id="touchJoystickKnob" class="touch-joystick-knob"></div>
+                    <div class="touch-joystick-dir touch-dir-up">▲</div>
+                    <div class="touch-joystick-dir touch-dir-down">▼</div>
+                    <div class="touch-joystick-dir touch-dir-left">◀</div>
+                    <div class="touch-joystick-dir touch-dir-right">▶</div>
+                </div>
+            </div>
+
+            <!-- Vùng nút hành động to, dễ chạm góc dưới bên phải -->
+            <div id="touchActionZone" class="touch-action-zone">
+                <button type="button" id="btnTouchSell" class="touch-action-btn btn-touch-sell" title="Bán Nhanh Cho Khách (Phím Space)">
+                    <span class="touch-btn-icon">⚡</span>
+                    <span class="touch-btn-label">Bán Nhanh</span>
+                </button>
+                <button type="button" id="btnTouchStall" class="touch-action-btn btn-touch-stall" title="Mở hoặc Đóng Sạp Hàng (Phím E)">
+                    <span class="touch-btn-icon">🏪</span>
+                    <span class="touch-btn-label">Mở Sạp</span>
+                </button>
+                <button type="button" id="btnTouchE" class="touch-action-btn btn-touch-interact" title="Tương Tác / Vào Bếp / Chợ / Hỏa Tốc (Phím E)">
+                    <span class="touch-btn-icon">✋</span>
+                    <span class="touch-btn-label">Tương Tác [E]</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. Thông báo tương tác khu vực -->
+        <div id="proximityPrompt" class="proximity-banner hidden">
+            <!-- Nội dung tự động cập nhật: "Nhấn E để vào [Tên khu vực]" -->
+        </div>
+
+        <!-- 4. Cửa sổ Popup toàn màn hình Bếp ASMR -->
+        <div id="kitchenModal" class="kitchen-modal-layer hidden"></div>
+
+        <!-- 5. Không gian bên trong Chợ Đầu Mối (3 Sạp hàng) -->
+        <div id="marketModal" class="market-modal-layer hidden"></div>
+
+        <!-- 6. Nút mở Smartphone iGiri OS ở góc dưới bên phải -->
+        <button type="button" id="phoneTriggerBtn" class="phone-trigger-btn" title="Mở Điện Thoại Nhiệm Vụ (Phím P)">
+            <span class="phone-trigger-icon">📱</span>
+            <span class="phone-trigger-label">iGiri</span>
+            <span id="phoneBadge" class="phone-notify-badge hidden"></span>
+        </button>
+
+        <!-- 7. Cửa sổ Popup Smartphone iGiri OS (GTA Phone 3 Tab) -->
+        <div id="phoneModal" class="phone-modal-layer hidden"></div>
+
+        <!-- 8. Hóa Đơn Vận Hành Cuối Ngày 23:55 -->
+        <div id="dailyBillModal" class="daily-bill-modal-layer hidden"></div>
+
+        <!-- 9. Menu Tương Tác Nhanh Người Chơi Online & Đổi Tên Thương Hiệu -->
+        <div id="onlineQuickMenu" class="online-quick-menu-layer hidden"></div>
+        <div id="brandNameModal" class="brand-name-modal-layer hidden"></div>
+    </div>
+
+    <!-- Nạp thư viện Socket.IO Client từ máy chủ Node.js -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Script nạp ES Modules -->
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
