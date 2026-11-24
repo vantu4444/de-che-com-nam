@@ -461,14 +461,26 @@ class GameApp {
                     sellingManager.closeSelling();
                     this.updateHUD();
                 } else {
-                    const nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+                    let nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+                    if (!nearby && typeof this.world.isInValidSellingSpot === 'function') {
+                        const spot = this.world.isInValidSellingSpot(this.player.x, this.player.y);
+                        if (spot) {
+                            nearby = (this.world.regions && this.world.regions.find(r => r.id === spot.regionId || r.id === spot.id)) || spot;
+                        }
+                    }
                     if (nearby && (
                         nearby.id.startsWith('school_') ||
                         nearby.id === 'university_town' ||
                         nearby.id === 'office_q1' ||
                         nearby.id === 'walking_street' ||
                         nearby.id === 'school' ||
-                        nearby.id === 'office'
+                        nearby.id === 'office' ||
+                        (nearby.regionId && (
+                            nearby.regionId.startsWith('school_') ||
+                            nearby.regionId === 'university_town' ||
+                            nearby.regionId === 'office_q1' ||
+                            nearby.regionId === 'walking_street'
+                        ))
                     )) {
                         sellingManager.toggleSelling(nearby, this.player);
                         this.updateHUD();
@@ -634,7 +646,13 @@ class GameApp {
             }
         }
 
-        const nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+        let nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+        if (!nearby && typeof this.world.isInValidSellingSpot === 'function') {
+            const spot = this.world.isInValidSellingSpot(this.player.x, this.player.y);
+            if (spot) {
+                nearby = (this.world.regions && this.world.regions.find(r => r.id === spot.regionId || r.id === spot.id)) || spot;
+            }
+        }
         if (!nearby) return;
 
         // Điểm bán đang bị khóa do chưa đủ cấp chi nhánh
@@ -657,7 +675,13 @@ class GameApp {
             nearby.id === 'office_q1' ||
             nearby.id === 'walking_street' ||
             nearby.id === 'school' ||
-            nearby.id === 'office'
+            nearby.id === 'office' ||
+            (nearby.regionId && (
+                nearby.regionId.startsWith('school_') ||
+                nearby.regionId === 'university_town' ||
+                nearby.regionId === 'office_q1' ||
+                nearby.regionId === 'walking_street'
+            ))
         ) {
             // Mở hoặc Đóng sạp bán hàng tại Cổng Trường Học, Làng Đại Học, Khu Văn Phòng, Phố Đi Bộ
             sellingManager.toggleSelling(nearby, this.player);
@@ -938,6 +962,23 @@ class GameApp {
     updatePrompt() {
         // Cập nhật nhãn trạng thái Nút Mở/Đóng Sạp cảm ứng (chỉ cập nhật textContent)
         const stallBtn = document.getElementById('btnTouchStall');
+        const stallLegalTag = document.getElementById('stallLegalTag');
+        const isLegal = Boolean(
+            (this.world && typeof this.world.isInValidSellingSpot === 'function' && this.world.isInValidSellingSpot(this.player.x, this.player.y)) ||
+            (sellingManager && typeof sellingManager.isInsideLegalZone === 'function' && sellingManager.isInsideLegalZone(this.player.x, this.player.y))
+        );
+
+        if (stallLegalTag) {
+            if (isLegal) {
+                if (stallLegalTag.classList.contains('hidden')) stallLegalTag.classList.remove('hidden');
+                if (stallLegalTag.textContent !== '🟢 Điểm Bán Hợp Pháp (An toàn 100%)') {
+                    stallLegalTag.textContent = '🟢 Điểm Bán Hợp Pháp (An toàn 100%)';
+                }
+            } else {
+                if (!stallLegalTag.classList.contains('hidden')) stallLegalTag.classList.add('hidden');
+            }
+        }
+
         if (stallBtn) {
             const labelEl = stallBtn.querySelector('.touch-btn-label');
             const iconEl = stallBtn.querySelector('.touch-btn-icon');
@@ -980,7 +1021,14 @@ class GameApp {
             return;
         }
 
-        const nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+        let nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+        if (!nearby && typeof this.world.isInValidSellingSpot === 'function') {
+            const spot = this.world.isInValidSellingSpot(this.player.x, this.player.y);
+            if (spot) {
+                nearby = (this.world.regions && this.world.regions.find(r => r.id === spot.regionId || r.id === spot.id)) || spot;
+            }
+        }
+
         if (nearby) {
             if (nearby.isLocked) {
                 const promptKey = `locked_${nearby.id}`;
@@ -1000,7 +1048,13 @@ class GameApp {
                 nearby.id === 'office_q1' ||
                 nearby.id === 'walking_street' ||
                 nearby.id === 'school' ||
-                nearby.id === 'office';
+                nearby.id === 'office' ||
+                (nearby.regionId && (
+                    nearby.regionId.startsWith('school_') ||
+                    nearby.regionId === 'university_town' ||
+                    nearby.regionId === 'office_q1' ||
+                    nearby.regionId === 'walking_street'
+                ));
 
             let promptKey = '';
             let promptHTML = '';
@@ -1019,19 +1073,20 @@ class GameApp {
                 `;
             } else if (isSellingSpot) {
                 const extraHint = nearby.id === 'walking_street' ? (isTouch ? ' • <strong>Chạm Bóc Cơm VIP</strong>' : ' • <strong>Phím B</strong>: Biểu diễn Bóc Cơm VIP') : '';
+                const legalBadge = isLegal ? '<div style="font-size:11px;color:#4ade80;margin-top:2px;font-weight:700;">🟢 Điểm Bán Hợp Pháp (An toàn 100%)</div>' : '';
                 if (sellingManager.isOpen) {
-                    promptKey = `selling_open_${nearby.id}_${isTouch ? 'touch' : 'key'}`;
+                    promptKey = `selling_open_${nearby.id}_${isTouch ? 'touch' : 'key'}_${isLegal ? 'legal' : 'street'}`;
                     const stallMsg = isTouch ? 'Chạm <strong>Mở Sạp</strong>: Đóng • <strong>Bán Nhanh</strong>: Bán' : 'Nhấn <strong>E</strong>: Đóng sạp • <strong>Space</strong>: Bán';
                     promptHTML = `
                         <span class="prompt-icon">🏪</span>
-                        <span class="prompt-msg">${stallMsg}${extraHint}</span>
+                        <span class="prompt-msg">${stallMsg}${extraHint}${legalBadge}</span>
                     `;
                 } else {
-                    promptKey = `selling_closed_${nearby.id}_${isTouch ? 'touch' : 'key'}`;
+                    promptKey = `selling_closed_${nearby.id}_${isTouch ? 'touch' : 'key'}_${isLegal ? 'legal' : 'street'}`;
                     const openMsg = isTouch ? 'Chạm <strong>Mở Sạp</strong> để bán' : 'Nhấn <strong>E</strong> để <strong>Mở sạp</strong>';
                     promptHTML = `
-                        <span class="prompt-icon">${nearby.icon}</span>
-                        <span class="prompt-msg">${openMsg} tại ${nearby.name}${extraHint}</span>
+                        <span class="prompt-icon">${nearby.icon || '🏪'}</span>
+                        <span class="prompt-msg">${openMsg} tại ${nearby.name}${extraHint}${legalBadge}</span>
                     `;
                 }
             } else {

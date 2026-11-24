@@ -743,7 +743,8 @@ function runStaticAuditorSuite() {
         'floatingChatWidget',
         'onlineToastNotification',
         'startBranchSelect',
-        'startPhoneInput'
+        'startPhoneInput',
+        'stallLegalTag'
     ];
 
     let idsOk = true;
@@ -1215,6 +1216,31 @@ async function runInteractiveSimulationSuite() {
                 if (clockTimeEl) clockTimeEl.textContent = timeInfo.timeStr;
                 const clockStatusEl = doc.getElementById('hudClockStatus');
                 if (clockStatusEl) clockStatusEl.textContent = timeInfo.statusLabel;
+            }
+
+            updatePrompt() {
+                const stallBtn = doc.getElementById('btnTouchStall');
+                const stallLegalTag = doc.getElementById('stallLegalTag');
+                const isLegal = Boolean(
+                    (this.world && typeof this.world.isInValidSellingSpot === 'function' && this.world.isInValidSellingSpot(this.player.x, this.player.y)) ||
+                    (sellingManager && typeof sellingManager.isInsideLegalZone === 'function' && sellingManager.isInsideLegalZone(this.player.x, this.player.y))
+                );
+
+                if (stallLegalTag) {
+                    if (isLegal) {
+                        stallLegalTag.classList.remove('hidden');
+                        stallLegalTag.textContent = '🟢 Điểm Bán Hợp Pháp (An toàn 100%)';
+                    } else {
+                        stallLegalTag.classList.add('hidden');
+                    }
+                }
+
+                if (stallBtn) {
+                    const labelEl = stallBtn.querySelector ? stallBtn.querySelector('.touch-btn-label') : null;
+                    if (labelEl) {
+                        labelEl.textContent = sellingManager.isOpen ? 'Đóng Sạp' : 'Mở Sạp';
+                    }
+                }
             }
 
             loop() {
@@ -1847,6 +1873,79 @@ async function runInteractiveSimulationSuite() {
         logger.pass('Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() chạy 100% ổn định mượt mà qua ngưỡng phạt 100%, canMove=true không bao giờ đơ game');
     } else {
         logger.fail('Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() bị đơ hoặc lỗi khi chạm ngưỡng phạt 100%');
+    }
+
+    // 5.7 Mô phỏng Thực Tế Ô Vạch Xanh Trường Học: Đỗ xe bán hàng 10 giây (600 frames), 0 lần bị phạt, tiền tăng đúng giá bán lẻ
+    logger.log('SIMULATION DIRECTOR', 'Kiểm tra Ô Vạch Xanh Trường Học & Miễn trừ Trật Tự Đô Thị...', COLORS.cyan);
+    gameApp.player.x = 790;
+    gameApp.player.y = 625; // Tâm Ô Vạch Xanh Trường Tiểu Học Hoa Mai (x: 720, y: 580, w: 140, h: 90)
+
+    const isSchoolLegalZone = Boolean(
+        sellingManager.isInsideLegalZone(790, 625) ||
+        (testWorld.isInValidSellingSpot && testWorld.isInValidSellingSpot(790, 625))
+    );
+
+    // Cập nhật giao diện để kiểm tra huy hiệu #stallLegalTag
+    gameApp.updatePrompt();
+    const stallLegalTagEl = document.getElementById('stallLegalTag');
+    const isTagVisible = stallLegalTagEl && !stallLegalTagEl.classList.contains('hidden') && stallLegalTagEl.textContent.includes('Điểm Bán Hợp Pháp');
+
+    // Nạp sẵn 10 cơm nắm tươi ngon cho sạp
+    state.inventory = [];
+    for (let i = 0; i < 10; i++) {
+        state.inventory.push({
+            id: `fresh_school_${i}`,
+            filling: 'crab_egg_mayo', // 20.000đ
+            freshness: 100,
+            stars: 5
+        });
+    }
+
+    const schoolRegion = testWorld.regions.find(r => r.id === 'school_hoamai');
+    sellingManager.openSelling(schoolRegion, gameApp.player);
+
+    let schoolPenalties = 0;
+    const testApplyUrbanPenalty = state.applyUrbanPenalty;
+    state.applyUrbanPenalty = function() {
+        schoolPenalties++;
+        return testApplyUrbanPenalty.apply(this, arguments);
+    };
+
+    const initialSchoolMoney = state.money;
+    let successfulSales = 0;
+
+    // Giả lập 600 frames (tương đương 10 giây liên tục tại 60fps)
+    for (let frame = 0; frame < 600; frame++) {
+        sellingManager.update(gameApp.player, testWorld);
+        gameApp.updatePrompt();
+
+        // Cứ mỗi 60 frames tạo khách hoặc bán nhanh nếu có khách chờ
+        if (frame % 60 === 0) {
+            if (sellingManager.customers.length === 0) {
+                sellingManager.trySpawnCustomer();
+            }
+            // Đặt khách đầu tiên sang trạng thái waiting
+            if (sellingManager.customers.length > 0) {
+                sellingManager.customers[0].status = 'waiting';
+                const sold = sellingManager.sellQuick();
+                if (sold) successfulSales++;
+            }
+        }
+    }
+
+    state.applyUrbanPenalty = testApplyUrbanPenalty;
+
+    const schoolHeatClean = sellingManager.heatLevel === 0 && sellingManager.urbanWarning === 0;
+    const zeroPenalties = schoolPenalties === 0;
+    const moneyIncreasedProperly = state.money >= initialSchoolMoney + (successfulSales * 20000);
+
+    sellingManager.closeSelling();
+
+    if (isSchoolLegalZone && isTagVisible && schoolHeatClean && zeroPenalties && moneyIncreasedProperly) {
+        logger.pass('Mô phỏng Ô Vạch Xanh Trường Học: Đứng tâm (790, 625) bán 10s an toàn 100%, huy hiệu xanh sáng, 0 lần bị phạt, tiền tăng chuẩn giá 20.000đ');
+    } else {
+        logger.fail('Mô phỏng Ô Vạch Xanh Trường Học: Thất bại',
+            `zone: ${isSchoolLegalZone}, tag: ${isTagVisible}, heat: ${sellingManager.heatLevel}, penalties: ${schoolPenalties}, moneyInc: ${state.money - initialSchoolMoney}`);
     }
 
     // -------------------------------------------------------------------------

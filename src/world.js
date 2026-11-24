@@ -3,6 +3,70 @@
 import { state } from './state.js';
 import { city3D } from './city3D.js';
 
+// =============================================================================
+// NGUỒN TỌA ĐỘ DUY NHẤT (SINGLE SOURCE OF TRUTH) CÁC Ô VẠCH XANH HỢP PHÁP
+// Bao gồm đầy đủ: Ô Vạch Xanh Trường Học, Công Viên, Chợ Bến Thành, Phố Đi Bộ
+// =============================================================================
+export const LEGAL_SELLING_ZONES = [
+    // -------------------------------------------------------------
+    // CHI NHÁNH 1: TP. HỒ CHÍ MINH (branch_hcm)
+    // -------------------------------------------------------------
+    { id: 'spot_school_hoamai', name: 'Ô Vạch Xanh Trường Học (Tiểu Học Hoa Mai)', cityId: 'branch_hcm', regionId: 'school_hoamai', type: 'school', x: 720, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_nguyendu', name: 'Ô Vạch Xanh Trường THCS Nguyễn Du', cityId: 'branch_hcm', regionId: 'school_nguyendu', type: 'school', x: 1920, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_lequydon', name: 'Ô Vạch Xanh Trường THPT Lê Quý Đôn', cityId: 'branch_hcm', regionId: 'school_lequydon', type: 'school', x: 3120, y: 580, w: 140, h: 90 },
+    { id: 'spot_university_town', name: 'Ô Vạch Xanh Công Viên (Làng Đại Học)', cityId: 'branch_hcm', regionId: 'university_town', type: 'park', x: 780, y: 1500, w: 140, h: 90 },
+    { id: 'spot_office_q1', name: 'Ô Vạch Xanh Chợ Bến Thành (Văn Phòng Q1)', cityId: 'branch_hcm', regionId: 'office_q1', type: 'market', x: 2180, y: 1500, w: 140, h: 90 },
+    { id: 'spot_walking_street', name: 'Ô Vạch Xanh Phố Đi Bộ Nguyễn Huệ', cityId: 'branch_hcm', regionId: 'walking_street', type: 'walking_street', x: 3280, y: 1500, w: 140, h: 90 },
+
+    // -------------------------------------------------------------
+    // CHI NHÁNH 2: BUÔN MA THUỘT - ĐẮK LẮK (branch_daklak)
+    // -------------------------------------------------------------
+    { id: 'spot_school_ntranglong', name: 'Ô Vạch Xanh Trường Tiểu Học N\'Trang Lơng', cityId: 'branch_daklak', regionId: 'school_ntranglong', type: 'school', x: 720, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_phanchutrinh', name: 'Ô Vạch Xanh Trường THCS Phan Chu Trinh', cityId: 'branch_daklak', regionId: 'school_phanchutrinh', type: 'school', x: 1920, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_bmt_nguyendu', name: 'Ô Vạch Xanh Trường THPT Chuyên Nguyễn Du', cityId: 'branch_daklak', regionId: 'school_bmt_nguyendu', type: 'school', x: 3120, y: 580, w: 140, h: 90 },
+    { id: 'spot_university_taynguyen', name: 'Ô Vạch Xanh Công Viên (Đại Học Tây Nguyên)', cityId: 'branch_daklak', regionId: 'university_taynguyen', type: 'park', x: 780, y: 1500, w: 140, h: 90 },
+    { id: 'spot_office_bmt_ngasau', name: 'Ô Vạch Xanh Chợ BMT & Khu VP Ngã Sáu', cityId: 'branch_daklak', regionId: 'office_bmt_ngasau', type: 'market', x: 2180, y: 1500, w: 140, h: 90 },
+    { id: 'spot_square_10_3', name: 'Ô Vạch Xanh Phố Đi Bộ Quảng Trường 10/3', cityId: 'branch_daklak', regionId: 'square_10_3', type: 'walking_street', x: 3280, y: 1500, w: 140, h: 90 },
+
+    // -------------------------------------------------------------
+    // CHI NHÁNH 3: TP. VINH - NGHỆ AN (branch_vinh)
+    // -------------------------------------------------------------
+    { id: 'spot_school_lemao', name: 'Ô Vạch Xanh Trường Tiểu Học Lê Mao', cityId: 'branch_vinh', regionId: 'school_lemao', type: 'school', x: 720, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_dangthaimai', name: 'Ô Vạch Xanh Trường THCS Đặng Thai Mai', cityId: 'branch_vinh', regionId: 'school_dangthaimai', type: 'school', x: 1920, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_huynhthuckhang', name: 'Ô Vạch Xanh Trường THPT Huỳnh Thúc Kháng', cityId: 'branch_vinh', regionId: 'school_huynhthuckhang', type: 'school', x: 3120, y: 580, w: 140, h: 90 },
+    { id: 'spot_university_vinh', name: 'Ô Vạch Xanh Công Viên (Đại Học Vinh)', cityId: 'branch_vinh', regionId: 'university_vinh', type: 'park', x: 780, y: 1500, w: 140, h: 90 },
+    { id: 'spot_office_lenin', name: 'Ô Vạch Xanh Chợ Vinh & Khu VP Đại Lộ Lê Nin', cityId: 'branch_vinh', regionId: 'office_lenin', type: 'market', x: 2180, y: 1500, w: 140, h: 90 },
+    { id: 'spot_square_songlam', name: 'Ô Vạch Xanh Phố Đi Bộ Quảng Trường Sông Lam', cityId: 'branch_vinh', regionId: 'square_songlam', type: 'walking_street', x: 3280, y: 1500, w: 140, h: 90 },
+
+    // -------------------------------------------------------------
+    // CHI NHÁNH 4: THỦ ĐÔ HÀ NỘI (branch_hanoi)
+    // -------------------------------------------------------------
+    { id: 'spot_school_thanglong', name: 'Ô Vạch Xanh Trường Tiểu Học Thăng Long', cityId: 'branch_hanoi', regionId: 'school_thanglong', type: 'school', x: 720, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_trungvuong', name: 'Ô Vạch Xanh Trường THCS Trưng Vương', cityId: 'branch_hanoi', regionId: 'school_trungvuong', type: 'school', x: 1920, y: 580, w: 140, h: 90 },
+    { id: 'spot_school_chuvanan', name: 'Ô Vạch Xanh Trường THPT Chu Văn An', cityId: 'branch_hanoi', regionId: 'school_chuvanan', type: 'school', x: 3120, y: 580, w: 140, h: 90 },
+    { id: 'spot_university_dhqghn', name: 'Ô Vạch Xanh Công Viên (Đại Học Quốc Gia Hà Nội)', cityId: 'branch_hanoi', regionId: 'university_dhqghn', type: 'park', x: 780, y: 1500, w: 140, h: 90 },
+    { id: 'spot_office_caugiay', name: 'Ô Vạch Xanh Chợ Đồng Xuân & Khu VP Cầu Giấy', cityId: 'branch_hanoi', regionId: 'office_caugiay', type: 'market', x: 2180, y: 1500, w: 140, h: 90 },
+    { id: 'spot_walking_street_hoguom', name: 'Ô Vạch Xanh Phố Đi Bộ Hồ Gươm', cityId: 'branch_hanoi', regionId: 'walking_street_hoguom', type: 'walking_street', x: 3280, y: 1500, w: 140, h: 90 }
+];
+
+// Hàm kiểm tra vị trí có nằm trong Ô Vạch Xanh Hợp Pháp không (+20px biên độ an toàn)
+export function isInsideLegalZone(x, y, cityId = null) {
+    if (typeof x !== 'number' || typeof y !== 'number') return null;
+    const margin = 20; // Mở rộng vùng nhận diện hợp lệ thêm +20px biên độ an toàn tính từ tâm nhân vật/xe
+    for (const zone of LEGAL_SELLING_ZONES) {
+        if (cityId && zone.cityId && zone.cityId !== cityId) continue;
+        if (
+            x >= zone.x - margin &&
+            x <= zone.x + zone.w + margin &&
+            y >= zone.y - margin &&
+            y <= zone.y + zone.h + margin
+        ) {
+            return zone;
+        }
+    }
+    return null;
+}
+
 export const CITY_DATA = {
     branch_hcm: {
         id: 'branch_hcm',
@@ -240,13 +304,27 @@ export class World {
         });
     }
 
-    // Kiểm tra xem vị trí người chơi có nằm trong Ô Vạch Xanh Lá hợp lệ không (loại trừ các điểm đang khóa)
+    // Kiểm tra xem vị trí người chơi có nằm trong Ô Vạch Xanh Lá hợp lệ không (+20px biên độ an toàn, loại trừ các điểm đang khóa)
     isInValidSellingSpot(px, py) {
+        // 1. Kiểm tra nhanh qua Single Source of Truth duy nhất (có sẵn +20px margin an toàn)
+        const matchedZone = isInsideLegalZone(px, py, this.currentCityId);
+        if (matchedZone) {
+            // Kiểm tra trạng thái khóa của điểm bán tại thành phố hiện tại
+            if (Array.isArray(this.validSellingSpots)) {
+                const liveSpot = this.validSellingSpots.find(s => s.id === matchedZone.id || s.regionId === matchedZone.regionId);
+                if (liveSpot && liveSpot.isLocked) return null;
+                return liveSpot || matchedZone;
+            }
+            return matchedZone;
+        }
+
+        // 2. Fallback duyệt mảng validSellingSpots với biên độ an toàn +20px
         if (!Array.isArray(this.validSellingSpots)) return null;
+        const margin = 20;
         for (const spot of this.validSellingSpots) {
             if (!spot.isLocked &&
-                px >= spot.x && px <= spot.x + spot.w &&
-                py >= spot.y && py <= spot.y + spot.h) {
+                px >= (spot.x - margin) && px <= (spot.x + spot.w + margin) &&
+                py >= (spot.y - margin) && py <= (spot.y + spot.h + margin)) {
                 return spot;
             }
         }

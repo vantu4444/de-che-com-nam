@@ -4406,8 +4406,35 @@ body, html {
 }
 
 .btn-touch-stall {
+    position: relative;
+    overflow: visible;
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     border-color: #7dd3fc;
+}
+
+/* Badge điểm bán hợp pháp 100% trên nút Mở Sạp */
+.stall-legal-tag {
+    position: absolute;
+    top: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.6);
+    pointer-events: none;
+    border: 1px solid #86efac;
+    animation: legalPulse 2s infinite ease-in-out;
+    z-index: 10;
+}
+
+@keyframes legalPulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
 }
 
 .btn-touch-sell {

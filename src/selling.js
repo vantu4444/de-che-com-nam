@@ -1,9 +1,12 @@
 // src/selling.js - Hệ thống Đi bán hàng, Khách hàng NPC & Xếp hàng mua cơm nắm
 
-import { state, FILLINGS } from './state.js';
+import { state, FILLINGS, VEHICLES } from './state.js';
 import { audio } from './audio.js';
 import { characterRenderer } from './characterRenderer.js';
 import { seaweedGame } from './seaweedGame.js';
+import { LEGAL_SELLING_ZONES, isInsideLegalZone } from './world.js';
+
+export { LEGAL_SELLING_ZONES, isInsideLegalZone };
 
 export const STAFF_SPOTS = [
     { id: 'staff_1', name: 'Nhân viên TH Hoa Mai', x: 620, y: 520, facing: 1, loc: 'school_hoamai' },
@@ -63,6 +66,12 @@ export class SellingManager {
     }
     set isSelling(val) {
         this.isOpen = Boolean(val);
+    }
+
+    // Kiểm tra vị trí có nằm trong Ô Vạch Xanh Hợp Pháp không (+20px biên độ an toàn)
+    isInsideLegalZone(x, y) {
+        const cityId = (state && state.currentCity) || null;
+        return isInsideLegalZone(x, y, cityId);
     }
 
     get urbanWarning() {
@@ -280,103 +289,123 @@ export class SellingManager {
         }
 
         try {
-            const inGreenSpot = Boolean(world && typeof world.isInValidSellingSpot === 'function' && world.isInValidSellingSpot(this.stallX, this.stallY));
-            isSchoolSpot = Boolean(this.isOpen && this.currentSpot && (
-                this.currentSpot.type === 'school' ||
-                (this.currentSpot.id && this.currentSpot.id.startsWith('school_')) ||
-                this.currentSpot.id === 'university_town'
+            // Kiểm tra Ô Vạch Xanh từ Single Source of Truth duy nhất (kết hợp tọa độ sạp và người chơi)
+            const currentCityId = (state && state.currentCity) || null;
+            const checkX = (typeof this.stallX === 'number' && this.stallX !== 0) ? this.stallX : (player ? player.x : 0);
+            const checkY = (typeof this.stallY === 'number' && this.stallY !== 0) ? this.stallY : (player ? player.y : 0);
+
+            const matchedZone = isInsideLegalZone(checkX, checkY, currentCityId) ||
+                                (player ? isInsideLegalZone(player.x, player.y, currentCityId) : null) ||
+                                (world && typeof world.isInValidSellingSpot === 'function' ? (world.isInValidSellingSpot(checkX, checkY) || (player ? world.isInValidSellingSpot(player.x, player.y) : null)) : null);
+
+            const inGreenSpot = Boolean(matchedZone);
+
+            isSchoolSpot = Boolean(this.isOpen && (
+                (matchedZone && matchedZone.type === 'school') ||
+                (this.currentSpot && (
+                    this.currentSpot.type === 'school' ||
+                    (this.currentSpot.id && this.currentSpot.id.startsWith('school_')) ||
+                    this.currentSpot.id === 'university_town'
+                ))
             ));
-            const isSchoolOvertime = isSchoolSpot && Boolean(timeInfo.isSchoolOvertime);
 
-            // Vi phạm nếu mở sạp ngoài Ô Vạch Xanh Lá HOẶC đứng bán tại Cổng Trường quá 30 phút sau cao điểm
-            const isViolating = Boolean(this.isOpen && (!inGreenSpot || isSchoolOvertime));
-
-            if (isViolating) {
-                if (!inGreenSpot) {
-                    this.violationReason = 'BÁN NGOÀI Ô VẠCH XANH QUY ĐỊNH';
-                } else {
-                    this.violationReason = 'BÁN CỔNG TRƯỜNG QUÁ 30 PHÚT SAU CAO ĐIỂM';
-                }
-
-                // Thanh cảnh báo tăng 0% -> 100% trong đúng 8 giây thực tế (8s * 60fps = 480 frames, ~0.208% per frame)
-                const heatReduce = state.permanentBuffs?.heatRateReduce || 0;
-                const heatInc = (100 / 480) * Math.max(0.1, 1 - heatReduce);
-                this.heatLevel = Math.min(100, (this.heatLevel || 0) + heatInc);
-                this.urbanWarning = this.heatLevel;
-
-                // Phát tiếng còi cảnh báo định kỳ từ audio.js mỗi ~1.2 giây
-                this.warningBeepTimer = (this.warningBeepTimer || 0) + 1;
-                if (this.warningBeepTimer >= 72 || !this.heatWarned) {
-                    this.warningBeepTimer = 0;
-                    this.heatWarned = true;
-                    try {
-                        if (audio && typeof audio.playWarningBeep === 'function') {
-                            audio.playWarningBeep();
-                        } else if (audio && typeof audio.playWarning === 'function') {
-                            audio.playWarning();
-                        }
-                    } catch (eAudio) {
-                        // Safe fallback
-                    }
-                }
-
-                // Khi chạm ngưỡng 100%: KÍCH HOẠT MỘT LẦN (ONE-SHOT TRIGGER)
-                // Dòng code đầu tiên bắt buộc phải thực hiện ngay lập tức: reset cảnh báo, dọn sạp, cho phép di chuyển tự do
-                if (this.heatLevel >= 100 || this.urbanWarning >= 100) {
-                    this.heatLevel = 0;
-                    this.urbanWarning = 0;
-                    this.isOpen = false;
-                    this.isSelling = false;
-                    this.heatWarned = false;
-                    this.warningBeepTimer = 0;
-                    this.closeSelling(); // Đảm bảo isOpen = false ngay lập tức
-
-                    // Đảm bảo nhân vật và phương tiện vẫn di chuyển bình thường, không bị khóa cứng
-                    if (player) {
-                        player.canMove = true;
-                    }
-
-                    // Âm thanh còi hụ cảnh sát (Web Audio API có bộ lọc chống spam)
-                    try {
-                        if (audio && typeof audio.playPoliceSiren === 'function') {
-                            audio.playPoliceSiren();
-                        } else if (audio && typeof audio.playSiren === 'function') {
-                            audio.playSiren();
-                        }
-                    } catch (eSiren) {
-                        // Safe fallback
-                    }
-
-                    // Trừ tiền phạt 150.000đ an toàn tuyệt đối
-                    let penaltyResult = { deductedMoney: 150000, reputationPenalty: 0 };
-                    try {
-                        if (state && typeof state.applyUrbanPenalty === 'function') {
-                            penaltyResult = state.applyUrbanPenalty() || penaltyResult;
-                        }
-                    } catch (ePenalty) {
-                        console.error('[SellingManager] applyUrbanPenalty error:', ePenalty);
-                    }
-
-                    const detailMsg = (penaltyResult && penaltyResult.reputationPenalty > 0)
-                        ? 'Ví không đủ tiền! Tiền mặt về 0đ và trừ 20 Danh vọng!'
-                        : 'Đã trừ trực tiếp 150.000đ tiền phạt vào tài khoản!';
-
-                    this.penaltyBanner = {
-                        timer: 360, // Hiển thị 6 giây trên Canvas
-                        text: 'BỊ PHẠT 150.000Đ DO BÁN SAI VỊ TRÍ / SAI GIỜ!',
-                        subtext: detailMsg
-                    };
-                    this.showToast('🚨 BỊ PHẠT 150.000Đ DO BÁN SAI VỊ TRÍ / SAI GIỜ!', 300);
-                }
+            // THIẾT LẬP Ô VẠCH XANH LÀ "VÙNG AN TOÀN TUYỆT ĐỐI" (Miễn nhiễm Trật Tự Đô Thị 100%):
+            // - Khi inGreenSpot === true (kể cả tại Trường Học): cấm tuyệt đối Trật Tự Đô Thị phạt tiền, tịch thu hàng hoặc tăng mức truy đuổi.
+            // - Loại bỏ hoàn toàn lỗi phạt isSchoolOvertime khi người chơi đang đứng trong Ô Vạch Xanh.
+            // - Nếu người chơi đang bị truy đuổi từ ngoài đường mà chạy lọt vào Ô Vạch Xanh, AI Trật Tự tự động hủy truy đuổi, reset heatLevel = 0, urbanWarning = 0.
+            if (inGreenSpot) {
+                this.heatLevel = 0;
+                this.urbanWarning = 0;
+                this.heatWarned = false;
+                this.warningBeepTimer = 0;
+                this.violationReason = '';
             } else {
-                // Khi di chuyển rời đi, hoặc hợp lệ, hoặc đóng sạp: thanh cảnh báo tự giảm về 0%
-                if (this.heatLevel > 0 || this.urbanWarning > 0) {
-                    this.heatLevel = Math.max(0, (this.heatLevel || 0) - 1.2);
+                // Vi phạm CHỈ KHI mở sạp ngoài Ô Vạch Xanh Lá quy định
+                const isViolating = Boolean(this.isOpen);
+
+                if (isViolating) {
+                    this.violationReason = 'BÁN NGOÀI Ô VẠCH XANH QUY ĐỊNH';
+
+                    // Thanh cảnh báo tăng 0% -> 100% trong đúng 8 giây thực tế (8s * 60fps = 480 frames, ~0.208% per frame)
+                    const heatReduce = state.permanentBuffs?.heatRateReduce || 0;
+                    const heatInc = (100 / 480) * Math.max(0.1, 1 - heatReduce);
+                    this.heatLevel = Math.min(100, (this.heatLevel || 0) + heatInc);
                     this.urbanWarning = this.heatLevel;
-                    this.warningBeepTimer = 0;
-                    if (this.heatLevel === 0) {
+
+                    // Phát tiếng còi cảnh báo định kỳ từ audio.js mỗi ~1.2 giây
+                    this.warningBeepTimer = (this.warningBeepTimer || 0) + 1;
+                    if (this.warningBeepTimer >= 72 || !this.heatWarned) {
+                        this.warningBeepTimer = 0;
+                        this.heatWarned = true;
+                        try {
+                            if (audio && typeof audio.playWarningBeep === 'function') {
+                                audio.playWarningBeep();
+                            } else if (audio && typeof audio.playWarning === 'function') {
+                                audio.playWarning();
+                            }
+                        } catch (eAudio) {
+                            // Safe fallback
+                        }
+                    }
+
+                    // Khi chạm ngưỡng 100%: KÍCH HOẠT MỘT LẦN (ONE-SHOT TRIGGER)
+                    // Dòng code đầu tiên bắt buộc phải thực hiện ngay lập tức: reset cảnh báo, dọn sạp, cho phép di chuyển tự do
+                    if (this.heatLevel >= 100 || this.urbanWarning >= 100) {
+                        this.heatLevel = 0;
+                        this.urbanWarning = 0;
+                        this.isOpen = false;
+                        this.isSelling = false;
                         this.heatWarned = false;
-                        this.violationReason = '';
+                        this.warningBeepTimer = 0;
+                        this.closeSelling(); // Đảm bảo isOpen = false ngay lập tức
+
+                        // Đảm bảo nhân vật và phương tiện vẫn di chuyển bình thường, không bị khóa cứng
+                        if (player) {
+                            player.canMove = true;
+                        }
+
+                        // Âm thanh còi hụ cảnh sát (Web Audio API có bộ lọc chống spam)
+                        try {
+                            if (audio && typeof audio.playPoliceSiren === 'function') {
+                                audio.playPoliceSiren();
+                            } else if (audio && typeof audio.playSiren === 'function') {
+                                audio.playSiren();
+                            }
+                        } catch (eSiren) {
+                            // Safe fallback
+                        }
+
+                        // Trừ tiền phạt 150.000đ an toàn tuyệt đối
+                        let penaltyResult = { deductedMoney: 150000, reputationPenalty: 0 };
+                        try {
+                            if (state && typeof state.applyUrbanPenalty === 'function') {
+                                penaltyResult = state.applyUrbanPenalty() || penaltyResult;
+                            }
+                        } catch (ePenalty) {
+                            console.error('[SellingManager] applyUrbanPenalty error:', ePenalty);
+                        }
+
+                        const detailMsg = (penaltyResult && penaltyResult.reputationPenalty > 0)
+                            ? 'Ví không đủ tiền! Tiền mặt về 0đ và trừ 20 Danh vọng!'
+                            : 'Đã trừ trực tiếp 150.000đ tiền phạt vào tài khoản!';
+
+                        this.penaltyBanner = {
+                            timer: 360, // Hiển thị 6 giây trên Canvas
+                            text: 'BỊ PHẠT 150.000Đ DO BÁN SAI VỊ TRÍ / NGOÀI VẠCH XANH!',
+                            subtext: detailMsg
+                        };
+                        this.showToast('🚨 BỊ PHẠT 150.000Đ DO BÁN SAI VỊ TRÍ / NGOÀI VẠCH XANH!', 300);
+                    }
+                } else {
+                    // Khi di chuyển rời đi, hoặc hợp lệ, hoặc đóng sạp: thanh cảnh báo tự giảm về 0%
+                    if (this.heatLevel > 0 || this.urbanWarning > 0) {
+                        this.heatLevel = Math.max(0, (this.heatLevel || 0) - 1.2);
+                        this.urbanWarning = this.heatLevel;
+                        this.warningBeepTimer = 0;
+                        if (this.heatLevel === 0) {
+                            this.heatWarned = false;
+                            this.violationReason = '';
+                        }
                     }
                 }
             }
