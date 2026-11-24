@@ -4,6 +4,34 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.2-PROD (CHÍNH THỨC XUẤT XƯỞNG: BỘ BA TƯƠNG TÁC ONLINE TOÀN DIỆN – CHAT 1 CHẠM, KẾT BẠN XÁC NHẬN & THÁCH ĐẤU 1V1 REAL-TIME)
+- **Ngày ghi nhận:** 24/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (138/138 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Lệnh Sửa Số 1 – Hệ Thống Chat Trực Tiếp 1 Chạm & Đa Kênh (`index.html`, `style.css`, `src/onlineUI.js`, `src/main.js`):**
+     - Đặt nút **`💬 Chat`** trực tiếp trên thanh HUD với huy hiệu chấm đỏ thông báo tin mới, bấm vào là mở thẳng khung Chat đầy đủ ngay lập tức (không qua nhiều lớp menu).
+     - Cho phép chạm nhanh vào thanh xem trước `#floatingChatWidget` để mở giao diện Chat.
+     - Tự động ẩn toàn bộ cụm phím ảo điều khiển xe khi khung Chat mở trên Mobile để bàn phím ảo hiển thị thoáng đãng.
+     - Xử lý cô lập sự kiện `keydown` trên các thẻ `INPUT`/`TEXTAREA`: cho phép gõ đầy đủ **dấu cách (`Space`)** và tiếng Việt có dấu trọn vẹn, không bị bộ điều khiển xe chặn phím.
+     - Phân định rõ ràng 2 tab **Chat Toàn Quốc** (cộng đồng) và **Bạn Bè** (trò chuyện riêng tư 1-1).
+  2. **Lệnh Sửa Số 2 – Hệ Thống Kết Bạn Bền Vững & Hộp Thoại Xác Nhận (`server/server.js`, `src/network.js`, `src/onlineUI.js`, `src/world.js`):**
+     - Mở rộng vùng nhận diện chạm quanh nhân vật người chơi khác trên bản đồ lên bán kính tối thiểu **`56px`** theo tọa độ màn hình (hỗ trợ cả 2D và 3D).
+     - Hỗ trợ bấm vào tên người chơi trong khung Chat hoặc danh sách Online để mở **Thẻ Hồ Sơ Người Chơi** (`z-index: 99990`, tự ẩn phím ảo Mobile), hiển thị tên, chi nhánh, nút **`➕ Thêm Bạn`** (chuyển thành `⏳ Đã gửi lời mời` sau khi bấm, hoặc `💬 Nhắn tin` nếu đã là bạn).
+     - Định tuyến máy chủ 2 chiều bền vững qua cả `playerId` và `socketId`: lưu trữ lời mời và danh sách bạn bè vào `persistentFriends` và `pendingFriendRequests` theo `playerId`, chống mất dữ liệu khi đổi mạng hoặc tải lại trang.
+     - Hộp thoại Xác Nhận Kết Bạn trung tâm (`#friendInviteNotification`, `z-index: 99999`) với 2 nút lớn: **`✅ Đồng Ý`** và **`❌ Từ Chối`**, kèm âm thanh Web Audio an toàn.
+  3. **Lệnh Sửa Số 3 – Hệ Thống Thách Đấu 1v1 Có Xác Nhận & Đấu Trường Real-Time (`server/server.js`, `src/network.js`, `src/onlineUI.js`):**
+     - Nút **`⚔️ Thách Đấu 1v1`** (`#btnProfileChallenge`) nổi bật trên Thẻ Hồ Sơ và Danh Sách Bạn Bè, cho phép chọn nhanh mức cược: **Giao Hữu (0đ)**, **50.000đ**, **200.000đ** cùng thể thức **Gói Cơm ASMR 30s** hoặc **Bóc Rong Biển Tốc Độ**.
+     - Máy chủ định tuyến sự kiện thách đấu (`pvp:invite`, `pvp:accept`, `pvp:decline`, `pvp:tap`, `pvp:score_update`, `pvp:settlement`) song song qua cả `socketId` và `playerId`.
+     - Kiểm tra điều kiện đủ tiền cược: chỉ trừ tiền cược khi đối thủ bấm **Đồng Ý**, tự động cộng toàn bộ tiền hũ thưởng + 15 điểm Uy tín cho người chiến thắng khi kết thúc trận.
+     - Hộp thoại Xác Nhận Thách Đấu trung tâm (`#pvpInviteNotification`, `z-index: 99999`, `backdrop-filter: blur(10px)`) tự ẩn phím ảo Mobile, đếm ngược 15 giây cùng 2 nút lớn nằm ngang: **`✅ ĐỒNG Ý`** (`#btnPvpAccept`) và **`❌ TỪ CHỐI`** (`#btnPvpDecline`).
+     - Bấm **`❌ Từ Chối`** hoặc hết 15s: Đóng hộp thoại và gửi thông báo lịch sự `❌ [Tên đối thủ] đã từ chối lời mời thách đấu` về người mời.
+     - Bấm **`✅ Đồng Ý`**: Tự động đưa **cả 2 người chơi** vào giao diện Đấu Trường 1v1 (`#btnArenaActionTap`), đồng bộ thanh tiến độ và số lần chạm tap thời gian thực, hiển thị bảng tổng kết thắng/thua rõ ràng.
+  4. **Kiểm Toán & Nghiệm Thu Toàn Diện (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - 100% PASS (138/138 Bài kiểm thử), tuyệt đối **0 Console Errors**, bảo đảm công thái học không chồng lấn trên Desktop (1440x900), iPhone (375x812) và iPad (768x1024).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.1-PROD (CHÍNH THỨC XUẤT XƯỞNG: ĐỒNG BỘ TỌA ĐỘ Ô VẠCH XANH TRƯỜNG HỌC & MIỄN TRỪ TRẬT TỰ ĐÔ THỊ 100%)
 - **Ngày ghi nhận:** 24/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (138/138 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
