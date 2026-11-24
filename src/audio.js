@@ -282,6 +282,10 @@ class AudioManager {
         return this.playCoinKeng();
     }
 
+    playCoin() {
+        return this.playCoinKeng();
+    }
+
     // Tiếng chuông báo thông báo nhẹ nhàng (Gentle Dual Chime / Bell)
     playBellNotification() {
         if (this.isMuted) return;

@@ -671,13 +671,21 @@ export class NetworkManager {
 
     acceptFriendRequest(fromId) {
         if (this.isOnline && this.socket && this.socket.connected) {
-            this.socket.emit('friend:accept', { fromId });
+            this.socket.emit('friend:accept', {
+                fromId,
+                fromPlayerId: fromId,
+                toPlayerId: state.getPlayerId()
+            });
         }
     }
 
     declineFriendRequest(fromId) {
         if (this.isOnline && this.socket && this.socket.connected) {
-            this.socket.emit('friend:decline', { fromId });
+            this.socket.emit('friend:decline', {
+                fromId,
+                fromPlayerId: fromId,
+                toPlayerId: state.getPlayerId()
+            });
         }
     }
 

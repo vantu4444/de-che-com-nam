@@ -282,9 +282,11 @@ export class OnigiriServer {
                 const rawCity = data?.city || SERVER_CONFIG.DEFAULT_CITY;
                 const city = rawCity.replace('branch_', '');
                 const validCity = SERVER_CONFIG.CITIES.includes(city) ? city : SERVER_CONFIG.DEFAULT_CITY;
+                const playerId = (data && data.playerId) ? String(data.playerId) : socket.id;
 
                 const player = {
                     id: socket.id,
+                    playerId: playerId,
                     brandName: (data && data.brandName) ? String(data.brandName).slice(0, 30) : 'Chi Nhánh #' + socket.id.slice(0, 4),
                     level: Number(data?.level) || 1,
                     vehicleId: data?.vehicleId || 'walking',
@@ -297,6 +299,10 @@ export class OnigiriServer {
                 };
 
                 this.players.set(socket.id, player);
+                this.playerSockets.set(playerId, socket.id);
+                this.socketToPlayerId.set(socket.id, playerId);
+                this.persistentPlayers.set(playerId, player);
+
                 if (this.cityRooms.has(validCity)) {
                     this.cityRooms.get(validCity).add(socket.id);
                 }
@@ -309,6 +315,31 @@ export class OnigiriServer {
                     coopOrder: this.coopOrder,
                     leaderboard: this.getLeaderboard()
                 });
+
+                // Chống mất lời mời khi chuyển tab Mobile: Gửi lại các lời mời kết bạn đang chờ tới playerId này
+                if (this.pendingFriendRequests.has(playerId)) {
+                    const reqMap = this.pendingFriendRequests.get(playerId);
+                    for (const req of reqMap.values()) {
+                        this.sendEventToUser(socket.id, 'friend:invite', req);
+                    }
+                }
+
+                // Chống mất lời mời thách đấu khi chuyển tab
+                for (const inv of this.pendingPvpInvites.values()) {
+                    if (inv.targetPlayerId === playerId || inv.targetId === socket.id) {
+                        const elapsed = (Date.now() - inv.createdAt) / 1000;
+                        const remaining = Math.max(1, Math.round(15 - elapsed));
+                        this.sendEventToUser(socket.id, 'pvp:invite', {
+                            inviteId: inv.inviteId,
+                            fromName: inv.fromName,
+                            fromLevel: inv.fromLevel,
+                            fromCity: inv.fromCity,
+                            gameType: inv.gameType,
+                            betAmount: inv.betAmount,
+                            timeoutSeconds: remaining
+                        });
+                    }
+                }
 
                 // Phát sóng thông báo người mới tới cho các cửa sổ đang mở
                 socket.to(`city_${validCity}`).emit('playerJoined', player);
@@ -941,12 +972,19 @@ export class OnigiriServer {
 
     // [HỆ THỐNG KẾT BẠN]
     handleFriendRequest(senderId, data) {
+        console.log('[SERVER] handleFriendRequest called from:', senderId, 'data:', data);
         const sender = this.resolvePlayer(senderId) || this.players.get(senderId);
         const targetId = data?.targetPlayerId || data?.targetId;
-        const target = this.resolvePlayer(targetId);
+        const target = this.resolvePlayer(targetId) || this.players.get(targetId);
 
-        if (!sender || !target) return;
-        if (sender.id === target.id || (sender.playerId && sender.playerId === target.playerId)) return;
+        if (!sender || !target) {
+            console.log('[SERVER] REJECT: sender or target not found');
+            return;
+        }
+        if (sender.id === target.id || (sender.playerId && sender.playerId === target.playerId)) {
+            console.log('[SERVER] REJECT: same player (sender:', sender.playerId, 'target:', target.playerId, ')');
+            return;
+        }
 
         const senderPId = sender.playerId || sender.id;
         const targetPId = target.playerId || target.id;
@@ -964,15 +1002,25 @@ export class OnigiriServer {
         }
         this.pendingFriendRequests.get(targetPId).set(senderPId, reqData);
 
-        this.sendEventToUser(target.id, 'friend:invite', reqData);
+        console.log(`[FRIEND LOG] Invite from ${sender.brandName} (${senderPId}) to ${target.brandName} (${targetPId})`);
+
+        // Gửi qua cả playerId lẫn socket.id để chống thất lạc
+        this.sendEventToUser(targetPId, 'friend:invite', reqData);
+        if (target.id && target.id !== targetPId) {
+            this.sendEventToUser(target.id, 'friend:invite', reqData);
+        }
     }
 
     handleFriendAccept(targetId, data) {
+        console.log('[SERVER] handleFriendAccept called targetId:', targetId, 'data:', data);
         const fromId = data?.fromPlayerId || data?.fromId;
-        const playerA = this.resolvePlayer(fromId);
-        const playerB = this.resolvePlayer(targetId);
+        const playerA = this.resolvePlayer(fromId) || this.players.get(fromId);
+        const playerB = this.resolvePlayer(targetId) || this.players.get(targetId);
 
-        if (!playerA || !playerB) return;
+        if (!playerA || !playerB) {
+            console.log('[SERVER] handleFriendAccept REJECT: playerA or playerB not found');
+            return;
+        }
 
         const pIdA = playerA.playerId || playerA.id;
         const pIdB = playerB.playerId || playerB.id;
@@ -986,6 +1034,8 @@ export class OnigiriServer {
         if (this.pendingFriendRequests.has(pIdB)) {
             this.pendingFriendRequests.get(pIdB).delete(pIdA);
         }
+
+        console.log(`[FRIEND LOG] ACCEPTED: ${playerA.brandName} (${pIdA}) <---> ${playerB.brandName} (${pIdB})`);
 
         const friendA = {
             id: playerB.id,
@@ -1002,8 +1052,10 @@ export class OnigiriServer {
             city: playerA.city
         };
 
-        // Báo cho cả 2 để lưu vào danh bạ
+        // Báo cho cả 2 để lưu vào danh bạ (gửi theo cả playerId lẫn socketId)
+        this.sendEventToUser(pIdA, 'friend:accepted', { friend: friendA });
         this.sendEventToUser(playerA.id, 'friend:accepted', { friend: friendA });
+        this.sendEventToUser(pIdB, 'friend:accepted', { friend: friendB });
         this.sendEventToUser(playerB.id, 'friend:accepted', { friend: friendB });
     }
 

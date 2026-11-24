@@ -536,7 +536,14 @@ export class OnlineUIManager {
                     ` : this.globalMessages.map(m => `
                         <div class="chat-msg-row ${m.senderId === network.selfId ? 'is-self' : ''}">
                             <div class="cmr-meta">
-                                <strong class="cmr-sender">${m.senderName}</strong>
+                                <strong class="cmr-sender ${m.senderId !== network.selfId ? 'cmr-sender-btn' : ''}" 
+                                        data-sender-id="${m.senderId}" 
+                                        data-sender-name="${m.senderName}" 
+                                        data-sender-level="${m.senderLevel || 1}" 
+                                        data-sender-city="${m.city || 'hcm'}" 
+                                        title="${m.senderId !== network.selfId ? 'Bấm để xem hồ sơ và kết bạn' : 'Bạn'}">
+                                    ${m.senderName} ${m.senderId !== network.selfId ? '<span class="cmr-inspect-icon">👤</span>' : ''}
+                                </strong>
                                 <span class="cmr-lvl">Cấp ${m.senderLevel || 1}</span>
                                 <span class="cmr-time">${new Date(m.time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
@@ -790,11 +797,11 @@ export class OnlineUIManager {
                 <div class="pcm-actions">
                     ${isFriend ? `
                         <button type="button" class="btn-profile-action btn-profile-friend" id="btnProfileChat">
-                            💬 Nhắn Tin Riêng
+                            💬 Nhắn tin
                         </button>
                     ` : `
                         <button type="button" class="btn-profile-action btn-profile-friend ${isRequestSent ? 'is-sent' : ''}" id="btnProfileAddFriend" ${isRequestSent ? 'disabled' : ''}>
-                            ${isRequestSent ? '⏳ Đã Gửi Lời Mời' : '➕ Thêm Bạn'}
+                            ${isRequestSent ? '⏳ Đã gửi lời mời' : '➕ Thêm Bạn'}
                         </button>
                     `}
                     <button type="button" class="btn-profile-action btn-profile-challenge" id="btnProfileChallenge">
@@ -828,7 +835,7 @@ export class OnlineUIManager {
                 this.sentFriendRequests.add(targetPlayerId);
                 this.sentFriendRequests.add(targetId);
                 const res = network.sendFriendRequest(player);
-                btnFriend.textContent = '⏳ Đã Gửi Lời Mời';
+                btnFriend.textContent = '⏳ Đã gửi lời mời';
                 btnFriend.classList.add('is-sent');
                 btnFriend.disabled = true;
                 this.showToastNotification(res.message);
@@ -948,6 +955,17 @@ export class OnlineUIManager {
             const pid = row.dataset.pid;
             const target = network.otherPlayers.get(pid);
             if (!target) return;
+
+            const infoBox = row.querySelector('.npm-item-info');
+            if (infoBox) {
+                infoBox.style.cursor = 'pointer';
+                infoBox.title = 'Bấm để xem hồ sơ và kết bạn';
+                infoBox.onclick = () => {
+                    audio.playClick();
+                    this.closeNearbyModal();
+                    this.openPlayerProfile(target);
+                };
+            }
 
             const btnProfile = row.querySelector('[data-action="profile"]');
             if (btnProfile) {
@@ -1123,10 +1141,10 @@ export class OnlineUIManager {
                 </p>
                 <div class="pip-actions" style="margin-top: 14px;">
                     <button type="button" class="btn-pip-accept" id="btnFriendAccept">
-                        ✅ ĐỒNG Ý
+                        ✅ Đồng Ý
                     </button>
                     <button type="button" class="btn-pip-decline" id="btnFriendDecline">
-                        ❌ TỪ CHỐI
+                        ❌ Từ Chối
                     </button>
                 </div>
             </div>
@@ -1137,7 +1155,7 @@ export class OnlineUIManager {
         const btnAccept = this.friendInviteElement.querySelector('#btnFriendAccept');
         if (btnAccept) {
             btnAccept.onclick = () => {
-                audio.playCoin();
+                try { audio.playCoin(); } catch (e) {}
                 this.hideFriendInviteNotification();
                 network.acceptFriendRequest(data.fromPlayerId || data.fromId);
                 state.addFriend({
@@ -1337,7 +1355,28 @@ export class OnlineUIManager {
 
         const line = document.createElement('div');
         line.className = 'fcw-line animate-fade';
-        line.innerHTML = `<strong>${msg.senderName}:</strong> ${msg.text}`;
+        const isSelf = msg.senderId === network.selfId;
+        line.innerHTML = `<strong class="fcw-sender-link" data-sid="${msg.senderId}" data-sname="${msg.senderName}" data-slvl="${msg.senderLevel || 1}" data-scity="${msg.city || 'hcm'}" style="${isSelf ? '' : 'cursor: pointer; text-decoration: underline; color: #38bdf8;'}" title="${isSelf ? 'Bạn' : 'Bấm để xem hồ sơ và kết bạn'}">${msg.senderName}:</strong> ${msg.text}`;
+
+        if (!isSelf) {
+            const senderLink = line.querySelector('.fcw-sender-link');
+            if (senderLink) {
+                senderLink.onclick = (e) => {
+                    e.stopPropagation();
+                    audio.playClick();
+                    const player = network.otherPlayers.get(msg.senderId) || {
+                        id: msg.senderId,
+                        playerId: msg.senderId,
+                        brandName: msg.senderName,
+                        name: msg.senderName,
+                        level: Number(msg.senderLevel) || 1,
+                        city: msg.city || 'hcm'
+                    };
+                    this.openPlayerProfile(player);
+                };
+            }
+        }
+
         msgBox.appendChild(line);
 
         while (msgBox.children.length > 2) {
@@ -1570,6 +1609,52 @@ export class OnlineUIManager {
                 network.contributeCoopRice(count);
                 this.refreshSubTabInContainer(container);
             };
+        });
+
+        // Bấm vào tên người gửi trong khung Chat để mở Thẻ Hồ Sơ Người Chơi
+        const senderBtns = container.querySelectorAll('.cmr-sender-btn');
+        senderBtns.forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                audio.playClick();
+                const sid = btn.dataset.senderId;
+                if (!sid || sid === network.selfId) return;
+                const player = network.otherPlayers.get(sid) || {
+                    id: sid,
+                    playerId: sid,
+                    brandName: btn.dataset.senderName || 'Người Chơi',
+                    name: btn.dataset.senderName || 'Người Chơi',
+                    level: Number(btn.dataset.senderLevel) || 1,
+                    city: btn.dataset.senderCity || 'hcm'
+                };
+                this.openPlayerProfile(player);
+            };
+        });
+
+        // Bấm vào tên người chơi trong BXH Tỷ Phú để mở Thẻ Hồ Sơ Người Chơi
+        const bilNames = container.querySelectorAll('.bil-brand-cell');
+        bilNames.forEach(cell => {
+            const row = cell.closest('tr');
+            const targetBtn = row?.querySelector('.btn-friend-player, .btn-challenge-player');
+            const targetId = targetBtn?.dataset.targetid;
+            const targetName = targetBtn?.dataset.targetname;
+            if (targetId && targetId !== network.selfId) {
+                cell.style.cursor = 'pointer';
+                cell.title = 'Bấm để xem hồ sơ và kết bạn';
+                cell.onclick = (e) => {
+                    e.stopPropagation();
+                    audio.playClick();
+                    const player = network.otherPlayers.get(targetId) || {
+                        id: targetId,
+                        playerId: targetId,
+                        brandName: targetName || 'Chi Nhánh Đối Tác',
+                        name: targetName || 'Chi Nhánh Đối Tác',
+                        level: 1,
+                        city: 'hcm'
+                    };
+                    this.openPlayerProfile(player);
+                };
+            }
         });
     }
 

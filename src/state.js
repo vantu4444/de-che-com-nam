@@ -1442,11 +1442,13 @@ class GameState {
         if (!Array.isArray(this.friends)) this.friends = [];
 
         const cleanName = String(friendData.name).trim();
-        const existingIdx = this.friends.findIndex(f => f.id === friendData.id || f.name.toLowerCase() === cleanName.toLowerCase());
+        const pId = friendData.playerId || friendData.id;
+        const existingIdx = this.friends.findIndex(f => f.id === friendData.id || (pId && f.playerId === pId) || f.name.toLowerCase() === cleanName.toLowerCase());
         if (existingIdx !== -1) {
             this.friends[existingIdx] = {
                 ...this.friends[existingIdx],
                 ...friendData,
+                playerId: pId,
                 name: cleanName
             };
             this.save();
@@ -1456,6 +1458,7 @@ class GameState {
 
         this.friends.push({
             id: friendData.id || 'f_' + Date.now(),
+            playerId: pId,
             name: cleanName,
             level: Number(friendData.level) || 1,
             city: friendData.city || 'hcm',
@@ -1469,7 +1472,7 @@ class GameState {
 
     removeFriend(friendId) {
         if (!Array.isArray(this.friends)) return false;
-        this.friends = this.friends.filter(f => f.id !== friendId && f.name !== friendId);
+        this.friends = this.friends.filter(f => f.id !== friendId && f.playerId !== friendId && f.name !== friendId);
         this.save();
         this.notify({ friendsUpdated: true });
         return true;
@@ -1478,7 +1481,7 @@ class GameState {
     isFriend(targetIdOrName) {
         if (!Array.isArray(this.friends) || !targetIdOrName) return false;
         const targetClean = String(targetIdOrName).trim().toLowerCase();
-        return this.friends.some(f => f.id === targetIdOrName || f.name.toLowerCase() === targetClean);
+        return this.friends.some(f => f.id === targetIdOrName || f.playerId === targetIdOrName || f.name.toLowerCase() === targetClean);
     }
 
     addPrivateMessage(friendId, msg) {
