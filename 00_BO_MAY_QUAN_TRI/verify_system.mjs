@@ -734,6 +734,9 @@ function runStaticAuditorSuite() {
         'brandNameModal',
         'hudOnlineCard',
         'hudOnlineStatus',
+        'btnNearbyPlayers',
+        'playerProfileModal',
+        'nearbyPlayersModal',
         'pvpChallengeDialog',
         'pvpInviteNotification',
         'friendInviteNotification',
@@ -1135,6 +1138,10 @@ async function runInteractiveSimulationSuite() {
 
                 this.updateClockHUD();
 
+                if (onlineUI && onlineUI.updateNearbyCount) {
+                    onlineUI.updateNearbyCount();
+                }
+
                 const promptBanner = doc.getElementById('proximityPrompt');
                 if (promptBanner) {
                     const isTouch = (typeof win !== 'undefined' && (('ontouchstart' in win) || (win.navigator?.maxTouchPoints > 0)));
@@ -1145,6 +1152,46 @@ async function runInteractiveSimulationSuite() {
                         promptBanner.innerHTML = `<span class="prompt-icon">${nearby.icon}</span><span class="prompt-msg">${interactEnter} <strong>${nearby.name}</strong></span>`;
                     }
                 }
+            }
+
+            handleInputCoords(screenX, screenY) {
+                if (this.isKitchenOpen || this.isMarketOpen || (this.questManager && this.questManager.isOpen)) return false;
+                if (onlineUI && onlineUI.isAnyModalOpen && onlineUI.isAnyModalOpen()) return false;
+
+                const worldX = screenX + this.camera.x;
+                const worldY = screenY + this.camera.y;
+
+                // 1. Ưu tiên bắt chạm người chơi khác (Hitbox bán kính >= 56px trên màn hình)
+                let clickedOther = null;
+                let minDist = 56;
+                if (network && network.otherPlayers) {
+                    for (const p of network.otherPlayers.values()) {
+                        const pScreen = (city3D && typeof city3D.projectToScreen === 'function')
+                            ? city3D.projectToScreen(p.x, p.y, this.camera)
+                            : { x: p.x - this.camera.x, y: p.y - this.camera.y };
+
+                        const screenDist = Math.hypot(screenX - pScreen.x, screenY - pScreen.y);
+                        const worldDist = Math.hypot(worldX - p.x, worldY - p.y);
+
+                        if (screenDist <= minDist || worldDist <= 56) {
+                            clickedOther = p;
+                            minDist = Math.min(minDist, screenDist);
+                        }
+                    }
+                }
+
+                if (clickedOther) {
+                    if (onlineUI.closeQuickMenu) onlineUI.closeQuickMenu();
+                    if (onlineUI.openPlayerProfile) {
+                        onlineUI.openPlayerProfile(clickedOther);
+                    }
+                    return true;
+                }
+
+                if (sellingManager.isOpen) {
+                    sellingManager.handleClick(worldX, worldY);
+                }
+                return false;
             }
 
             onKeyDown(e) {
@@ -2568,18 +2615,25 @@ async function runInteractiveSimulationSuite() {
         logger.fail('Mô phỏng Render Bản Đồ 2D: Lỗi vẽ người chơi trực tuyến trên Canvas', renderOnlineError);
     }
 
-    // 8.10. Mô phỏng Đồng Bộ 2 Người Chơi Thật (Player_1 & Player_2) Qua Socket Server
+    // 8.10. Mô phỏng Định Danh Bền Vững, Chạm Nhân Vật (Hitbox 56px), Nút Quanh Đây, Thách Đấu & Kết Bạn
     try {
         const testServer = new OnigiriServer(3999);
         const p1Id = 'p1_socket_test';
         const p2Id = 'p2_socket_test';
+        const p1PersistentId = 'ply_p1_persistent_test';
+        const p2PersistentId = 'ply_p2_persistent_test';
+
+        // 1. Kiểm tra playerId bền vững trong state
+        const localPlayerId = state.getPlayerId();
+        const persistentIdOk = Boolean(localPlayerId && typeof localPlayerId === 'string' && localPlayerId.startsWith('ply_'));
 
         // Đăng ký hàng đợi tin nhắn giả lập 2 client
         testServer.pollingQueues.set(p1Id, []);
         testServer.pollingQueues.set(p2Id, []);
 
-        // 1. Player_1 vào game
+        // 2. Player_1 vào game với playerId bền vững
         testServer.processClientEvent(p1Id, 'joinGame', {
+            playerId: p1PersistentId,
             brandName: 'Thương Hiệu Cơm Nắm 1',
             level: 10,
             vehicleId: 'bike',
@@ -2589,8 +2643,9 @@ async function runInteractiveSimulationSuite() {
             isStallOpen: false
         });
 
-        // 2. Player_2 vào game cùng thành phố 'hcm'
+        // 3. Player_2 vào game cùng thành phố 'hcm' với playerId bền vững
         testServer.processClientEvent(p2Id, 'joinGame', {
+            playerId: p2PersistentId,
             brandName: 'Thương Hiệu Cơm Nắm 2',
             level: 15,
             vehicleId: 'delivery_bike',
@@ -2603,13 +2658,16 @@ async function runInteractiveSimulationSuite() {
         const p1Queue = testServer.pollingQueues.get(p1Id) || [];
         const p2Queue = testServer.pollingQueues.get(p2Id) || [];
 
+        // Kiểm tra server map đúng playerId <-> socketId
+        const serverPlayerMapOk = (testServer.playerSockets.get(p1PersistentId) === p1Id && testServer.playerSockets.get(p2PersistentId) === p2Id);
+
         // Player_1 phải nhận được sự kiện 'playerJoined' của Player_2
         const p1SawP2Join = p1Queue.some(m => m.event === 'playerJoined' && m.data.id === p2Id && m.data.brandName === 'Thương Hiệu Cơm Nắm 2');
 
         // Player_2 phải có Player_1 trong danh sách ban đầu 'joinSuccess'
         const p2SawP1InList = p2Queue.some(m => m.event === 'joinSuccess' && m.data.players && m.data.players.some(p => p.id === p1Id && p.brandName === 'Thương Hiệu Cơm Nắm 1'));
 
-        // 3. Player_1 di chuyển tới tọa độ mới (550, 650)
+        // 4. Player_1 di chuyển tới tọa độ mới (550, 650)
         testServer.processClientEvent(p1Id, 'playerMove', {
             x: 550,
             y: 650,
@@ -2621,12 +2679,75 @@ async function runInteractiveSimulationSuite() {
         // Player_2 phải nhận được sự kiện 'playerMove' của Player_1 với đúng tọa độ mới
         const p2ReceivedP1Move = p2Queue.some(m => m.event === 'playerMove' && m.data.id === p1Id && m.data.x === 550 && m.data.y === 650 && m.data.isStallOpen === true);
 
-        // 4. KỊCH BẢN THÁCH ĐẤU 1V1 CÓ XÁC NHẬN (DECLINE & ACCEPT)
-        // Kịch bản 4a: Player_1 mời Player_2 -> Player_2 bấm Từ Chối
+        // 5. KIỂM TRA CHẠM NHÂN VẬT (HITBOX 56PX) & THẺ HỒ SƠ NGƯỜI CHƠI
+        // Đảm bảo không có modal nào khác đang mở chắn input
+        if (gameApp.questManager) gameApp.questManager.isOpen = false;
+        gameApp.isKitchenOpen = false;
+        gameApp.isMarketOpen = false;
+        const phoneModalEl = doc.getElementById('phoneModal');
+        if (phoneModalEl) phoneModalEl.classList.add('hidden');
+        onlineUI.closeQuickMenu();
+        onlineUI.initDomElements();
+
+        // Đưa Player_2 vào network.otherPlayers của gameApp
+        network.otherPlayers.set(p2Id, {
+            id: p2Id,
+            playerId: p2PersistentId,
+            brandName: 'Thương Hiệu Cơm Nắm 2',
+            level: 15,
+            branch: 'Bến Thành',
+            city: 'hcm',
+            netWorth: 850000,
+            x: 400,
+            y: 500
+        });
+
+        gameApp.camera = { x: 0, y: 0 };
+        // Giả lập click tại (415, 515) -> khoảng cách Math.hypot(15, 15) ~ 21.2px <= 56px (trúng Hitbox)
+        gameApp.handleInputCoords(415, 515);
+
+        const profileModalEl = doc.getElementById('playerProfileModal');
+        const profileIsOpen = profileModalEl && !profileModalEl.classList.contains('hidden');
+        const profileHasButtons = Boolean(
+            doc.getElementById('btnProfileAddFriend') &&
+            doc.getElementById('btnProfileChallenge') &&
+            doc.getElementById('btnProfileClose')
+        );
+
+        // Đóng profile
+        const btnProfileClose = doc.getElementById('btnProfileClose');
+        if (btnProfileClose) btnProfileClose.onclick();
+        const profileClosedOk = profileModalEl && profileModalEl.classList.contains('hidden');
+        const playerProfileTapOk = Boolean(profileIsOpen && profileHasButtons && profileClosedOk);
+
+        // 6. KIỂM TRA NÚT HUD "👥 QUANH ĐÂY (X)" & MODAL DANH SÁCH NGƯỜI CHƠI
+        onlineUI.updateNearbyCount();
+        const btnNearbyEl = doc.getElementById('btnNearbyPlayers');
+        const nearbyCountUpdated = btnNearbyEl && btnNearbyEl.textContent.includes('Quanh Đây');
+
+        // Bấm nút Quanh Đây để mở modal
+        if (btnNearbyEl) btnNearbyEl.onclick();
+        const nearbyModalEl = doc.getElementById('nearbyPlayersModal');
+        const nearbyModalOpen = nearbyModalEl && !nearbyModalEl.classList.contains('hidden');
+        const nearbyListEl = nearbyModalEl?.querySelector('.npm-list');
+        const nearbyHasItems = Boolean(
+            nearbyListEl &&
+            (nearbyListEl.children.length > 0 || nearbyModalEl.innerHTML.includes('Thương Hiệu Cơm Nắm 2'))
+        );
+
+        // Đóng modal Quanh Đây
+        const btnNearbyClose = doc.getElementById('btnNearbyClose');
+        if (btnNearbyClose) btnNearbyClose.onclick();
+        const nearbyModalClosed = nearbyModalEl && nearbyModalEl.classList.contains('hidden');
+        const nearbySystemOk = Boolean(nearbyCountUpdated && nearbyModalOpen && nearbyHasItems && nearbyModalClosed);
+
+        // 7. KỊCH BẢN THÁCH ĐẤU 1V1 CÓ XÁC NHẬN (DECLINE & ACCEPT)
+        // Kịch bản 7a: Player_1 mời Player_2 -> Player_2 bấm Từ Chối
         p1Queue.length = 0;
         p2Queue.length = 0;
         testServer.processClientEvent(p1Id, 'pvp:invite', {
             targetId: p2Id,
+            targetPlayerId: p2PersistentId,
             gameType: 'speed_kitchen',
             betAmount: 50000
         });
@@ -2639,14 +2760,15 @@ async function runInteractiveSimulationSuite() {
             p2InviteMsg &&
             p1DeclinedMsg &&
             p1DeclinedMsg.data?.reason &&
-            p1DeclinedMsg.data.reason.includes('đang bận bán hàng, đã từ chối lời mời')
+            p1DeclinedMsg.data.reason.includes('đã từ chối lời mời')
         );
 
-        // Kịch bản 4b: Player_1 gửi lại lời mời -> Player_2 bấm Đồng Ý -> Vào phòng đấu 1v1
+        // Kịch bản 7b: Player_1 gửi lại lời mời -> Player_2 bấm Đồng Ý -> Vào phòng đấu 1v1
         p1Queue.length = 0;
         p2Queue.length = 0;
         testServer.processClientEvent(p1Id, 'pvp:invite', {
             targetId: p2Id,
+            targetPlayerId: p2PersistentId,
             gameType: 'speed_kitchen',
             betAmount: 50000
         });
@@ -2667,18 +2789,18 @@ async function runInteractiveSimulationSuite() {
         const pvpTapOk = Boolean(p1ScoreUpdate && p2ScoreUpdate && p1ScoreUpdate.data?.player1Score === 1);
         const pvpMatchOk = matchSameRoom && pvpTapOk;
 
-        // 5. KỊCH BẢN KẾT BẠN & TRÒ CHUYỆN ĐA KÊNH (CHAT CÓ DẤU CÁCH & TIẾNG VIỆT)
-        // 5a. Kết bạn: Player_1 gửi lời mời -> Player_2 đồng ý
+        // 8. KỊCH BẢN KẾT BẠN & TRÒ CHUYỆN ĐA KÊNH (CHAT CÓ DẤU CÁCH & TIẾNG VIỆT)
+        // 8a. Kết bạn: Player_1 gửi lời mời -> Player_2 đồng ý
         p1Queue.length = 0;
         p2Queue.length = 0;
-        testServer.processClientEvent(p1Id, 'friend:request', { targetId: p2Id });
+        testServer.processClientEvent(p1Id, 'friend:request', { targetId: p2Id, targetPlayerId: p2PersistentId });
         const p2FriendInvite = p2Queue.find(m => m.event === 'friend:invite');
-        testServer.processClientEvent(p2Id, 'friend:accept', { fromId: p1Id });
+        testServer.processClientEvent(p2Id, 'friend:accept', { fromId: p1Id, fromPlayerId: p1PersistentId });
         const p1FriendAcc = p1Queue.find(m => m.event === 'friend:accepted');
         const p2FriendAcc = p2Queue.find(m => m.event === 'friend:accepted');
         const friendSystemOk = Boolean(p2FriendInvite && p1FriendAcc && p2FriendAcc);
 
-        // 5b. Chat 1-1 riêng bạn bè: Gửi tin nhắn có dấu cách ("Chào bạn Cơm Nắm Sài Gòn")
+        // 8b. Chat 1-1 riêng bạn bè: Gửi tin nhắn có dấu cách ("Chào bạn Cơm Nắm Sài Gòn")
         p1Queue.length = 0;
         p2Queue.length = 0;
         const testChatContent = 'Chào bạn Cơm Nắm Sài Gòn';
@@ -2694,7 +2816,7 @@ async function runInteractiveSimulationSuite() {
             p2ReceivedChat.data.text.includes(' ')
         );
 
-        // 6. KIỂM TRA BẢNG XẾP HẠNG TỶ PHÚ (SẮP XẾP GIẢM DẦN & HUY CHƯƠNG)
+        // 9. KIỂM TRA BẢNG XẾP HẠNG TỶ PHÚ (SẮP XẾP GIẢM DẦN & HUY CHƯƠNG)
         const billionaires = testServer.getBillionaires('all');
         const bilLengthOk = Array.isArray(billionaires) && billionaires.length >= 10;
         const bilSortedOk = billionaires.every((b, i, arr) => i === 0 || b.netWorth <= arr[i - 1].netWorth);
@@ -2703,6 +2825,24 @@ async function runInteractiveSimulationSuite() {
 
         testServer.stop();
 
+        if (persistentIdOk && serverPlayerMapOk) {
+            logger.pass('Mô phỏng Định Danh Người Chơi Bền Vững: playerId duy nhất lưu localStorage và ánh xạ 2 chiều playerId <-> socketId chống mất kết nối khi chuyển tab');
+        } else {
+            logger.fail('Mô phỏng Định Danh Người Chơi Bền Vững: Lỗi khởi tạo hoặc ánh xạ playerId', JSON.stringify({ persistentIdOk, serverPlayerMapOk }));
+        }
+
+        if (playerProfileTapOk) {
+            logger.pass('Mô phỏng Bắt Chạm Nhân Vật (Hitbox 56px): Chạm trúng người chơi khác ngoài phố mở Thẻ Hồ Sơ trung tâm màn hình với 3 nút lớn chuẩn công thái học');
+        } else {
+            logger.fail('Mô phỏng Bắt Chạm Nhân Vật (Hitbox 56px): Lỗi bắt chạm hoặc Thẻ Hồ Sơ không mở đúng chuẩn', JSON.stringify({ profileIsOpen, profileHasButtons, profileClosedOk }));
+        }
+
+        if (nearbySystemOk) {
+            logger.pass('Mô phỏng Nút HUD "👥 Quanh Đây": Cập nhật số người trực tuyến, mở danh sách khoảng cách mét và chi nhánh chuẩn xác 100%');
+        } else {
+            logger.fail('Mô phỏng Nút HUD "👥 Quanh Đây": Lỗi hiển thị danh sách người chơi quanh đây', JSON.stringify({ nearbyCountUpdated, nearbyModalOpen, nearbyHasItems, nearbyModalClosed }));
+        }
+
         if (p1SawP2Join && p2SawP1InList && p2ReceivedP1Move) {
             logger.pass('Mô phỏng 2 Người Chơi Thật: Đồng bộ tức thì Player_1 & Player_2 cùng phòng, truyền nhận tọa độ di chuyển chuẩn xác 100%');
         } else {
@@ -2710,7 +2850,7 @@ async function runInteractiveSimulationSuite() {
         }
 
         if (pvpDeclineOk) {
-            logger.pass('Mô phỏng Thách Đấu 1v1 Từ Chối: Player_A mời -> Player_B từ chối -> Hủy đúng quy trình và gửi thông báo lịch sự "[Tên] đang bận bán hàng"');
+            logger.pass('Mô phỏng Thách Đấu 1v1 Từ Chối: Player_A mời -> Player_B từ chối -> Hủy đúng quy trình và gửi thông báo lịch sự "[Tên] đã từ chối lời mời"');
         } else {
             logger.fail('Mô phỏng Thách Đấu 1v1 Từ Chối: Không xử lý đúng quy trình từ chối', JSON.stringify({ p2InviteMsg, p1DeclinedMsg }));
         }

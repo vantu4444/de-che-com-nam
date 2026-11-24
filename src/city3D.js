@@ -76,6 +76,26 @@ export class City3DManager {
         }
     }
 
+    // Chuyển đổi tọa độ thế giới sang tọa độ màn hình (Hỗ trợ cả 3D Camera Projection lẫn 2D Offset)
+    projectToScreen(worldX, worldY, camera = { x: 0, y: 0 }) {
+        if (this.camera && this.renderer && typeof window !== 'undefined' && window.THREE) {
+            try {
+                const vec = new window.THREE.Vector3(worldX, 0, worldY);
+                vec.project(this.camera);
+                const halfW = (this.renderer.domElement?.width || window.innerWidth) / 2;
+                const halfH = (this.renderer.domElement?.height || window.innerHeight) / 2;
+                return {
+                    x: (vec.x * halfW) + halfW,
+                    y: -(vec.y * halfH) + halfH
+                };
+            } catch (e) {}
+        }
+        return {
+            x: worldX - (camera.x || 0),
+            y: worldY - (camera.y || 0)
+        };
+    }
+
     // Cập nhật các hạt vật lý & thời tiết mỗi khung hình
     update(dt = 0.016, timeInfo = {}) {
         // 1. Chu kỳ mưa rào Sài Gòn bất chợt: Mỗi 10 phút game có xác suất mưa 2 phút

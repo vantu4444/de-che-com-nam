@@ -754,11 +754,40 @@ export const ACHIEVEMENT_ORDER = [
 class GameState {
     constructor() {
         this.saveKey = 'de_che_com_nam_save_v4';
+        this.playerId = this.initPlayerId();
         this.reset();
         this.listeners = [];
     }
 
+    initPlayerId() {
+        let storedId = null;
+        try {
+            if (typeof localStorage !== 'undefined') {
+                storedId = localStorage.getItem('onigiri_persistent_player_id');
+            }
+        } catch (e) {}
+        if (!storedId) {
+            storedId = 'ply_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 9);
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.setItem('onigiri_persistent_player_id', storedId);
+                }
+            } catch (e) {}
+        }
+        return storedId;
+    }
+
+    getPlayerId() {
+        if (!this.playerId) {
+            this.playerId = this.initPlayerId();
+        }
+        return this.playerId;
+    }
+
     reset() {
+        if (!this.playerId) {
+            this.playerId = this.initPlayerId();
+        }
         this.money = 50000;
         this.level = 1;
         this.exp = 0;
@@ -2279,6 +2308,7 @@ class GameState {
                 dailyRevenue: this.dailyRevenue || 0,
                 dailyTips: this.dailyTips || 0,
                 gameDay: this.gameDay || 1,
+                playerId: this.playerId || this.initPlayerId(),
                 friends: Array.isArray(this.friends) ? this.friends : [],
                 privateMessages: this.privateMessages || {}
             };
@@ -2315,6 +2345,14 @@ class GameState {
             this.dailyRevenue = typeof data.dailyRevenue === 'number' ? data.dailyRevenue : 0;
             this.dailyTips = typeof data.dailyTips === 'number' ? data.dailyTips : 0;
             this.gameDay = typeof data.gameDay === 'number' && data.gameDay >= 1 ? data.gameDay : 1;
+            if (data.playerId && typeof data.playerId === 'string') {
+                this.playerId = data.playerId;
+                try {
+                    if (typeof localStorage !== 'undefined') {
+                        localStorage.setItem('onigiri_persistent_player_id', this.playerId);
+                    }
+                } catch (e) {}
+            }
 
             if (Array.isArray(data.inventory)) {
                 this.inventory = data.inventory;

@@ -128,17 +128,21 @@ export class NetworkManager {
                     this.status = 'CONNECTED';
                     this.isOnline = true;
                     this.selfId = this.socket.id;
+                    this.selfPlayerId = state.getPlayerId();
                     this.notifyStatus();
                     this.updateHudOnlineStatus();
 
-                    // Đăng ký thông tin người chơi ngay khi kết nối
+                    // Đăng ký thông tin người chơi ngay khi kết nối (kèm định danh bền vững playerId)
                     const rawCity = state.currentCity || 'hcm';
                     const city = rawCity.replace('branch_', '');
                     this.socket.emit('joinGame', {
+                        playerId: state.getPlayerId(),
+                        name: state.brandName || 'Tiệm Cơm Nắm Sài Gòn',
                         brandName: state.brandName || 'Tiệm Cơm Nắm Sài Gòn',
+                        branch: city,
+                        city: city,
                         level: state.level || 1,
                         vehicleId: state.currentVehicle || 'walking',
-                        city: city,
                         x: 420,
                         y: 1250,
                         isStallOpen: false,
@@ -556,8 +560,28 @@ export class NetworkManager {
         return { rewardMoney, rewardExp, rewardRep, ratio: Math.round(ratio * 100) };
     }
 
+    // Lấy danh sách người chơi quanh đây sắp xếp theo khoảng cách mét
+    getNearbyPlayers(localX = 420, localY = 1250) {
+        const list = [];
+        for (const p of this.otherPlayers.values()) {
+            const px = typeof p.x === 'number' ? p.x : 420;
+            const py = typeof p.y === 'number' ? p.y : 1250;
+            const distPx = Math.hypot(px - localX, py - localY);
+            const distMeters = Math.max(1, Math.round(distPx / 10));
+            list.push({
+                ...p,
+                distPx,
+                distMeters
+            });
+        }
+        return list.sort((a, b) => a.distPx - b.distPx);
+    }
+
     // [PVP 1V1 XÁC NHẬN BẮT BUỘC] Gửi Lời Mời Thách Đấu
-    sendPvpInvite(targetId, gameType = 'speed_kitchen', betAmount = 0) {
+    sendPvpInvite(targetIdOrPlayer, gameType = 'speed_kitchen', betAmount = 0) {
+        const targetId = typeof targetIdOrPlayer === 'object' ? targetIdOrPlayer.id : targetIdOrPlayer;
+        const targetPlayerId = typeof targetIdOrPlayer === 'object' ? (targetIdOrPlayer.playerId || targetIdOrPlayer.id) : targetId;
+        const targetName = typeof targetIdOrPlayer === 'object' ? (targetIdOrPlayer.brandName || targetIdOrPlayer.name) : targetId;
         const bet = [0, 50000, 200000].includes(Number(betAmount)) ? Number(betAmount) : 0;
         const gType = gameType === 'seaweed_peel' ? 'seaweed_peel' : 'speed_kitchen';
 
@@ -568,14 +592,15 @@ export class NetworkManager {
         if (this.isOnline && this.socket && this.socket.connected) {
             this.socket.emit('pvp:invite', {
                 targetId,
+                targetPlayerId,
                 gameType: gType,
                 betAmount: bet
             });
-            return { success: true, message: 'Đã gửi lời mời thách đấu! Vui lòng chờ đối thủ xác nhận...' };
+            return { success: true, message: `Đã gửi lời mời thách đấu tới [${targetName}]! Vui lòng chờ xác nhận...` };
         } else {
             // Chế độ Giả lập Offline Bot
-            const opponent = this.otherPlayers.get(targetId);
-            const opponentName = opponent ? opponent.brandName : 'Chi Nhánh Đối Thủ';
+            const opponent = typeof targetIdOrPlayer === 'object' ? targetIdOrPlayer : this.otherPlayers.get(targetId);
+            const opponentName = opponent ? (opponent.brandName || opponent.name) : targetName;
 
             // Mô phỏng đối thủ suy nghĩ trong 1.2s rồi đồng ý
             setTimeout(() => {
@@ -613,25 +638,34 @@ export class NetworkManager {
     }
 
     // [HỆ THỐNG KẾT BẠN]
-    sendFriendRequest(targetId) {
+    sendFriendRequest(targetIdOrPlayer) {
+        const targetId = typeof targetIdOrPlayer === 'object' ? targetIdOrPlayer.id : targetIdOrPlayer;
+        const targetPlayerId = typeof targetIdOrPlayer === 'object' ? (targetIdOrPlayer.playerId || targetIdOrPlayer.id) : targetId;
+        const targetName = typeof targetIdOrPlayer === 'object' ? (targetIdOrPlayer.brandName || targetIdOrPlayer.name) : targetId;
+
         if (this.isOnline && this.socket && this.socket.connected) {
-            this.socket.emit('friend:request', { targetId });
-            return { success: true, message: 'Đã gửi lời mời kết bạn!' };
+            this.socket.emit('friend:request', {
+                targetId,
+                targetPlayerId,
+                fromPlayerId: state.getPlayerId()
+            });
+            return { success: true, message: `Đã gửi lời mời kết bạn tới [${targetName}]!` };
         } else {
             // Chế độ Bot: Tự động đồng ý sau 800ms
-            const target = this.otherPlayers.get(targetId);
+            const target = typeof targetIdOrPlayer === 'object' ? targetIdOrPlayer : this.otherPlayers.get(targetId);
             if (target) {
                 setTimeout(() => {
                     state.addFriend({
                         id: target.id,
-                        name: target.brandName,
+                        playerId: target.playerId || target.id,
+                        name: target.brandName || target.name,
                         level: target.level || 1,
-                        city: target.city || 'hcm'
+                        city: target.city || target.branch || 'hcm'
                     });
                     this.emitEvent('onFriendAccepted', { friend: target });
                 }, 800);
             }
-            return { success: true, message: 'Đã gửi lời mời kết bạn!' };
+            return { success: true, message: `Đã gửi lời mời kết bạn tới [${targetName}]!` };
         }
     }
 

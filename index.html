@@ -112,11 +112,15 @@
                     </div>
                 </div>
 
-                <!-- HÀNG 2: Đèn báo trạng thái kết nối Online / Offline -->
+                <!-- HÀNG 2: Đèn báo trạng thái kết nối Online / Offline & Nút Quanh Đây -->
                 <div class="hud-right-row-2">
                     <div class="hud-item hud-online-card" id="hudOnlineCard">
                         <span class="hud-online-status is-connecting" id="hudOnlineStatus">🟡 Đang kết nối máy chủ...</span>
                     </div>
+                    <button type="button" id="btnNearbyPlayers" class="hud-btn-nearby" title="Danh sách người chơi quanh đây">
+                        <span class="hud-btn-icon">👥</span>
+                        <span class="hud-btn-text" id="hudNearbyText">Quanh Đây (0)</span>
+                    </button>
                 </div>
 
                 <!-- HÀNG 3: Vùng khung MINIMAP trên Canvas được vẽ ngay bên dưới Hàng 2 với khoảng cách an toàn -->
@@ -181,6 +185,8 @@
         <div id="dailyBillModal" class="daily-bill-modal-layer hidden"></div>
 
         <!-- 9. Menu Tương Tác Nhanh Người Chơi Online & Đổi Tên Thương Hiệu -->
+        <div id="playerProfileModal" class="player-profile-modal-layer hidden"></div>
+        <div id="nearbyPlayersModal" class="nearby-players-modal-layer hidden"></div>
         <div id="onlineQuickMenu" class="online-quick-menu-layer hidden"></div>
         <div id="brandNameModal" class="brand-name-modal-layer hidden"></div>
 

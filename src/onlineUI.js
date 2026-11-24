@@ -25,6 +25,10 @@ export class OnlineUIManager {
 
         this.quickMenuTarget = null;
         this.quickMenuElement = null;
+        this.playerProfileElement = null;
+        this.nearbyPlayersElement = null;
+        this.btnNearbyPlayers = null;
+        this.sentFriendRequests = new Set();
         this.brandModalElement = null;
         this.pvpInviteElement = null;
         this.friendInviteElement = null;
@@ -50,12 +54,23 @@ export class OnlineUIManager {
             return el;
         };
 
+        this.playerProfileElement = getOrCreate('playerProfileModal', 'player-profile-modal-layer hidden');
+        this.nearbyPlayersElement = getOrCreate('nearbyPlayersModal', 'nearby-players-modal-layer hidden');
         this.quickMenuElement = getOrCreate('onlineQuickMenu', 'online-quick-menu-layer hidden');
         this.brandModalElement = getOrCreate('brandNameModal', 'brand-name-modal-layer hidden');
         this.pvpInviteElement = getOrCreate('pvpInviteNotification', 'pvp-invite-card hidden');
         this.friendInviteElement = getOrCreate('friendInviteNotification', 'friend-invite-card hidden');
         this.challengeDialogElement = getOrCreate('pvpChallengeDialog', 'pvp-challenge-dialog-layer hidden');
         this.floatingChatElement = getOrCreate('floatingChatWidget', 'floating-chat-preview');
+
+        this.btnNearbyPlayers = document.getElementById('btnNearbyPlayers');
+        if (this.btnNearbyPlayers) {
+            this.btnNearbyPlayers.onclick = () => {
+                audio.playClick();
+                this.openNearbyModal();
+            };
+        }
+
         this.renderFloatingChatWidget();
     }
 
@@ -667,22 +682,316 @@ export class OnlineUIManager {
     // 2. CÁC HỘP THOẠI & THẺ THÔNG BÁO NỔI (NOTIFICATIONS & POPUPS)
     // =========================================================================
 
-    // Thẻ thông báo mời thách đấu 1v1 nổi góc màn hình (Có đếm ngược 15s)
+    isAnyModalOpen() {
+        const modals = [
+            this.playerProfileElement,
+            this.nearbyPlayersElement,
+            this.pvpInviteElement,
+            this.friendInviteElement,
+            this.challengeDialogElement,
+            document.getElementById('phoneModal'),
+            document.getElementById('kitchenModal'),
+            document.getElementById('marketModal')
+        ];
+        return modals.some(m => m && !m.classList.contains('hidden'));
+    }
+
+    // THẺ HỒ SƠ NGƯỜI CHƠI (Player Profile Card - z-index: 99990)
+    openPlayerProfile(player) {
+        if (!this.playerProfileElement || !player) return;
+
+        this.profileTarget = player;
+        const brandName = player.brandName || player.name || 'Chi Nhánh Đối Tác';
+        const level = player.level || 1;
+        const reputation = player.reputation || 100;
+        const rawCity = player.city || player.branch || 'hcm';
+        const cityNames = { hcm: 'TP.HCM', daklak: 'Đắk Lắk', vinh: 'TP. Vinh', hanoi: 'Hà Nội' };
+        const cityName = cityNames[rawCity.replace('branch_', '')] || 'TP.HCM';
+        const netWorth = Number(player.netWorth) || ((player.totalRevenue || 0) + (level * 3000000) + 15000000);
+        const targetId = player.id;
+        const targetPlayerId = player.playerId || player.id;
+
+        const isFriend = state.isFriend ? state.isFriend(targetPlayerId || targetId || brandName) : false;
+        const isRequestSent = this.sentFriendRequests.has(targetPlayerId) || this.sentFriendRequests.has(targetId);
+
+        let selectedBet = 0;
+        let selectedGameType = 'speed_kitchen';
+
+        // Ẩn phím ảo điều khiển Mobile khi mở hồ sơ
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
+        this.playerProfileElement.innerHTML = `
+            <div class="profile-card-modal">
+                <div class="pcm-header">
+                    <div class="pcm-avatar-box">🍙</div>
+                    <div class="pcm-info">
+                        <h3 class="pcm-brand-name">${brandName}</h3>
+                        <span class="pcm-branch-badge">📍 Chi Nhánh ${cityName}</span>
+                    </div>
+                </div>
+
+                <div class="pcm-stats-grid">
+                    <div class="pcm-stat-item">
+                        <span class="pcm-stat-label">Cấp Độ Bếp</span>
+                        <span class="pcm-stat-value">Cấp ${level}</span>
+                    </div>
+                    <div class="pcm-stat-item">
+                        <span class="pcm-stat-label">Uy Tín ISO</span>
+                        <span class="pcm-stat-value">⭐ ${reputation}</span>
+                    </div>
+                    <div class="pcm-stat-item" style="grid-column: span 2;">
+                        <span class="pcm-stat-label">Tổng Tài Sản Ròng</span>
+                        <span class="pcm-stat-value pcm-stat-gold">💰 ${netWorth.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                </div>
+
+                <div class="pcm-bet-selector">
+                    <div class="pcm-bet-selector-title">⚔️ Mức Cược Thách Đấu 1v1:</div>
+                    <div class="pcm-bet-chips">
+                        <button type="button" class="pcm-bet-chip active" data-bet="0">Giao hữu 0đ</button>
+                        <button type="button" class="pcm-bet-chip" data-bet="50000">50.000đ</button>
+                        <button type="button" class="pcm-bet-chip" data-bet="200000">200.000đ</button>
+                    </div>
+                </div>
+
+                <div class="pcm-actions">
+                    ${isFriend ? `
+                        <button type="button" class="btn-profile-action btn-profile-friend" id="btnProfileChat">
+                            💬 Nhắn Tin Riêng
+                        </button>
+                    ` : `
+                        <button type="button" class="btn-profile-action btn-profile-friend ${isRequestSent ? 'is-sent' : ''}" id="btnProfileAddFriend" ${isRequestSent ? 'disabled' : ''}>
+                            ${isRequestSent ? '⏳ Đã Gửi Lời Mời' : '➕ Thêm Bạn'}
+                        </button>
+                    `}
+                    <button type="button" class="btn-profile-action btn-profile-challenge" id="btnProfileChallenge">
+                        ⚔️ Thách Đấu 1v1
+                    </button>
+                    <button type="button" class="btn-profile-action btn-profile-close" id="btnProfileClose">
+                        ✕ Đóng
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.playerProfileElement.classList.remove('hidden');
+
+        // Gắn sự kiện chọn mức cược
+        const betChips = this.playerProfileElement.querySelectorAll('.pcm-bet-chip');
+        betChips.forEach(chip => {
+            chip.onclick = () => {
+                audio.playClick();
+                betChips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                selectedBet = Number(chip.dataset.bet) || 0;
+            };
+        });
+
+        // Nút Thêm Bạn / Nhắn Tin
+        const btnFriend = this.playerProfileElement.querySelector('#btnProfileAddFriend');
+        if (btnFriend) {
+            btnFriend.onclick = () => {
+                audio.playClick();
+                this.sentFriendRequests.add(targetPlayerId);
+                this.sentFriendRequests.add(targetId);
+                const res = network.sendFriendRequest(player);
+                btnFriend.textContent = '⏳ Đã Gửi Lời Mời';
+                btnFriend.classList.add('is-sent');
+                btnFriend.disabled = true;
+                this.showToastNotification(res.message);
+            };
+        }
+        const btnChat = this.playerProfileElement.querySelector('#btnProfileChat');
+        if (btnChat) {
+            btnChat.onclick = () => {
+                audio.playClick();
+                this.closePlayerProfile();
+                if (window.game?.questManager) {
+                    window.game.questManager.open('online');
+                    this.activeSubTab = 'chat';
+                    this.selectedFriendId = targetId;
+                    this.chatChannel = 'private';
+                    window.game.questManager.render();
+                }
+            };
+        }
+
+        // Nút Thách Đấu
+        const btnChallenge = this.playerProfileElement.querySelector('#btnProfileChallenge');
+        if (btnChallenge) {
+            btnChallenge.onclick = () => {
+                audio.playClick();
+                this.closePlayerProfile();
+                const res = network.sendPvpInvite(player, selectedGameType, selectedBet);
+                this.showToastNotification(res.message);
+            };
+        }
+
+        // Nút Đóng
+        const btnClose = this.playerProfileElement.querySelector('#btnProfileClose');
+        if (btnClose) {
+            btnClose.onclick = () => {
+                audio.playClick();
+                this.closePlayerProfile();
+            };
+        }
+    }
+
+    closePlayerProfile() {
+        if (this.playerProfileElement) {
+            this.playerProfileElement.classList.add('hidden');
+        }
+        this.profileTarget = null;
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls && !this.isAnyModalOpen()) {
+            virtualControls.classList.remove('hidden');
+        }
+    }
+
+    // MODAL DANH SÁCH NGƯỜI CHƠI QUANH ĐÂY (Nearby Modal - z-index: 99980)
+    openNearbyModal() {
+        if (!this.nearbyPlayersElement) return;
+
+        const pX = window.game?.player?.x || 420;
+        const pY = window.game?.player?.y || 1250;
+        const nearbyList = network.getNearbyPlayers(pX, pY);
+        const cityNames = { hcm: 'TP.HCM', daklak: 'Đắk Lắk', vinh: 'TP. Vinh', hanoi: 'Hà Nội' };
+
+        // Ẩn phím ảo
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
+        this.nearbyPlayersElement.innerHTML = `
+            <div class="nearby-modal-card">
+                <div class="npm-header">
+                    <h3>👥 Người Chơi Quanh Đây (${nearbyList.length})</h3>
+                    <button type="button" class="npm-close-btn" id="btnNearbyClose">✕</button>
+                </div>
+                <div class="npm-list">
+                    ${nearbyList.length === 0 ? `
+                        <div style="text-align: center; color: #94a3b8; padding: 30px;">
+                            Hiện chưa có người chơi nào khác ở gần bạn...
+                        </div>
+                    ` : nearbyList.map(p => {
+                        const bName = p.brandName || p.name || 'Chi Nhánh Đối Tác';
+                        const lvl = p.level || 1;
+                        const cName = cityNames[(p.city || 'hcm').replace('branch_', '')] || 'TP.HCM';
+                        const dist = p.distMeters || 10;
+                        const isFr = state.isFriend ? state.isFriend(p.playerId || p.id || bName) : false;
+
+                        return `
+                            <div class="npm-item-row" data-pid="${p.id}">
+                                <div class="npm-item-info">
+                                    <span class="npm-item-avatar">🍙</span>
+                                    <div>
+                                        <div class="npm-item-name">${bName}</div>
+                                        <div class="npm-item-sub">Cấp ${lvl} • ${cName} • Cách ${dist}m</div>
+                                    </div>
+                                </div>
+                                <div class="npm-item-actions">
+                                    <button type="button" class="btn-npm-action btn-npm-profile" data-action="profile">Hồ Sơ</button>
+                                    <button type="button" class="btn-npm-action btn-npm-challenge" data-action="challenge">⚔️ Đấu</button>
+                                    ${!isFr ? `<button type="button" class="btn-npm-action btn-npm-friend" data-action="friend">➕ Bạn</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+
+        this.nearbyPlayersElement.classList.remove('hidden');
+
+        const btnClose = this.nearbyPlayersElement.querySelector('#btnNearbyClose');
+        if (btnClose) {
+            btnClose.onclick = () => {
+                audio.playClick();
+                this.closeNearbyModal();
+            };
+        }
+
+        const rows = this.nearbyPlayersElement.querySelectorAll('.npm-item-row');
+        rows.forEach(row => {
+            const pid = row.dataset.pid;
+            const target = network.otherPlayers.get(pid);
+            if (!target) return;
+
+            const btnProfile = row.querySelector('[data-action="profile"]');
+            if (btnProfile) {
+                btnProfile.onclick = () => {
+                    audio.playClick();
+                    this.closeNearbyModal();
+                    this.openPlayerProfile(target);
+                };
+            }
+
+            const btnChallenge = row.querySelector('[data-action="challenge"]');
+            if (btnChallenge) {
+                btnChallenge.onclick = () => {
+                    audio.playClick();
+                    this.closeNearbyModal();
+                    this.openPlayerProfile(target);
+                };
+            }
+
+            const btnFriend = row.querySelector('[data-action="friend"]');
+            if (btnFriend) {
+                btnFriend.onclick = () => {
+                    audio.playClick();
+                    this.sentFriendRequests.add(target.playerId || target.id);
+                    const res = network.sendFriendRequest(target);
+                    btnFriend.style.display = 'none';
+                    this.showToastNotification(res.message);
+                };
+            }
+        });
+    }
+
+    closeNearbyModal() {
+        if (this.nearbyPlayersElement) {
+            this.nearbyPlayersElement.classList.add('hidden');
+        }
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls && !this.isAnyModalOpen()) {
+            virtualControls.classList.remove('hidden');
+        }
+    }
+
+    updateNearbyCount() {
+        const btnNearbyText = document.getElementById('hudNearbyText');
+        if (btnNearbyText) {
+            const count = network.otherPlayers ? network.otherPlayers.size : 0;
+            btnNearbyText.textContent = `Quanh Đây (${count})`;
+        }
+    }
+
+    // HỘP THOẠI XÁC NHẬN MỜI THÁCH ĐẤU TRUNG TÂM (z-index: 99999)
     showPvpInviteNotification(data) {
         if (!this.pvpInviteElement) return;
 
-        audio.playClick();
+        try {
+            audio.playBellNotification();
+        } catch(e) {
+            audio.playClick();
+        }
+
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
         const modeLabel = data.gameType === 'seaweed_peel' ? 'Bóc Rong Biển Tốc Độ' : 'Gói Cơm ASMR Chuẩn ISO 30s';
-        const betLabel = data.betAmount > 0 ? `${data.betAmount.toLocaleString('vi-VN')}đ` : 'Giao hữu (0đ)';
+        const betLabel = data.betAmount > 0 ? `${Number(data.betAmount).toLocaleString('vi-VN')}đ` : 'Giao hữu 0đ';
+        const cityNames = { hcm: 'TP.HCM', daklak: 'Đắk Lắk', vinh: 'TP. Vinh', hanoi: 'Hà Nội' };
+        const cityName = cityNames[String(data.fromCity || 'hcm').replace('branch_', '')] || 'TP.HCM';
 
         this.pvpInviteElement.innerHTML = `
             <div class="pip-inner animate-pop">
                 <div class="pip-header">
-                    <span class="pip-icon">⚔️</span>
-                    <h4>LỜI MỜI THÁCH ĐẤU 1V1!</h4>
+                    <span class="pip-icon" style="font-size: 26px;">⚔️</span>
+                    <h4 style="font-size: 18px;">LỜI MỜI THÁCH ĐẤU 1V1!</h4>
                 </div>
-                <p class="pip-from">
-                    <strong>${data.fromName}</strong> (Cấp ${data.fromLevel || 1}) thách thức bạn!
+                <p class="pip-from" style="font-size: 15px; margin: 8px 0 12px 0;">
+                    <strong>${data.fromName}</strong> (Cấp ${data.fromLevel || 1} • Chi Nhánh ${cityName}) thách thức bạn!
                 </p>
                 <div class="pip-details">
                     <span>Thể thức: <strong>${modeLabel}</strong></span>
@@ -693,10 +1002,10 @@ export class OnlineUIManager {
                 </div>
                 <div class="pip-actions">
                     <button type="button" class="btn-pip-accept" id="btnPvpAccept">
-                        ✅ Đồng Ý
+                        ✅ ĐỒNG Ý
                     </button>
                     <button type="button" class="btn-pip-decline" id="btnPvpDecline">
-                        ❌ Từ Chối
+                        ❌ TỪ CHỐI
                     </button>
                 </div>
             </div>
@@ -749,23 +1058,44 @@ export class OnlineUIManager {
         if (this.pvpInviteElement) {
             this.pvpInviteElement.classList.add('hidden');
         }
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls && !this.isAnyModalOpen()) {
+            virtualControls.classList.remove('hidden');
+        }
     }
 
-    // Thẻ thông báo mời kết bạn nổi
+    // HỘP THOẠI XÁC NHẬN KẾT BẠN TRUNG TÂM (z-index: 99999)
     showFriendInviteNotification(data) {
         if (!this.friendInviteElement) return;
 
-        audio.playClick();
+        try {
+            audio.playBellNotification();
+        } catch(e) {
+            audio.playClick();
+        }
+
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
+        const cityNames = { hcm: 'TP.HCM', daklak: 'Đắk Lắk', vinh: 'TP. Vinh', hanoi: 'Hà Nội' };
+        const cityName = cityNames[String(data.fromCity || 'hcm').replace('branch_', '')] || 'TP.HCM';
+
         this.friendInviteElement.innerHTML = `
             <div class="fip-inner animate-pop">
                 <div class="fip-header">
-                    <span class="fip-icon">🤝</span>
-                    <h4>LỜI MỜI KẾT BẠN!</h4>
+                    <span class="fip-icon" style="font-size: 24px;">🤝</span>
+                    <h4 style="font-size: 18px;">LỜI MỜI KẾT BẠN!</h4>
                 </div>
-                <p><strong>${data.fromName}</strong> (Cấp ${data.fromLevel || 1}) muốn kết bạn với bạn!</p>
-                <div class="fip-actions">
-                    <button type="button" class="btn-fip-accept" id="btnFriendAccept">✅ Đồng Ý</button>
-                    <button type="button" class="btn-fip-decline" id="btnFriendDecline">❌ Từ Chối</button>
+                <p class="fip-from" style="font-size: 15px; margin: 10px 0 14px 0;">
+                    <strong>${data.fromName}</strong> (Cấp ${data.fromLevel || 1} • Chi Nhánh ${cityName}) muốn kết bạn với bạn!
+                </p>
+                <div class="pip-actions" style="margin-top: 14px;">
+                    <button type="button" class="btn-pip-accept" id="btnFriendAccept">
+                        ✅ ĐỒNG Ý
+                    </button>
+                    <button type="button" class="btn-pip-decline" id="btnFriendDecline">
+                        ❌ TỪ CHỐI
+                    </button>
                 </div>
             </div>
         `;
@@ -775,9 +1105,17 @@ export class OnlineUIManager {
         const btnAccept = this.friendInviteElement.querySelector('#btnFriendAccept');
         if (btnAccept) {
             btnAccept.onclick = () => {
-                audio.playClick();
-                this.friendInviteElement.classList.add('hidden');
-                network.acceptFriendRequest(data.fromId);
+                audio.playCoin();
+                this.hideFriendInviteNotification();
+                network.acceptFriendRequest(data.fromPlayerId || data.fromId);
+                state.addFriend({
+                    id: data.fromId,
+                    playerId: data.fromPlayerId || data.fromId,
+                    name: data.fromName,
+                    level: data.fromLevel || 1,
+                    city: data.fromCity || 'hcm'
+                });
+                this.showToastNotification(`Bạn và [${data.fromName}] đã trở thành bạn bè!`);
             };
         }
 
@@ -785,9 +1123,19 @@ export class OnlineUIManager {
         if (btnDecline) {
             btnDecline.onclick = () => {
                 audio.playClick();
-                this.friendInviteElement.classList.add('hidden');
-                network.declineFriendRequest(data.fromId);
+                this.hideFriendInviteNotification();
+                network.declineFriendRequest(data.fromPlayerId || data.fromId);
             };
+        }
+    }
+
+    hideFriendInviteNotification() {
+        if (this.friendInviteElement) {
+            this.friendInviteElement.classList.add('hidden');
+        }
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls && !this.isAnyModalOpen()) {
+            virtualControls.classList.remove('hidden');
         }
     }
 

@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 15:26:18, 24/11/2026  
+**Thời điểm thực thi:** 16:20:11, 24/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **132** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **132** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **135** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **135** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
@@ -74,8 +74,8 @@
 - **[PASS]** `Cú pháp JavaScript: server.js`
 - **[PASS]** `Cú pháp JavaScript: server/server.js`
 - **[PASS]** `Đồ thị Module Import/Export: 100% đường dẫn tệp hợp lệ`
-- **[PASS]** `Liên kết HTML-JS: Đầy đủ 38 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
-- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (8 nút) có type="button"`
+- **[PASS]** `Liên kết HTML-JS: Đầy đủ 41 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
+- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (9 nút) có type="button"`
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
 - **[PASS]** `Giao diện Smartphone: .phone-tab-content-wrapper cấu hình overflow-y: auto chuẩn`
@@ -170,8 +170,11 @@
 - **[PASS]** `Mô phỏng Đấu Trường 1v1 (Tab 2): Ghép cặp thi đấu 30 giây, cập nhật tỷ số và trao thưởng chiến thắng chuẩn FSM`
 - **[PASS]** `Mô phỏng Co-op Đại Tiệc (Tab 3): Góp cơm từ kho xe, cập nhật tiến độ liên tỉnh và chia thưởng theo tỷ lệ 100%`
 - **[PASS]** `Mô phỏng Render Bản Đồ 2D: Vẽ linh vật, xe, sạp hàng và bảng tên người chơi trực tuyến trên Canvas hoàn hảo`
+- **[PASS]** `Mô phỏng Định Danh Người Chơi Bền Vững: playerId duy nhất lưu localStorage và ánh xạ 2 chiều playerId <-> socketId chống mất kết nối khi chuyển tab`
+- **[PASS]** `Mô phỏng Bắt Chạm Nhân Vật (Hitbox 56px): Chạm trúng người chơi khác ngoài phố mở Thẻ Hồ Sơ trung tâm màn hình với 3 nút lớn chuẩn công thái học`
+- **[PASS]** `Mô phỏng Nút HUD "👥 Quanh Đây": Cập nhật số người trực tuyến, mở danh sách khoảng cách mét và chi nhánh chuẩn xác 100%`
 - **[PASS]** `Mô phỏng 2 Người Chơi Thật: Đồng bộ tức thì Player_1 & Player_2 cùng phòng, truyền nhận tọa độ di chuyển chuẩn xác 100%`
-- **[PASS]** `Mô phỏng Thách Đấu 1v1 Từ Chối: Player_A mời -> Player_B từ chối -> Hủy đúng quy trình và gửi thông báo lịch sự "[Tên] đang bận bán hàng"`
+- **[PASS]** `Mô phỏng Thách Đấu 1v1 Từ Chối: Player_A mời -> Player_B từ chối -> Hủy đúng quy trình và gửi thông báo lịch sự "[Tên] đã từ chối lời mời"`
 - **[PASS]** `Mô phỏng Thách Đấu 1v1 Đồng Ý: Player_A mời -> Player_B đồng ý -> Ghép vào cùng phòng 1v1 và đồng bộ điểm real-time khi thao tác`
 - **[PASS]** `Mô phỏng Kết Bạn & Chat: Gửi/nhận lời mời kết bạn thành công -> Trò chuyện 1-1 gửi nhận chuỗi văn bản có dấu cách ("Chào bạn Cơm Nắm Sài Gòn") trọn vẹn`
 - **[PASS]** `Mô phỏng Bảng Xếp Hạng Tỷ Phú: Sắp xếp theo Tổng Tài Sản Ròng giảm dần 100%, vinh danh Huy chương Top 1-2-3 (Vàng, Bạc, Đồng) và hỗ trợ lọc chi nhánh`

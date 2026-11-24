@@ -56,6 +56,13 @@ export class OnigiriServer {
         // Quản lý người chơi trực tuyến theo socket ID
         this.players = new Map();
 
+        // [ĐỊNH DANH BỀN VỮNG] Bảng ánh xạ playerId <-> socketId
+        this.playerSockets = new Map(); // playerId -> socketId
+        this.socketToPlayerId = new Map(); // socketId -> playerId
+        this.persistentPlayers = new Map(); // playerId -> player profile object
+        this.persistentFriends = new Map(); // playerId -> Set(friendPlayerIds)
+        this.pendingFriendRequests = new Map(); // targetPlayerId -> Map(fromPlayerId, requestData)
+
         // Quản lý phòng theo thành phố
         this.cityRooms = new Map();
         SERVER_CONFIG.CITIES.forEach(c => this.cityRooms.set(c, new Set()));
@@ -351,6 +358,12 @@ export class OnigiriServer {
 
             // Sự kiện 5: Ngắt kết nối
             socket.on('disconnect', () => {
+                const playerId = this.socketToPlayerId.get(socket.id);
+                if (playerId && this.playerSockets.get(playerId) === socket.id) {
+                    this.playerSockets.delete(playerId);
+                }
+                this.socketToPlayerId.delete(socket.id);
+
                 const player = this.players.get(socket.id);
                 if (player) {
                     const city = player.city;
@@ -359,7 +372,7 @@ export class OnigiriServer {
                     }
                     this.players.delete(socket.id);
 
-                    socket.to(`city_${city}`).emit('playerLeft', { id: socket.id });
+                    socket.to(`city_${city}`).emit('playerLeft', { id: socket.id, playerId });
                     this.io.to(`city_${city}`).emit('playersUpdate', this.getPlayersInCity(city));
                 }
             });
@@ -429,31 +442,44 @@ export class OnigiriServer {
 
     processClientEvent(sid, event, data) {
         if (event === 'joinGame' || event === 'player_join') {
-            const rawCity = data?.city || SERVER_CONFIG.DEFAULT_CITY;
+            const rawCity = data?.city || data?.branch || SERVER_CONFIG.DEFAULT_CITY;
             const city = rawCity.replace('branch_', '');
             const validCity = SERVER_CONFIG.CITIES.includes(city) ? city : SERVER_CONFIG.DEFAULT_CITY;
+            const playerId = (data && data.playerId) ? String(data.playerId) : sid;
+
+            this.playerSockets.set(playerId, sid);
+            this.socketToPlayerId.set(sid, playerId);
+
+            const brandName = (data && (data.brandName || data.name)) ? String(data.brandName || data.name).slice(0, 30) : 'Chi Nhánh #' + sid.slice(0, 4);
+            const netWorth = Number(data?.netWorth) || 50000;
 
             const player = {
                 id: sid,
-                brandName: (data && data.brandName) ? String(data.brandName).slice(0, 30) : 'Chi Nhánh #' + sid.slice(0, 4),
+                playerId: playerId,
+                brandName: brandName,
+                name: brandName,
                 level: Number(data?.level) || 1,
                 vehicleId: data?.vehicleId || 'walking',
                 x: typeof data?.x === 'number' ? data.x : 420,
                 y: typeof data?.y === 'number' ? data.y : 1250,
                 isStallOpen: !!data?.isStallOpen,
                 city: validCity,
+                branch: validCity,
                 totalRevenue: Number(data?.totalRevenue) || 0,
-                reputation: Number(data?.reputation) || 100
+                reputation: Number(data?.reputation) || 100,
+                netWorth: netWorth
             };
 
             this.players.set(sid, player);
+            this.persistentPlayers.set(playerId, player);
             if (this.cityRooms.has(validCity)) {
                 this.cityRooms.get(validCity).add(sid);
             }
 
-            // Gửi joinSuccess cho client mới
+            // Gửi joinSuccess cho client mới (kèm playerId)
             this.sendToClient(sid, 'joinSuccess', {
                 selfId: sid,
+                playerId: playerId,
                 players: this.getPlayersInCity(validCity),
                 coopOrder: this.coopOrder,
                 leaderboard: this.getLeaderboard()
@@ -464,6 +490,33 @@ export class OnigiriServer {
 
             // Gửi playersUpdate cho toàn bộ phòng
             this.broadcastToCity(validCity, null, 'playersUpdate', this.getPlayersInCity(validCity));
+
+            // Chống mất lời mời khi chuyển tab: Gửi lại các lời mời kết bạn đang chờ tới playerId này
+            if (this.pendingFriendRequests.has(playerId)) {
+                const reqMap = this.pendingFriendRequests.get(playerId);
+                for (const req of reqMap.values()) {
+                    this.sendEventToUser(sid, 'friend:invite', req);
+                }
+            }
+
+            // Chống mất lời mời khi chuyển tab: Gửi lại các lời mời thách đấu đang chờ tới playerId này
+            for (const inv of this.pendingPvpInvites.values()) {
+                if (inv.targetPlayerId === playerId || inv.targetId === sid) {
+                    const elapsed = (Date.now() - inv.createdAt) / 1000;
+                    const remaining = Math.max(1, Math.round(15 - elapsed));
+                    this.sendEventToUser(sid, 'pvp:invite', {
+                        inviteId: inv.inviteId,
+                        fromId: inv.fromId,
+                        fromPlayerId: inv.fromPlayerId,
+                        fromName: inv.fromName,
+                        fromLevel: inv.fromLevel,
+                        fromCity: inv.fromCity,
+                        gameType: inv.gameType,
+                        betAmount: inv.betAmount,
+                        timeoutSeconds: remaining
+                    });
+                }
+            }
         } else if (event === 'playerMove' || event === 'player_update') {
             const player = this.players.get(sid);
             if (!player) return;
@@ -572,28 +625,50 @@ export class OnigiriServer {
         }
     }
 
+    resolveSocketId(idOrPlayerId) {
+        if (!idOrPlayerId) return null;
+        if (this.players.has(idOrPlayerId)) return idOrPlayerId;
+        if (this.playerSockets.has(idOrPlayerId)) {
+            const sid = this.playerSockets.get(idOrPlayerId);
+            if (this.players.has(sid)) return sid;
+        }
+        for (const [sid, p] of this.players.entries()) {
+            if (p.playerId === idOrPlayerId) return sid;
+        }
+        return null;
+    }
+
+    resolvePlayer(idOrPlayerId) {
+        if (!idOrPlayerId) return null;
+        const sid = this.resolveSocketId(idOrPlayerId);
+        if (sid && this.players.has(sid)) return this.players.get(sid);
+        if (this.persistentPlayers.has(idOrPlayerId)) return this.persistentPlayers.get(idOrPlayerId);
+        return null;
+    }
+
     sendEventToUser(userId, event, data) {
+        const socketId = this.resolveSocketId(userId) || userId;
         if (this.io) {
             try {
                 let s = null;
                 if (this.io.sockets?.sockets?.get) {
-                    s = this.io.sockets.sockets.get(userId);
+                    s = this.io.sockets.sockets.get(socketId);
                 } else if (this.io.sockets?.sockets) {
-                    s = this.io.sockets.sockets[userId];
+                    s = this.io.sockets.sockets[socketId];
                 }
                 if (s) {
                     s.emit(event, data);
                 }
             } catch (e) {}
         }
-        this.sendToClient(userId, event, data);
+        this.sendToClient(socketId, event, data);
     }
 
     // [PVP 1V1] Xử lý Lời Mời Thách Đấu
     handlePvpInvite(senderId, data) {
-        const sender = this.players.get(senderId);
-        const targetId = data?.targetId;
-        const target = this.players.get(targetId);
+        const sender = this.resolvePlayer(senderId) || this.players.get(senderId);
+        const targetId = data?.targetPlayerId || data?.targetId;
+        const target = this.resolvePlayer(targetId) || this.players.get(targetId);
 
         if (!sender) return;
 
@@ -604,7 +679,7 @@ export class OnigiriServer {
             return;
         }
 
-        if (senderId === targetId) {
+        if (sender.id === target.id || (sender.playerId && sender.playerId === target.playerId)) {
             this.sendEventToUser(senderId, 'pvp:declined', {
                 reason: 'Bạn không thể tự thách đấu chính mình.'
             });
@@ -617,7 +692,8 @@ export class OnigiriServer {
 
         // Hủy lời mời cũ nếu có giữa 2 người
         for (const [invId, inv] of this.pendingPvpInvites.entries()) {
-            if (inv.fromId === senderId && inv.targetId === targetId) {
+            if ((inv.fromPlayerId === sender.playerId || inv.fromId === sender.id) &&
+                (inv.targetPlayerId === target.playerId || inv.targetId === target.id)) {
                 clearTimeout(inv.timer);
                 this.pendingPvpInvites.delete(invId);
             }
@@ -627,17 +703,23 @@ export class OnigiriServer {
         const timer = setTimeout(() => {
             if (this.pendingPvpInvites.has(inviteId)) {
                 this.pendingPvpInvites.delete(inviteId);
-                this.sendEventToUser(senderId, 'pvp:declined', {
-                    reason: `[${target.brandName}] đang bận bán hàng, đã từ chối lời mời`
+                const targetName = target ? (target.brandName || target.name) : 'Đối thủ';
+                this.sendEventToUser(sender.id, 'pvp:declined', {
+                    reason: `[${targetName}] đã từ chối lời mời thách đấu`
                 });
-                this.sendEventToUser(targetId, 'pvp:invite_expired', { inviteId });
+                this.sendEventToUser(target.id, 'pvp:invite_expired', { inviteId });
             }
         }, 15000);
 
         this.pendingPvpInvites.set(inviteId, {
             inviteId,
-            fromId: senderId,
-            targetId,
+            fromId: sender.id,
+            fromPlayerId: sender.playerId || sender.id,
+            fromName: sender.brandName || sender.name,
+            fromLevel: sender.level || 1,
+            fromCity: sender.city || 'hcm',
+            targetId: target.id,
+            targetPlayerId: target.playerId || target.id,
             gameType,
             betAmount,
             timer,
@@ -645,12 +727,13 @@ export class OnigiriServer {
         });
 
         // Gửi thông báo nổi tới riêng Người chơi B
-        this.sendEventToUser(targetId, 'pvp:invite', {
+        this.sendEventToUser(target.id, 'pvp:invite', {
             inviteId,
-            fromId: senderId,
-            fromName: sender.brandName,
-            fromLevel: sender.level,
-            fromCity: sender.city,
+            fromId: sender.id,
+            fromPlayerId: sender.playerId || sender.id,
+            fromName: sender.brandName || sender.name,
+            fromLevel: sender.level || 1,
+            fromCity: sender.city || 'hcm',
             gameType,
             betAmount,
             timeoutSeconds: 15
@@ -666,12 +749,12 @@ export class OnigiriServer {
         clearTimeout(inv.timer);
         this.pendingPvpInvites.delete(inviteId);
 
-        const target = this.players.get(targetId);
-        const targetName = target ? target.brandName : 'Đối thủ';
+        const target = this.resolvePlayer(targetId) || this.players.get(targetId);
+        const targetName = target ? (target.brandName || target.name) : 'Đối thủ';
 
         // Báo cho Người chơi A
         this.sendEventToUser(inv.fromId, 'pvp:declined', {
-            reason: `[${targetName}] đang bận bán hàng, đã từ chối lời mời`
+            reason: `[${targetName}] đã từ chối lời mời thách đấu`
         });
     }
 
@@ -684,8 +767,8 @@ export class OnigiriServer {
         clearTimeout(inv.timer);
         this.pendingPvpInvites.delete(inviteId);
 
-        const playerA = this.players.get(inv.fromId);
-        const playerB = this.players.get(targetId);
+        const playerA = this.resolvePlayer(inv.fromId) || this.players.get(inv.fromId);
+        const playerB = this.resolvePlayer(targetId) || this.players.get(targetId);
 
         if (!playerA || !playerB) {
             this.sendEventToUser(targetId, 'pvp:declined', { reason: 'Một trong hai người chơi đã rời game.' });
@@ -697,8 +780,8 @@ export class OnigiriServer {
 
         const roomObj = {
             roomId,
-            player1: { id: playerA.id, name: playerA.brandName, level: playerA.level, score: 0 },
-            player2: { id: playerB.id, name: playerB.brandName, level: playerB.level, score: 0 },
+            player1: { id: playerA.id, playerId: playerA.playerId, name: playerA.brandName || playerA.name, level: playerA.level, score: 0 },
+            player2: { id: playerB.id, playerId: playerB.playerId, name: playerB.brandName || playerB.name, level: playerB.level, score: 0 },
             gameType: inv.gameType,
             betAmount: inv.betAmount,
             potMoney,
@@ -712,7 +795,7 @@ export class OnigiriServer {
         // Báo vào trận cho Người chơi A
         this.sendEventToUser(playerA.id, 'pvp:match_start', {
             roomId,
-            opponent: { id: playerB.id, name: playerB.brandName, level: playerB.level, city: playerB.city },
+            opponent: { id: playerB.id, playerId: playerB.playerId, name: playerB.brandName || playerB.name, level: playerB.level, city: playerB.city },
             gameType: inv.gameType,
             betAmount: inv.betAmount,
             potMoney,
@@ -722,7 +805,7 @@ export class OnigiriServer {
         // Báo vào trận cho Người chơi B
         this.sendEventToUser(playerB.id, 'pvp:match_start', {
             roomId,
-            opponent: { id: playerA.id, name: playerA.brandName, level: playerA.level, city: playerA.city },
+            opponent: { id: playerA.id, playerId: playerA.playerId, name: playerA.brandName || playerA.name, level: playerA.level, city: playerA.city },
             gameType: inv.gameType,
             betAmount: inv.betAmount,
             potMoney,
@@ -811,40 +894,80 @@ export class OnigiriServer {
 
     // [HỆ THỐNG KẾT BẠN]
     handleFriendRequest(senderId, data) {
-        const sender = this.players.get(senderId);
-        const targetId = data?.targetId;
-        const target = this.players.get(targetId);
+        const sender = this.resolvePlayer(senderId) || this.players.get(senderId);
+        const targetId = data?.targetPlayerId || data?.targetId;
+        const target = this.resolvePlayer(targetId);
 
-        if (!sender || !target || senderId === targetId) return;
+        if (!sender || !target) return;
+        if (sender.id === target.id || (sender.playerId && sender.playerId === target.playerId)) return;
 
-        this.sendEventToUser(targetId, 'friend:invite', {
-            fromId: senderId,
-            fromName: sender.brandName,
-            fromLevel: sender.level,
-            fromCity: sender.city
-        });
+        const senderPId = sender.playerId || sender.id;
+        const targetPId = target.playerId || target.id;
+
+        const reqData = {
+            fromId: sender.id,
+            fromPlayerId: senderPId,
+            fromName: sender.brandName || sender.name,
+            fromLevel: sender.level || 1,
+            fromCity: sender.city || 'hcm'
+        };
+
+        if (!this.pendingFriendRequests.has(targetPId)) {
+            this.pendingFriendRequests.set(targetPId, new Map());
+        }
+        this.pendingFriendRequests.get(targetPId).set(senderPId, reqData);
+
+        this.sendEventToUser(target.id, 'friend:invite', reqData);
     }
 
     handleFriendAccept(targetId, data) {
-        const fromId = data?.fromId;
-        const playerA = this.players.get(fromId);
-        const playerB = this.players.get(targetId);
+        const fromId = data?.fromPlayerId || data?.fromId;
+        const playerA = this.resolvePlayer(fromId);
+        const playerB = this.resolvePlayer(targetId);
 
         if (!playerA || !playerB) return;
 
+        const pIdA = playerA.playerId || playerA.id;
+        const pIdB = playerB.playerId || playerB.id;
+
+        if (!this.persistentFriends.has(pIdA)) this.persistentFriends.set(pIdA, new Set());
+        if (!this.persistentFriends.has(pIdB)) this.persistentFriends.set(pIdB, new Set());
+
+        this.persistentFriends.get(pIdA).add(pIdB);
+        this.persistentFriends.get(pIdB).add(pIdA);
+
+        if (this.pendingFriendRequests.has(pIdB)) {
+            this.pendingFriendRequests.get(pIdB).delete(pIdA);
+        }
+
+        const friendA = {
+            id: playerB.id,
+            playerId: pIdB,
+            name: playerB.brandName || playerB.name,
+            level: playerB.level,
+            city: playerB.city
+        };
+        const friendB = {
+            id: playerA.id,
+            playerId: pIdA,
+            name: playerA.brandName || playerA.name,
+            level: playerA.level,
+            city: playerA.city
+        };
+
         // Báo cho cả 2 để lưu vào danh bạ
-        this.sendEventToUser(playerA.id, 'friend:accepted', {
-            friend: { id: playerB.id, name: playerB.brandName, level: playerB.level, city: playerB.city }
-        });
-        this.sendEventToUser(playerB.id, 'friend:accepted', {
-            friend: { id: playerA.id, name: playerA.brandName, level: playerA.level, city: playerA.city }
-        });
+        this.sendEventToUser(playerA.id, 'friend:accepted', { friend: friendA });
+        this.sendEventToUser(playerB.id, 'friend:accepted', { friend: friendB });
     }
 
     handleFriendDecline(targetId, data) {
-        const fromId = data?.fromId;
-        const target = this.players.get(targetId);
-        const targetName = target ? target.brandName : 'Người chơi';
+        const fromId = data?.fromPlayerId || data?.fromId;
+        const target = this.resolvePlayer(targetId) || this.players.get(targetId);
+        const targetName = target ? (target.brandName || target.name) : 'Người chơi';
+
+        if (target && fromId && this.pendingFriendRequests.has(target.playerId || target.id)) {
+            this.pendingFriendRequests.get(target.playerId || target.id).delete(fromId);
+        }
 
         this.sendEventToUser(fromId, 'friend:declined', {
             reason: `[${targetName}] đã từ chối lời mời kết bạn.`

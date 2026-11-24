@@ -5727,28 +5727,38 @@ body, html {
    HỆ THỐNG THÁCH ĐẤU 1V1, KẾT BẠN, TRÒ CHUYỆN & BXH TỶ PHÚ (ENTERPRISE UI)
    ========================================================================== */
 
-/* 1. THẺ THÔNG BÁO MỜI THÁCH ĐẤU NỔI (15s Countdown) */
+/* 1. HỘP THOẠI XÁC NHẬN MỜI THÁCH ĐẤU TRUNG TÂM (z-index: 99999) */
 .pvp-invite-card {
     position: fixed;
-    top: calc(75px + env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 105;
-    width: 90%;
-    max-width: 420px;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     pointer-events: auto;
+    padding: 16px;
+}
+
+.pvp-invite-card.hidden {
+    display: none !important;
 }
 
 .pip-inner {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    width: 92%;
+    max-width: 440px;
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
     border: 2.5px solid #f97316;
-    border-radius: 20px;
-    padding: 16px 20px;
-    box-shadow: 0 16px 40px rgba(249, 115, 22, 0.5), 0 0 20px rgba(0, 0, 0, 0.6);
+    border-radius: 24px;
+    padding: 24px 22px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(249, 115, 22, 0.45);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     text-align: center;
     color: #ffffff;
+    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .pip-header {
@@ -5814,10 +5824,11 @@ body, html {
 
 .btn-pip-accept {
     flex: 1;
+    min-height: 48px;
     background: linear-gradient(135deg, #16a34a, #15803d);
     border: 2px solid #86efac;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
     padding: 12px;
     border-radius: 14px;
@@ -5828,10 +5839,11 @@ body, html {
 
 .btn-pip-decline {
     flex: 1;
+    min-height: 48px;
     background: linear-gradient(135deg, #dc2626, #b91c1c);
     border: 2px solid #fca5a5;
     color: #ffffff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
     padding: 12px;
     border-radius: 14px;
@@ -5844,26 +5856,36 @@ body, html {
     transform: scale(0.95);
 }
 
-/* 2. THẺ THÔNG BÁO LỜI MỜI KẾT BẠN NỔI */
+/* 2. HỘP THOẠI XÁC NHẬN KẾT BẠN TRUNG TÂM (z-index: 99999) */
 .friend-invite-card {
     position: fixed;
-    top: calc(85px + env(safe-area-inset-top));
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 105;
-    width: 90%;
-    max-width: 380px;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     pointer-events: auto;
+    padding: 16px;
+}
+
+.friend-invite-card.hidden {
+    display: none !important;
 }
 
 .fip-inner {
-    background: rgba(15, 23, 42, 0.98);
-    border: 2px solid #38bdf8;
-    border-radius: 18px;
-    padding: 16px;
+    width: 92%;
+    max-width: 440px;
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    border: 2.5px solid #38bdf8;
+    border-radius: 24px;
+    padding: 24px 22px;
     text-align: center;
     color: #ffffff;
-    box-shadow: 0 12px 30px rgba(56, 189, 248, 0.4);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.45);
+    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .fip-header {
@@ -6554,6 +6576,356 @@ body, html {
     background: #f97316;
     margin-left: auto;
     transition: width 0.15s ease;
+}
+
+/* ==========================================================================
+   HỆ THỐNG CHẠM NHÂN VẬT, NÚT QUANH ĐÂY & THẺ HỒ SƠ NGƯỜI CHƠI (STUDIO V4.1)
+   ========================================================================== */
+
+/* Nút Quanh Đây (X) trên HUD */
+.hud-btn-nearby {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.85), rgba(30, 41, 59, 0.85));
+    border: 1.5px solid #60a5fa;
+    border-radius: 20px;
+    padding: 4px 12px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(96, 165, 250, 0.25);
+    transition: transform 0.15s, background 0.2s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.hud-btn-nearby:hover {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(30, 58, 138, 0.95));
+    transform: scale(1.03);
+}
+
+.hud-btn-nearby:active {
+    transform: scale(0.96);
+}
+
+/* THẺ HỒ SƠ NGƯỜI CHƠI (Player Profile Card - z-index: 99990) */
+.player-profile-modal-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 16px;
+    pointer-events: auto;
+}
+
+.player-profile-modal-layer.hidden {
+    display: none !important;
+}
+
+.profile-card-modal {
+    width: 92%;
+    max-width: 420px;
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    border: 2px solid #38bdf8;
+    border-radius: 24px;
+    padding: 22px 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.35);
+    color: #ffffff;
+    animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pcm-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.pcm-avatar-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: radial-gradient(circle, #38bdf8 0%, #0369a1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+}
+
+.pcm-info {
+    flex: 1;
+}
+
+.pcm-brand-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #f8fafc;
+    margin: 0 0 4px 0;
+}
+
+.pcm-branch-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.pcm-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 18px;
+}
+
+.pcm-stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.pcm-stat-label {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.pcm-stat-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #f1f5f9;
+}
+
+.pcm-stat-gold {
+    color: #facc15;
+}
+
+.pcm-bet-selector {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+}
+
+.pcm-bet-selector-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fb923c;
+    margin-bottom: 8px;
+}
+
+.pcm-bet-chips {
+    display: flex;
+    gap: 8px;
+}
+
+.pcm-bet-chip {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+}
+
+.pcm-bet-chip.active {
+    background: #ea580c;
+    border-color: #fdba74;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(234, 88, 12, 0.5);
+}
+
+.pcm-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-profile-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 48px;
+    font-size: 15px;
+    font-weight: 800;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    border: none;
+}
+
+.btn-profile-action:active {
+    transform: scale(0.97);
+}
+
+.btn-profile-friend {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+}
+
+.btn-profile-friend.is-sent {
+    background: rgba(100, 116, 139, 0.5);
+    color: #cbd5e1;
+    cursor: default;
+}
+
+.btn-profile-challenge {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4);
+}
+
+.btn-profile-close {
+    background: rgba(51, 65, 85, 0.8);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* DANH SÁCH NGƯỜI CHƠI QUANH ĐÂY (Nearby Modal - z-index: 99980) */
+.nearby-players-modal-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 99980;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 16px;
+    pointer-events: auto;
+}
+
+.nearby-players-modal-layer.hidden {
+    display: none !important;
+}
+
+.nearby-modal-card {
+    width: 94%;
+    max-width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    border: 2px solid #60a5fa;
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(96, 165, 250, 0.35);
+    color: #ffffff;
+}
+
+.npm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.npm-header h3 {
+    font-size: 17px;
+    font-weight: 800;
+    color: #60a5fa;
+    margin: 0;
+}
+
+.npm-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.npm-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+}
+
+.npm-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.npm-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.npm-item-avatar {
+    font-size: 24px;
+}
+
+.npm-item-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.npm-item-sub {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.npm-item-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-npm-action {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-npm-profile {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.btn-npm-challenge {
+    background: #ea580c;
+    color: #ffffff;
+}
+
+.btn-npm-friend {
+    background: #16a34a;
+    color: #ffffff;
 }
 
 .timer-pot {

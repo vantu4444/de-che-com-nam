@@ -83,12 +83,22 @@ class GameApp {
         window.addEventListener('keydown', (e) => this.onKeyDown(e));
         window.addEventListener('keyup', (e) => this.onKeyUp(e));
 
-        // Bắt sự kiện Click chuột & Chạm Touch trên Canvas để bán hàng
+        // Bắt sự kiện Click chuột & Chạm Touch trên Canvas để bán hàng & tương tác người chơi
+        this.canvas.addEventListener('pointerdown', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const clientX = e.clientX - rect.left;
+            const clientY = e.clientY - rect.top;
+            const intercepted = this.handleInputCoords(clientX, clientY);
+            if (intercepted) {
+                e.stopPropagation();
+            }
+        });
         this.canvas.addEventListener('click', (e) => this.onCanvasClick(e));
         this.canvas.addEventListener('touchstart', (e) => {
             if (e.touches && e.touches.length > 0) {
                 const touch = e.touches[0];
-                this.handleInputCoords(touch.clientX, touch.clientY);
+                const rect = this.canvas.getBoundingClientRect();
+                this.handleInputCoords(touch.clientX - rect.left, touch.clientY - rect.top);
             }
         }, { passive: true });
 
@@ -208,7 +218,9 @@ class GameApp {
                 '#brandNameModal',
                 '#pvpChallengeDialog',
                 '#pvpInviteNotification:not(.hidden)',
-                '#friendInviteNotification:not(.hidden)'
+                '#friendInviteNotification:not(.hidden)',
+                '#playerProfileModal:not(.hidden)',
+                '#nearbyPlayersModal:not(.hidden)'
             ];
             const isAnyOpen = modalSelectors.some(sel => {
                 const el = document.querySelector(sel);
@@ -236,7 +248,7 @@ class GameApp {
                 const observer = new MutationObserver(() => {
                     checkModalVisibility();
                 });
-                ['kitchenModal', 'marketModal', 'phoneModal', 'dailyBillModal', 'onlineQuickMenu', 'brandNameModal', 'pvpChallengeDialog', 'pvpInviteNotification', 'friendInviteNotification'].forEach(id => {
+                ['kitchenModal', 'marketModal', 'phoneModal', 'dailyBillModal', 'onlineQuickMenu', 'brandNameModal', 'pvpChallengeDialog', 'pvpInviteNotification', 'friendInviteNotification', 'playerProfileModal', 'nearbyPlayersModal'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
                         observer.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
@@ -462,31 +474,47 @@ class GameApp {
 
     handleInputCoords(screenX, screenY) {
         // Nếu điện thoại, bếp hoặc chợ đang mở, bỏ qua click trên canvas
-        if (this.questManager.isOpen || this.isKitchenOpen || this.isMarketOpen) return;
+        if (this.questManager.isOpen || this.isKitchenOpen || this.isMarketOpen) return false;
+        if (onlineUI && typeof onlineUI.isAnyModalOpen === 'function' && onlineUI.isAnyModalOpen()) return false;
 
         // Chuyển đổi tọa độ màn hình sang tọa độ thực tế trong thế giới game (World Coordinates)
         const worldX = screenX + this.camera.x;
         const worldY = screenY + this.camera.y;
 
-        // 1. Kiểm tra click vào người chơi trực tuyến khác trên phố (Bán kính 50px)
+        // 1. Kiểm tra click/tap trúng người chơi trực tuyến khác (Bán kính chạm tối thiểu 56px trên màn hình)
+        // Hỗ trợ chuẩn cả tọa độ 2D lẫn 3D Camera projection, ưu tiên bắt sự kiện chọn người chơi trước
         let clickedOther = null;
+        let minDist = 56;
         for (const p of network.otherPlayers.values()) {
-            const dist = Math.hypot(worldX - p.x, worldY - p.y);
-            if (dist <= 50) {
+            const pScreen = (city3D && typeof city3D.projectToScreen === 'function')
+                ? city3D.projectToScreen(p.x, p.y, this.camera)
+                : { x: p.x - this.camera.x, y: p.y - this.camera.y };
+
+            const screenDist = Math.hypot(screenX - pScreen.x, screenY - pScreen.y);
+            const worldDist = Math.hypot(worldX - p.x, worldY - p.y);
+
+            if (screenDist <= minDist || worldDist <= 56) {
                 clickedOther = p;
-                break;
+                minDist = Math.min(minDist, screenDist);
             }
         }
+
         if (clickedOther) {
-            onlineUI.openQuickMenu(clickedOther, screenX, screenY);
-            return;
+            if (onlineUI.closeQuickMenu) onlineUI.closeQuickMenu();
+            if (onlineUI.openPlayerProfile) {
+                onlineUI.openPlayerProfile(clickedOther);
+            } else if (onlineUI.openQuickMenu) {
+                onlineUI.openQuickMenu(clickedOther, screenX, screenY);
+            }
+            return true; // Ưu tiên bắt sự kiện chọn người chơi trước thao tác di chuyển/bán hàng
         } else {
-            onlineUI.closeQuickMenu();
+            if (onlineUI.closeQuickMenu) onlineUI.closeQuickMenu();
         }
 
         if (sellingManager.isOpen) {
             sellingManager.handleClick(worldX, worldY);
         }
+        return false;
     }
 
     onKeyDown(e) {
@@ -680,6 +708,11 @@ class GameApp {
         // Cập nhật chấm đỏ thông báo điện thoại
         if (this.questManager) {
             this.questManager.updateNotificationBadge();
+        }
+
+        // Cập nhật số lượng người chơi quanh đây trên HUD
+        if (onlineUI && typeof onlineUI.updateNearbyCount === 'function') {
+            onlineUI.updateNearbyCount();
         }
 
         // Cập nhật Đồng hồ 24h & Khung giờ

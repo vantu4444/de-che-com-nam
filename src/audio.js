@@ -282,6 +282,38 @@ class AudioManager {
         return this.playCoinKeng();
     }
 
+    // Tiếng chuông báo thông báo nhẹ nhàng (Gentle Dual Chime / Bell)
+    playBellNotification() {
+        if (this.isMuted) return;
+        this.resume();
+        if (!this.ctx || !this.masterGain) return;
+        const now = this.ctx.currentTime || 0;
+        try {
+            const bellNotes = [880, 1318.5]; // A5 -> E6
+            bellNotes.forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + i * 0.12);
+
+                gain.gain.setValueAtTime(0.3, now + i * 0.12);
+                if (gain.gain.exponentialRampToValueAtTime) {
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.6);
+                }
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now + i * 0.12);
+                osc.stop(now + i * 0.12 + 0.65);
+            });
+        } catch (e) {}
+    }
+
+    playChime() {
+        return this.playBellNotification();
+    }
+
     // 5. Tiếng Chúc Mừng Lên Cấp (Level Up Fanfare Arpeggio)
     playLevelUp() {
         if (this.isMuted) return;
