@@ -4,6 +4,35 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: ĐỊNH DANH NGƯỜI CHƠI BỀN VỮNG, CHẠM NHÂN VẬT HITBOX 56PX, NÚT QUANH ĐÂY, KHO BẾP 4 TẦNG STUDIO NẤU NHANH & NẤU ĐẦY THÙNG, CỔNG DATA LEADS & TRANG QUẢN TRỊ /admin)
+- **Ngày ghi nhận:** 24/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (137/137 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT TOÀN BỘ"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Định Danh Người Chơi Bền Vững (`src/state.js`, `server/server.js`, `src/network.js`):**
+     - Tạo và lưu trữ vĩnh viễn chuỗi `playerId` duy nhất trong `localStorage`, gửi kèm khi kết nối Socket.io / `joinGame`.
+     - Quản lý bảng ánh xạ 2 chiều `playerId <-> socketId` trên máy chủ, lưu danh sách bạn bè (`persistentFriends`) và các lời mời đang chờ theo `playerId`, bảo vệ toàn vẹn dữ liệu khi đổi mạng Wi-Fi/4G hay tải lại trang trên Mobile.
+  2. **Bắt Chạm Nhân Vật Chuẩn Xác (Hitbox $\ge 56\text{px}$) & Nút HUD "👥 Quanh Đây" (`src/main.js`, `src/city3D.js`, `src/onlineUI.js`, `index.html`):**
+     - Mở rộng vùng nhận diện chạm bán kính tối thiểu $56\text{px}$ trên Canvas (hỗ trợ cả 2D camera offset và 3D camera projection), ưu tiên chọn người chơi trước khi di chuyển bản đồ hay bán hàng.
+     - Nút HUD `👥 Quanh Đây (X)` nằm gọn gàng tại `hud-right-row-2`, tách biệt hoàn toàn khỏi khung Minimap, mở modal danh sách người chơi online hiển thị khoảng cách tính theo mét ($m$), cấp độ và chi nhánh.
+     - Mở Thẻ Hồ Sơ Người Chơi (`#playerProfileModal`, `z-index: 99990`, tự ẩn phím ảo Mobile) gồm chip chọn nhanh mức cược (0đ, 50k, 200k) và 3 nút lớn: `➕ Thêm Bạn`, `⚔️ Thách Đấu 1v1`, `✕ Đóng`.
+  3. **Hộp Thoại Xác Nhận Thách Đấu & Kết Bạn Bắt Buộc Có Chuông Báo (`src/onlineUI.js`, `src/audio.js`, `style.css`):**
+     - Modal trung tâm toàn màn hình (`z-index: 99999`, `backdrop-filter: blur(10px)`), phát chuông nhẹ Web Audio API, đếm lùi 15s và 2 nút bấm cảm ứng lớn $\ge 48\text{px}$: `✅ ĐỒNG Ý` và `❌ TỪ CHỐI`.
+     - Luật xác nhận nghiêm ngặt: Tuyệt đối không tự ép vào trận; nếu từ chối hoặc hết giờ gửi lý do lịch sự về cho người gửi.
+  4. **Tái Thiết Kế Kho Bếp 4 Tầng Chuẩn Studio (`src/kitchenASMR.js`, `style.css`):**
+     - Khóa khung giao diện trong `max-height: 90dvh`, tự động ẩn hoàn toàn phím ảo ngoài phố khi mở bếp và phục hồi khi rời bếp:
+       + **Tầng 1 (Cao ~48px):** Tiêu đề `[🍙 KHO BẾP ISO]`, `[🎒 Thùng: X/Y]`, `[🌾 Gạo | 🥩 Nhân | 🥫 Sốt]` và nút `[✕ Rời Bếp]`.
+       + **Tầng 2 (Cao ~95px):** Bộ lọc giá (`Tất cả`, `20.000đ`, `22.000đ`, `25.000đ`) cùng dải thẻ 15 vị trượt ngang (`overflow-x: auto`), bỏ mô tả dài dòng, chỉ hiển thị Icon/Tên/Giá bán lẻ chuẩn ISO & ATVSTP.
+       + **Tầng 3 (Bàn Chế Biến Trung Tâm):** Trực quan nắm cơm tam giác, huy hiệu ISO vàng kim, thanh lực và câu lệnh cảm ứng thân thiện (*"Chạm & giữ để múc cơm"*, *"Chạm 3 lần để ép khuôn"*, *"Vuốt nhẹ để bọc rong biển"*).
+       + **Tầng 4 (Thanh Hành Động Đáy Cố Định):** 3 nút bấm lớn: `⚡ Nấu Nhanh (+1)` (trừ 1 Gạo + 1 Nhân + 1 Sốt, không cần chơi mini-game), `📦 Nấu Đầy Thùng` (lấp đầy sức chứa xe 1 chạm), `🛵 Ra Phố Bán Hàng`.
+  5. **Cổng Thu Thập Data Khởi Nghiệp & Trang Quản Trị `/admin` (`index.html`, `src/main.js`, `server/server.js`):**
+     - Màn hình chào tích hợp Chọn 4 Chi Nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội) & Ô nhập Số Điện Thoại nhận quà +200.000đ vốn khởi nghiệp.
+     - Backend hỗ trợ API `POST/GET /api/leads` và trang quản trị trực quan `/admin` hiển thị danh sách khách hàng đăng ký.
+  6. **Kiểm Thử Đo Đạc Hình Học Tự Động (`verify_system.mjs`):**
+     - Xác nhận 3 nút đáy Kho Bếp nằm trọn 100% trong viewport iPhone (375x812) và Desktop (1440x900) (`bottom <= window.innerHeight`), Zero Cutoff, 0 lỗi Console.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT TOÀN BỘ`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.7.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: HỆ THỐNG THÁCH ĐẤU 1V1 CÓ ĐỒNG THUẬN, KẾT BẠN, CHAT ĐA KÊNH, BẢNG XẾP HẠNG TỶ PHÚ & ĐỘI NGŨ CHUYÊN TRÁCH MOBILE STUDIO)
 - **Ngày ghi nhận:** 24/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (115/115 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
