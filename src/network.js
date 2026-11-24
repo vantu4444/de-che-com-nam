@@ -143,7 +143,8 @@ export class NetworkManager {
                         y: 1250,
                         isStallOpen: false,
                         totalRevenue: state.stats?.totalRevenue || 0,
-                        reputation: state.reputation || 100
+                        reputation: state.reputation || 100,
+                        netWorth: typeof state.getNetWorth === 'function' ? state.getNetWorth() : (state.money || 50000)
                     });
                 });
 
@@ -274,6 +275,124 @@ export class NetworkManager {
                 this.coopOrder = data.coopOrder;
                 this.notifyCoop();
             }
+        });
+
+        // [PVP 1V1 XÁC NHẬN BẮT BUỘC] Lắng nghe sự kiện từ Server
+        this.socket.on('pvp:invite', (data) => {
+            this.emitEvent('onPvpInvite', data);
+        });
+
+        this.socket.on('pvp:declined', (data) => {
+            this.emitEvent('onPvpDeclined', data);
+        });
+
+        this.socket.on('pvp:invite_expired', (data) => {
+            this.emitEvent('onPvpInviteExpired', data);
+        });
+
+        this.socket.on('pvp:match_start', (data) => {
+            this.activeArena = {
+                id: data.roomId,
+                gameType: data.gameType,
+                opponentId: data.opponent?.id,
+                opponentName: data.opponent?.name || 'Đối thủ',
+                status: 'PLAYING',
+                timeRemaining: data.timeRemaining || 30,
+                playerScore: 0,
+                opponentScore: 0,
+                betAmount: data.betAmount || 0,
+                potMoney: data.potMoney || 0,
+                result: null
+            };
+            this.emitEvent('onArenaEvent', { type: 'MATCH_STARTED', arena: this.activeArena });
+        });
+
+        this.socket.on('pvp:score_update', (data) => {
+            if (this.activeArena && this.activeArena.id === data.roomId) {
+                if (data.p1Id === this.selfId) {
+                    this.activeArena.playerScore = data.p1Score;
+                    this.activeArena.opponentScore = data.p2Score;
+                } else {
+                    this.activeArena.playerScore = data.p2Score;
+                    this.activeArena.opponentScore = data.p1Score;
+                }
+                this.emitEvent('onArenaEvent', { type: 'SCORE_UPDATE', arena: this.activeArena });
+            }
+        });
+
+        this.socket.on('pvp:settlement', (data) => {
+            if (this.activeArena && this.activeArena.id === data.roomId) {
+                this.activeArena.status = 'FINISHED';
+                this.activeArena.result = {
+                    isWin: data.isWin,
+                    isDraw: data.isDraw,
+                    rewardMoney: data.rewardMoney,
+                    rewardRep: data.rewardRep
+                };
+
+                if (data.isWin) {
+                    state.record1v1Win();
+                } else if (!data.isDraw) {
+                    state.record1v1Loss();
+                }
+
+                if (data.rewardMoney > 0) {
+                    state.money += data.rewardMoney;
+                }
+                if (data.rewardRep > 0) {
+                    state.reputation = Math.min(1000, (state.reputation || 100) + data.rewardRep);
+                }
+                state.notify();
+
+                this.emitEvent('onArenaEvent', { type: 'MATCH_FINISHED', arena: this.activeArena });
+            }
+        });
+
+        // [HỆ THỐNG KẾT BẠN]
+        this.socket.on('friend:invite', (data) => {
+            this.emitEvent('onFriendInvite', data);
+        });
+
+        this.socket.on('friend:accepted', (data) => {
+            if (data?.friend) {
+                state.addFriend(data.friend);
+            }
+            this.emitEvent('onFriendAccepted', data);
+        });
+
+        this.socket.on('friend:declined', (data) => {
+            this.emitEvent('onFriendDeclined', data);
+        });
+
+        this.socket.on('friend:status_result', (data) => {
+            this.emitEvent('onFriendsStatus', data?.friends || []);
+        });
+
+        // [HỆ THỐNG TRÒ CHUYỆN]
+        this.socket.on('chat:broadcast', (data) => {
+            this.emitEvent('onChatBroadcast', data);
+        });
+
+        this.socket.on('chat:private_message', (data) => {
+            if (data) {
+                state.addPrivateMessage(data.senderId, {
+                    from: 'friend',
+                    senderName: data.senderName,
+                    text: data.text,
+                    time: data.time || Date.now(),
+                    unread: true
+                });
+            }
+            this.emitEvent('onPrivateMessage', data);
+        });
+
+        this.socket.on('chat:history', (data) => {
+            this.emitEvent('onChatHistory', data?.messages || []);
+        });
+
+        // [BẢNG XẾP HẠNG TỶ PHÚ]
+        this.socket.on('billionaires:list', (data) => {
+            this.emitEvent('onBillionairesList', data?.list || []);
         });
     }
 
@@ -437,10 +556,226 @@ export class NetworkManager {
         return { rewardMoney, rewardExp, rewardRep, ratio: Math.round(ratio * 100) };
     }
 
-    // Khởi tạo hoặc mời thách đấu 1v1
-    start1v1Match(opponentId, gameType = 'speed_kitchen') {
+    // [PVP 1V1 XÁC NHẬN BẮT BUỘC] Gửi Lời Mời Thách Đấu
+    sendPvpInvite(targetId, gameType = 'speed_kitchen', betAmount = 0) {
+        const bet = [0, 50000, 200000].includes(Number(betAmount)) ? Number(betAmount) : 0;
+        const gType = gameType === 'seaweed_peel' ? 'seaweed_peel' : 'speed_kitchen';
+
+        if (bet > 0 && (state.money || 0) < bet) {
+            return { success: false, reason: 'not_enough_money', message: `Bạn không đủ ${bet.toLocaleString('vi-VN')}đ để đặt cược!` };
+        }
+
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('pvp:invite', {
+                targetId,
+                gameType: gType,
+                betAmount: bet
+            });
+            return { success: true, message: 'Đã gửi lời mời thách đấu! Vui lòng chờ đối thủ xác nhận...' };
+        } else {
+            // Chế độ Giả lập Offline Bot
+            const opponent = this.otherPlayers.get(targetId);
+            const opponentName = opponent ? opponent.brandName : 'Chi Nhánh Đối Thủ';
+
+            // Mô phỏng đối thủ suy nghĩ trong 1.2s rồi đồng ý
+            setTimeout(() => {
+                this.start1v1Match(targetId, gType, bet);
+            }, 1200);
+
+            return { success: true, message: `Đang gửi lời mời tới ${opponentName}...` };
+        }
+    }
+
+    // [PVP 1V1] Phản hồi Lời mời: Đồng Ý
+    acceptPvpInvite(inviteId) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('pvp:accept', { inviteId });
+        }
+    }
+
+    // [PVP 1V1] Phản hồi Lời mời: Từ Chối
+    declinePvpInvite(inviteId) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('pvp:decline', { inviteId });
+        }
+    }
+
+    // [PVP 1V1] Gửi thao tác bấm Tap trong trận đấu
+    sendPvpTap(roomId) {
+        if (this.activeArena && this.activeArena.status === 'PLAYING') {
+            this.activeArena.playerScore += 1;
+            this.emitEvent('onArenaEvent', { type: 'SCORE_UPDATE', arena: this.activeArena });
+        }
+
+        if (this.isOnline && this.socket && this.socket.connected && roomId) {
+            this.socket.emit('pvp:tap', { roomId });
+        }
+    }
+
+    // [HỆ THỐNG KẾT BẠN]
+    sendFriendRequest(targetId) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('friend:request', { targetId });
+            return { success: true, message: 'Đã gửi lời mời kết bạn!' };
+        } else {
+            // Chế độ Bot: Tự động đồng ý sau 800ms
+            const target = this.otherPlayers.get(targetId);
+            if (target) {
+                setTimeout(() => {
+                    state.addFriend({
+                        id: target.id,
+                        name: target.brandName,
+                        level: target.level || 1,
+                        city: target.city || 'hcm'
+                    });
+                    this.emitEvent('onFriendAccepted', { friend: target });
+                }, 800);
+            }
+            return { success: true, message: 'Đã gửi lời mời kết bạn!' };
+        }
+    }
+
+    acceptFriendRequest(fromId) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('friend:accept', { fromId });
+        }
+    }
+
+    declineFriendRequest(fromId) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('friend:decline', { fromId });
+        }
+    }
+
+    queryFriendsStatus(friendIds) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('friend:query_status', { friendIds });
+        } else {
+            // Offline fallback
+            const res = (friendIds || []).map(fId => {
+                const p = this.otherPlayers.get(fId);
+                return { id: fId, isOnline: Boolean(p), city: p?.city || 'hcm', level: p?.level || 1 };
+            });
+            this.emitEvent('onFriendsStatus', res);
+        }
+    }
+
+    // [HỆ THỐNG TRÒ CHUYỆN]
+    sendChatMessage(text, channel = 'global', targetId = null) {
+        const clean = String(text || '').trim();
+        if (!clean) return;
+
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('chat:message', {
+                channel,
+                targetId,
+                text: clean
+            });
+        } else {
+            // Mô phỏng trò chuyện Offline
+            const msg = {
+                id: 'msg_' + Date.now(),
+                senderId: this.selfId,
+                senderName: state.brandName || 'Bạn',
+                senderLevel: state.level || 1,
+                city: state.currentCity ? state.currentCity.replace('branch_', '') : 'hcm',
+                text: clean,
+                time: Date.now()
+            };
+
+            if (channel === 'private' && targetId) {
+                state.addPrivateMessage(targetId, {
+                    from: 'self',
+                    senderName: state.brandName,
+                    text: clean,
+                    time: Date.now(),
+                    unread: false
+                });
+                this.emitEvent('onPrivateMessage', msg);
+            } else {
+                this.emitEvent('onChatBroadcast', msg);
+
+                // Bot phản hồi vui nhộn ngẫu nhiên sau 1.5s
+                if (Math.random() < 0.6) {
+                    setTimeout(() => {
+                        const botReplies = [
+                            '🍙 Chúc bạn buôn may bán đắt!',
+                            'Chuẩn vị ISO luôn nhé người anh em! ✨',
+                            'Có cơm nắm mới ra lò thơm phức đây! 🎉',
+                            'Làm ván 1v1 bóc rong biển không bạn ơi? 🍘'
+                        ];
+                        const botMsg = {
+                            id: 'msg_bot_' + Date.now(),
+                            senderId: 'bot_' + Math.floor(Math.random() * 5 + 1),
+                            senderName: 'Tiệm Cơm Nắm Chú Ba',
+                            senderLevel: 15,
+                            city: 'hcm',
+                            text: botReplies[Math.floor(Math.random() * botReplies.length)],
+                            time: Date.now()
+                        };
+                        this.emitEvent('onChatBroadcast', botMsg);
+                    }, 1500);
+                }
+            }
+        }
+    }
+
+    getChatHistory() {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('chat:get_history');
+        }
+    }
+
+    // [BẢNG XẾP HẠNG TỶ PHÚ]
+    getBillionaires(filterCity = 'all') {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('billionaires:get', { city: filterCity });
+        } else {
+            // Offline fallback
+            const mockList = [
+                { id: 'bil_1', name: 'Tập Đoàn Cơm Nắm Sài Gòn 👑', netWorth: 285400000, level: 35, city: 'hcm', isOnline: true },
+                { id: 'bil_2', name: 'Onigiri Hoàng Gia Hà Nội ⭐', netWorth: 215000000, level: 32, city: 'hanoi', isOnline: true },
+                { id: 'bil_3', name: 'Bếp Cao Nguyên BMT Đắk Lắk 🌾', netWorth: 188500000, level: 30, city: 'daklak', isOnline: true },
+                { id: 'bil_4', name: 'Đế Chế Cơm Nắm Xứ Nghệ - Vinh 💎', netWorth: 165000000, level: 28, city: 'vinh', isOnline: true },
+                { id: 'bil_5', name: 'Xưởng Cơm Nắm Chợ Lớn Q.5', netWorth: 142000000, level: 26, city: 'hcm', isOnline: false },
+                { id: 'bil_6', name: 'Bếp Nắm Hồ Gươm 36 Phố Cổ', netWorth: 128000000, level: 25, city: 'hanoi', isOnline: false },
+                { id: 'bil_7', name: 'Onigiri Buôn Ma Thuột Vàng', netWorth: 114000000, level: 23, city: 'daklak', isOnline: false },
+                { id: 'bil_8', name: 'Tiệm Cơm Nắm Cửa Lò Bến Thủy', netWorth: 99000000, level: 22, city: 'vinh', isOnline: false }
+            ];
+
+            // Thêm người chơi
+            const myNetWorth = typeof state.getNetWorth === 'function' ? state.getNetWorth() : (state.money || 50000);
+            mockList.push({
+                id: this.selfId,
+                name: (state.brandName || 'Bạn') + ' (Bạn)',
+                netWorth: myNetWorth,
+                level: state.level || 1,
+                city: state.currentCity ? state.currentCity.replace('branch_', '') : 'hcm',
+                isOnline: true,
+                isSelf: true
+            });
+
+            let filtered = mockList;
+            if (filterCity && filterCity !== 'all') {
+                const c = filterCity.replace('branch_', '');
+                filtered = mockList.filter(b => b.city === c);
+            }
+            const sorted = filtered.sort((a, b) => b.netWorth - a.netWorth).slice(0, 50);
+            const res = sorted.map((b, idx) => ({
+                ...b,
+                rank: idx + 1,
+                medal: idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`
+            }));
+
+            this.emitEvent('onBillionairesList', res);
+        }
+    }
+
+    // Khởi tạo hoặc mời thách đấu 1v1 (Hỗ trợ gọi trực tiếp)
+    start1v1Match(opponentId, gameType = 'speed_kitchen', betAmount = 0) {
         const opponent = this.otherPlayers.get(opponentId);
         const opponentName = opponent ? opponent.brandName : 'Đối thủ bí ẩn';
+        const potMoney = betAmount > 0 ? betAmount * 2 : 100000;
 
         this.activeArena = {
             id: 'arena_' + Date.now(),
@@ -452,6 +787,8 @@ export class NetworkManager {
             timeRemaining: 30,
             playerScore: 0,
             opponentScore: 0,
+            betAmount,
+            potMoney,
             result: null
         };
 

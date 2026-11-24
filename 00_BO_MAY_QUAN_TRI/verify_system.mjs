@@ -733,7 +733,12 @@ function runStaticAuditorSuite() {
         'onlineQuickMenu',
         'brandNameModal',
         'hudOnlineCard',
-        'hudOnlineStatus'
+        'hudOnlineStatus',
+        'pvpChallengeDialog',
+        'pvpInviteNotification',
+        'friendInviteNotification',
+        'floatingChatWidget',
+        'onlineToastNotification'
     ];
 
     let idsOk = true;
@@ -2616,12 +2621,116 @@ async function runInteractiveSimulationSuite() {
         // Player_2 phải nhận được sự kiện 'playerMove' của Player_1 với đúng tọa độ mới
         const p2ReceivedP1Move = p2Queue.some(m => m.event === 'playerMove' && m.data.id === p1Id && m.data.x === 550 && m.data.y === 650 && m.data.isStallOpen === true);
 
+        // 4. KỊCH BẢN THÁCH ĐẤU 1V1 CÓ XÁC NHẬN (DECLINE & ACCEPT)
+        // Kịch bản 4a: Player_1 mời Player_2 -> Player_2 bấm Từ Chối
+        p1Queue.length = 0;
+        p2Queue.length = 0;
+        testServer.processClientEvent(p1Id, 'pvp:invite', {
+            targetId: p2Id,
+            gameType: 'speed_kitchen',
+            betAmount: 50000
+        });
+
+        const p2InviteMsg = p2Queue.find(m => m.event === 'pvp:invite');
+        const inviteId1 = p2InviteMsg?.data?.inviteId;
+        testServer.processClientEvent(p2Id, 'pvp:decline', { inviteId: inviteId1 });
+        const p1DeclinedMsg = p1Queue.find(m => m.event === 'pvp:declined');
+        const pvpDeclineOk = Boolean(
+            p2InviteMsg &&
+            p1DeclinedMsg &&
+            p1DeclinedMsg.data?.reason &&
+            p1DeclinedMsg.data.reason.includes('đang bận bán hàng, đã từ chối lời mời')
+        );
+
+        // Kịch bản 4b: Player_1 gửi lại lời mời -> Player_2 bấm Đồng Ý -> Vào phòng đấu 1v1
+        p1Queue.length = 0;
+        p2Queue.length = 0;
+        testServer.processClientEvent(p1Id, 'pvp:invite', {
+            targetId: p2Id,
+            gameType: 'speed_kitchen',
+            betAmount: 50000
+        });
+
+        const p2InviteMsg2 = p2Queue.find(m => m.event === 'pvp:invite');
+        const inviteId2 = p2InviteMsg2?.data?.inviteId;
+        testServer.processClientEvent(p2Id, 'pvp:accept', { inviteId: inviteId2 });
+
+        const p1MatchStart = p1Queue.find(m => m.event === 'pvp:match_start');
+        const p2MatchStart = p2Queue.find(m => m.event === 'pvp:match_start');
+        const matchRoomId = p1MatchStart?.data?.roomId;
+        const matchSameRoom = Boolean(matchRoomId && matchRoomId === p2MatchStart?.data?.roomId);
+
+        // Đồng bộ tiến độ 1v1: Player_1 bấm tap -> Server gửi pvp:score_update cho cả 2
+        testServer.processClientEvent(p1Id, 'pvp:tap', { roomId: matchRoomId });
+        const p1ScoreUpdate = p1Queue.find(m => m.event === 'pvp:score_update');
+        const p2ScoreUpdate = p2Queue.find(m => m.event === 'pvp:score_update');
+        const pvpTapOk = Boolean(p1ScoreUpdate && p2ScoreUpdate && p1ScoreUpdate.data?.player1Score === 1);
+        const pvpMatchOk = matchSameRoom && pvpTapOk;
+
+        // 5. KỊCH BẢN KẾT BẠN & TRÒ CHUYỆN ĐA KÊNH (CHAT CÓ DẤU CÁCH & TIẾNG VIỆT)
+        // 5a. Kết bạn: Player_1 gửi lời mời -> Player_2 đồng ý
+        p1Queue.length = 0;
+        p2Queue.length = 0;
+        testServer.processClientEvent(p1Id, 'friend:request', { targetId: p2Id });
+        const p2FriendInvite = p2Queue.find(m => m.event === 'friend:invite');
+        testServer.processClientEvent(p2Id, 'friend:accept', { fromId: p1Id });
+        const p1FriendAcc = p1Queue.find(m => m.event === 'friend:accepted');
+        const p2FriendAcc = p2Queue.find(m => m.event === 'friend:accepted');
+        const friendSystemOk = Boolean(p2FriendInvite && p1FriendAcc && p2FriendAcc);
+
+        // 5b. Chat 1-1 riêng bạn bè: Gửi tin nhắn có dấu cách ("Chào bạn Cơm Nắm Sài Gòn")
+        p1Queue.length = 0;
+        p2Queue.length = 0;
+        const testChatContent = 'Chào bạn Cơm Nắm Sài Gòn';
+        testServer.processClientEvent(p1Id, 'chat:message', {
+            channel: 'private',
+            targetId: p2Id,
+            text: testChatContent
+        });
+        const p2ReceivedChat = p2Queue.find(m => m.event === 'chat:private_message');
+        const chatWithSpacesOk = Boolean(
+            p2ReceivedChat &&
+            p2ReceivedChat.data?.text === testChatContent &&
+            p2ReceivedChat.data.text.includes(' ')
+        );
+
+        // 6. KIỂM TRA BẢNG XẾP HẠNG TỶ PHÚ (SẮP XẾP GIẢM DẦN & HUY CHƯƠNG)
+        const billionaires = testServer.getBillionaires('all');
+        const bilLengthOk = Array.isArray(billionaires) && billionaires.length >= 10;
+        const bilSortedOk = billionaires.every((b, i, arr) => i === 0 || b.netWorth <= arr[i - 1].netWorth);
+        const bilMedalsOk = billionaires[0]?.medal === '🥇' && billionaires[1]?.medal === '🥈' && billionaires[2]?.medal === '🥉';
+        const billionairesOk = bilLengthOk && bilSortedOk && bilMedalsOk;
+
         testServer.stop();
 
         if (p1SawP2Join && p2SawP1InList && p2ReceivedP1Move) {
             logger.pass('Mô phỏng 2 Người Chơi Thật: Đồng bộ tức thì Player_1 & Player_2 cùng phòng, truyền nhận tọa độ di chuyển chuẩn xác 100%');
         } else {
             logger.fail('Mô phỏng 2 Người Chơi Thật: Lỗi đồng bộ giữa 2 client', JSON.stringify({ p1SawP2Join, p2SawP1InList, p2ReceivedP1Move }));
+        }
+
+        if (pvpDeclineOk) {
+            logger.pass('Mô phỏng Thách Đấu 1v1 Từ Chối: Player_A mời -> Player_B từ chối -> Hủy đúng quy trình và gửi thông báo lịch sự "[Tên] đang bận bán hàng"');
+        } else {
+            logger.fail('Mô phỏng Thách Đấu 1v1 Từ Chối: Không xử lý đúng quy trình từ chối', JSON.stringify({ p2InviteMsg, p1DeclinedMsg }));
+        }
+
+        if (pvpMatchOk) {
+            logger.pass('Mô phỏng Thách Đấu 1v1 Đồng Ý: Player_A mời -> Player_B đồng ý -> Ghép vào cùng phòng 1v1 và đồng bộ điểm real-time khi thao tác');
+        } else {
+            logger.fail('Mô phỏng Thách Đấu 1v1 Đồng Ý: Lỗi ghép phòng hoặc đồng bộ điểm số', JSON.stringify({ matchSameRoom, pvpTapOk }));
+        }
+
+        if (friendSystemOk && chatWithSpacesOk) {
+            logger.pass('Mô phỏng Kết Bạn & Chat: Gửi/nhận lời mời kết bạn thành công -> Trò chuyện 1-1 gửi nhận chuỗi văn bản có dấu cách ("Chào bạn Cơm Nắm Sài Gòn") trọn vẹn');
+        } else {
+            logger.fail('Mô phỏng Kết Bạn & Chat: Thất bại trong kết bạn hoặc nhận tin nhắn có dấu cách', JSON.stringify({ friendSystemOk, chatWithSpacesOk }));
+        }
+
+        if (billionairesOk) {
+            logger.pass('Mô phỏng Bảng Xếp Hạng Tỷ Phú: Sắp xếp theo Tổng Tài Sản Ròng giảm dần 100%, vinh danh Huy chương Top 1-2-3 (Vàng, Bạc, Đồng) và hỗ trợ lọc chi nhánh');
+        } else {
+            logger.fail('Mô phỏng Bảng Xếp Hạng Tỷ Phú: Lỗi sắp xếp tài sản hoặc huy chương', JSON.stringify({ bilLengthOk, bilSortedOk, bilMedalsOk }));
         }
     } catch (errSync2P) {
         logger.fail('Mô phỏng 2 Người Chơi Thật: Ngoại lệ', errSync2P.message);

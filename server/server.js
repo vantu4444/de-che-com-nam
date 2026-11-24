@@ -63,6 +63,19 @@ export class OnigiriServer {
         // Quản lý các phòng đấu trường 1v1
         this.arenaRooms = new Map();
 
+        // [PVP XÁC NHẬN] Quản lý lời mời thách đấu đang chờ phản hồi
+        this.pendingPvpInvites = new Map();
+
+        // [CHAT] Lịch sử trò chuyện cộng đồng gần nhất
+        this.recentGlobalChat = [
+            { id: 'c_1', senderId: 'sys', senderName: 'Bếp Trưởng Quốc Gia', senderLevel: 50, city: 'hcm', text: '🍙 Chào mừng quý đồng nghiệp gia nhập Đế Chế Cơm Nắm!', time: Date.now() - 300000 },
+            { id: 'c_2', senderId: 'bot_1', senderName: 'Tập Đoàn Cơm Nắm Sài Gòn', senderLevel: 25, city: 'hcm', text: 'Chào cả nhà! Chi nhánh Bến Thành hôm nay bội thu đơn hàng! 🎉', time: Date.now() - 180000 },
+            { id: 'c_3', senderId: 'bot_3', senderName: 'Onigiri Hoàng Gia Hà Nội', senderLevel: 20, city: 'hanoi', text: 'Có ai giao lưu 1v1 bóc rong biển tốc độ không nào? 🍘⚡', time: Date.now() - 60000 }
+        ];
+
+        // [BẢNG XẾP HẠNG TỶ PHÚ] Danh sách Top 50 đại gia ẩm thực Cơm Nắm Onigiri
+        this.mockBillionaires = this.generateMockBillionaires();
+
         // Quỹ Đơn Hàng Hợp Tác Liên Tỉnh (Co-op)
         this.coopOrder = {
             id: 'coop_' + Date.now(),
@@ -317,6 +330,25 @@ export class OnigiriServer {
 
             socket.on('coop_contribute', (data) => socket.emit('coopContribute', data));
 
+            // [PVP 1V1 XÁC NHẬN BẮT BUỘC] Lời mời, Đồng ý, Từ chối & Bấm tap
+            socket.on('pvp:invite', (data) => this.handlePvpInvite(socket.id, data));
+            socket.on('pvp:decline', (data) => this.handlePvpDecline(socket.id, data));
+            socket.on('pvp:accept', (data) => this.handlePvpAccept(socket.id, data));
+            socket.on('pvp:tap', (data) => this.handlePvpTap(socket.id, data));
+
+            // [HỆ THỐNG KẾT BẠN]
+            socket.on('friend:request', (data) => this.handleFriendRequest(socket.id, data));
+            socket.on('friend:accept', (data) => this.handleFriendAccept(socket.id, data));
+            socket.on('friend:decline', (data) => this.handleFriendDecline(socket.id, data));
+            socket.on('friend:query_status', (data) => this.handleFriendQueryStatus(socket.id, data));
+
+            // [HỆ THỐNG TRÒ CHUYỆN ĐA KÊNH]
+            socket.on('chat:message', (data) => this.handleChatMessage(socket.id, data));
+            socket.on('chat:get_history', () => this.handleChatGetHistory(socket.id));
+
+            // [BẢNG XẾP HẠNG TỶ PHÚ]
+            socket.on('billionaires:get', (data) => this.handleGetBillionaires(socket.id, data));
+
             // Sự kiện 5: Ngắt kết nối
             socket.on('disconnect', () => {
                 const player = this.players.get(socket.id);
@@ -481,6 +513,28 @@ export class OnigiriServer {
                     completed: completedNow
                 });
             }
+        } else if (event === 'pvp:invite') {
+            this.handlePvpInvite(sid, data);
+        } else if (event === 'pvp:decline') {
+            this.handlePvpDecline(sid, data);
+        } else if (event === 'pvp:accept') {
+            this.handlePvpAccept(sid, data);
+        } else if (event === 'pvp:tap') {
+            this.handlePvpTap(sid, data);
+        } else if (event === 'friend:request') {
+            this.handleFriendRequest(sid, data);
+        } else if (event === 'friend:accept') {
+            this.handleFriendAccept(sid, data);
+        } else if (event === 'friend:decline') {
+            this.handleFriendDecline(sid, data);
+        } else if (event === 'friend:query_status') {
+            this.handleFriendQueryStatus(sid, data);
+        } else if (event === 'chat:message') {
+            this.handleChatMessage(sid, data);
+        } else if (event === 'chat:get_history') {
+            this.handleChatGetHistory(sid);
+        } else if (event === 'billionaires:get') {
+            this.handleGetBillionaires(sid, data);
         }
     }
 
@@ -516,6 +570,428 @@ export class OnigiriServer {
         for (const sid of this.players.keys()) {
             this.sendToClient(sid, event, data);
         }
+    }
+
+    sendEventToUser(userId, event, data) {
+        if (this.io) {
+            try {
+                let s = null;
+                if (this.io.sockets?.sockets?.get) {
+                    s = this.io.sockets.sockets.get(userId);
+                } else if (this.io.sockets?.sockets) {
+                    s = this.io.sockets.sockets[userId];
+                }
+                if (s) {
+                    s.emit(event, data);
+                }
+            } catch (e) {}
+        }
+        this.sendToClient(userId, event, data);
+    }
+
+    // [PVP 1V1] Xử lý Lời Mời Thách Đấu
+    handlePvpInvite(senderId, data) {
+        const sender = this.players.get(senderId);
+        const targetId = data?.targetId;
+        const target = this.players.get(targetId);
+
+        if (!sender) return;
+
+        if (!target) {
+            this.sendEventToUser(senderId, 'pvp:declined', {
+                reason: 'Đối thủ hiện không trực tuyến hoặc đã đổi phòng.'
+            });
+            return;
+        }
+
+        if (senderId === targetId) {
+            this.sendEventToUser(senderId, 'pvp:declined', {
+                reason: 'Bạn không thể tự thách đấu chính mình.'
+            });
+            return;
+        }
+
+        const gameType = data?.gameType === 'seaweed_peel' ? 'seaweed_peel' : 'speed_kitchen';
+        const betAmount = [0, 50000, 200000].includes(Number(data?.betAmount)) ? Number(data.betAmount) : 0;
+        const inviteId = 'inv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+        // Hủy lời mời cũ nếu có giữa 2 người
+        for (const [invId, inv] of this.pendingPvpInvites.entries()) {
+            if (inv.fromId === senderId && inv.targetId === targetId) {
+                clearTimeout(inv.timer);
+                this.pendingPvpInvites.delete(invId);
+            }
+        }
+
+        // Tạo timer 15 giây tự động hết hạn nếu đối thủ không phản hồi
+        const timer = setTimeout(() => {
+            if (this.pendingPvpInvites.has(inviteId)) {
+                this.pendingPvpInvites.delete(inviteId);
+                this.sendEventToUser(senderId, 'pvp:declined', {
+                    reason: `[${target.brandName}] đang bận bán hàng, đã từ chối lời mời`
+                });
+                this.sendEventToUser(targetId, 'pvp:invite_expired', { inviteId });
+            }
+        }, 15000);
+
+        this.pendingPvpInvites.set(inviteId, {
+            inviteId,
+            fromId: senderId,
+            targetId,
+            gameType,
+            betAmount,
+            timer,
+            createdAt: Date.now()
+        });
+
+        // Gửi thông báo nổi tới riêng Người chơi B
+        this.sendEventToUser(targetId, 'pvp:invite', {
+            inviteId,
+            fromId: senderId,
+            fromName: sender.brandName,
+            fromLevel: sender.level,
+            fromCity: sender.city,
+            gameType,
+            betAmount,
+            timeoutSeconds: 15
+        });
+    }
+
+    // [PVP 1V1] Người chơi B bấm Từ Chối
+    handlePvpDecline(targetId, data) {
+        const inviteId = data?.inviteId;
+        const inv = this.pendingPvpInvites.get(inviteId);
+        if (!inv) return;
+
+        clearTimeout(inv.timer);
+        this.pendingPvpInvites.delete(inviteId);
+
+        const target = this.players.get(targetId);
+        const targetName = target ? target.brandName : 'Đối thủ';
+
+        // Báo cho Người chơi A
+        this.sendEventToUser(inv.fromId, 'pvp:declined', {
+            reason: `[${targetName}] đang bận bán hàng, đã từ chối lời mời`
+        });
+    }
+
+    // [PVP 1V1] Người chơi B bấm Đồng Ý
+    handlePvpAccept(targetId, data) {
+        const inviteId = data?.inviteId;
+        const inv = this.pendingPvpInvites.get(inviteId);
+        if (!inv) return;
+
+        clearTimeout(inv.timer);
+        this.pendingPvpInvites.delete(inviteId);
+
+        const playerA = this.players.get(inv.fromId);
+        const playerB = this.players.get(targetId);
+
+        if (!playerA || !playerB) {
+            this.sendEventToUser(targetId, 'pvp:declined', { reason: 'Một trong hai người chơi đã rời game.' });
+            return;
+        }
+
+        const roomId = 'room_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+        const potMoney = inv.betAmount > 0 ? (inv.betAmount * 2) : 100000;
+
+        const roomObj = {
+            roomId,
+            player1: { id: playerA.id, name: playerA.brandName, level: playerA.level, score: 0 },
+            player2: { id: playerB.id, name: playerB.brandName, level: playerB.level, score: 0 },
+            gameType: inv.gameType,
+            betAmount: inv.betAmount,
+            potMoney,
+            timeRemaining: 30,
+            status: 'PLAYING',
+            timer: null
+        };
+
+        this.arenaRooms.set(roomId, roomObj);
+
+        // Báo vào trận cho Người chơi A
+        this.sendEventToUser(playerA.id, 'pvp:match_start', {
+            roomId,
+            opponent: { id: playerB.id, name: playerB.brandName, level: playerB.level, city: playerB.city },
+            gameType: inv.gameType,
+            betAmount: inv.betAmount,
+            potMoney,
+            timeRemaining: 30
+        });
+
+        // Báo vào trận cho Người chơi B
+        this.sendEventToUser(playerB.id, 'pvp:match_start', {
+            roomId,
+            opponent: { id: playerA.id, name: playerA.brandName, level: playerA.level, city: playerA.city },
+            gameType: inv.gameType,
+            betAmount: inv.betAmount,
+            potMoney,
+            timeRemaining: 30
+        });
+
+        // Bộ đếm thời gian trận đấu 30s
+        roomObj.timer = setInterval(() => {
+            roomObj.timeRemaining -= 1;
+
+            if (roomObj.timeRemaining <= 0) {
+                clearInterval(roomObj.timer);
+                roomObj.status = 'FINISHED';
+
+                const p1Score = roomObj.player1.score;
+                const p2Score = roomObj.player2.score;
+
+                const isP1Win = p1Score > p2Score;
+                const isDraw = p1Score === p2Score;
+                const isP2Win = p2Score > p1Score;
+
+                // Gửi kết quả cho P1
+                this.sendEventToUser(playerA.id, 'pvp:settlement', {
+                    roomId,
+                    isWin: isP1Win,
+                    isDraw,
+                    rewardMoney: isP1Win ? potMoney : (isDraw ? Math.floor(potMoney / 2) : 0),
+                    rewardRep: isP1Win ? 15 : (isDraw ? 8 : 0),
+                    playerScore: p1Score,
+                    opponentScore: p2Score,
+                    opponentName: playerB.brandName
+                });
+
+                // Gửi kết quả cho P2
+                this.sendEventToUser(playerB.id, 'pvp:settlement', {
+                    roomId,
+                    isWin: isP2Win,
+                    isDraw,
+                    rewardMoney: isP2Win ? potMoney : (isDraw ? Math.floor(potMoney / 2) : 0),
+                    rewardRep: isP2Win ? 15 : (isDraw ? 8 : 0),
+                    playerScore: p2Score,
+                    opponentScore: p1Score,
+                    opponentName: playerA.brandName
+                });
+
+                this.arenaRooms.delete(roomId);
+            }
+        }, 1000);
+    }
+
+    // [PVP 1V1] Nhận thao tác bấm Tap của người chơi
+    handlePvpTap(userId, data) {
+        const roomId = data?.roomId;
+        if (!roomId) return;
+        const room = this.arenaRooms.get(roomId);
+        if (!room || room.status !== 'PLAYING') return;
+
+        let p1Score = room.player1.score;
+        let p2Score = room.player2.score;
+
+        if (room.player1.id === userId) {
+            room.player1.score += 1;
+            p1Score = room.player1.score;
+        } else if (room.player2.id === userId) {
+            room.player2.score += 1;
+            p2Score = room.player2.score;
+        } else {
+            return;
+        }
+
+        // Đồng bộ điểm thời gian thực tới cả 2 người
+        const updateData = {
+            roomId,
+            p1Id: room.player1.id,
+            p1Score,
+            player1Score: p1Score,
+            p2Id: room.player2.id,
+            p2Score,
+            player2Score: p2Score,
+            lastTapperId: userId
+        };
+
+        this.sendEventToUser(room.player1.id, 'pvp:score_update', updateData);
+        this.sendEventToUser(room.player2.id, 'pvp:score_update', updateData);
+    }
+
+    // [HỆ THỐNG KẾT BẠN]
+    handleFriendRequest(senderId, data) {
+        const sender = this.players.get(senderId);
+        const targetId = data?.targetId;
+        const target = this.players.get(targetId);
+
+        if (!sender || !target || senderId === targetId) return;
+
+        this.sendEventToUser(targetId, 'friend:invite', {
+            fromId: senderId,
+            fromName: sender.brandName,
+            fromLevel: sender.level,
+            fromCity: sender.city
+        });
+    }
+
+    handleFriendAccept(targetId, data) {
+        const fromId = data?.fromId;
+        const playerA = this.players.get(fromId);
+        const playerB = this.players.get(targetId);
+
+        if (!playerA || !playerB) return;
+
+        // Báo cho cả 2 để lưu vào danh bạ
+        this.sendEventToUser(playerA.id, 'friend:accepted', {
+            friend: { id: playerB.id, name: playerB.brandName, level: playerB.level, city: playerB.city }
+        });
+        this.sendEventToUser(playerB.id, 'friend:accepted', {
+            friend: { id: playerA.id, name: playerA.brandName, level: playerA.level, city: playerA.city }
+        });
+    }
+
+    handleFriendDecline(targetId, data) {
+        const fromId = data?.fromId;
+        const target = this.players.get(targetId);
+        const targetName = target ? target.brandName : 'Người chơi';
+
+        this.sendEventToUser(fromId, 'friend:declined', {
+            reason: `[${targetName}] đã từ chối lời mời kết bạn.`
+        });
+    }
+
+    handleFriendQueryStatus(userId, data) {
+        const friendIds = Array.isArray(data?.friendIds) ? data.friendIds : [];
+        const result = friendIds.map(fId => {
+            const onlinePlayer = this.players.get(fId);
+            if (onlinePlayer) {
+                return {
+                    id: fId,
+                    name: onlinePlayer.brandName,
+                    isOnline: true,
+                    city: onlinePlayer.city,
+                    level: onlinePlayer.level
+                };
+            }
+            return { id: fId, isOnline: false };
+        });
+
+        this.sendEventToUser(userId, 'friend:status_result', { friends: result });
+    }
+
+    // [HỆ THỐNG TRÒ CHUYỆN]
+    handleChatMessage(senderId, data) {
+        const sender = this.players.get(senderId);
+        if (!sender) return;
+
+        const rawText = String(data?.text || '').trim();
+        if (rawText.length === 0) return;
+        const text = rawText.slice(0, 120);
+
+        if (data?.channel === 'private') {
+            const targetId = data?.targetId;
+            const target = this.players.get(targetId);
+            if (!target) {
+                this.sendEventToUser(senderId, 'chat:private_error', { reason: 'Bạn bè hiện đang ngoại tuyến.' });
+                return;
+            }
+
+            const pmsg = {
+                id: 'pmsg_' + Date.now(),
+                senderId: senderId,
+                senderName: sender.brandName,
+                targetId: targetId,
+                text,
+                time: Date.now()
+            };
+
+            this.sendEventToUser(targetId, 'chat:private_message', pmsg);
+            this.sendEventToUser(senderId, 'chat:private_sent', pmsg);
+        } else {
+            // Chat cộng đồng (Global)
+            const msg = {
+                id: 'msg_' + Date.now(),
+                senderId: senderId,
+                senderName: sender.brandName,
+                senderLevel: sender.level,
+                city: sender.city,
+                text,
+                time: Date.now()
+            };
+
+            this.recentGlobalChat.push(msg);
+            if (this.recentGlobalChat.length > 50) {
+                this.recentGlobalChat.shift();
+            }
+
+            // Phát sóng toàn máy chủ
+            if (this.io) {
+                this.io.emit('chat:broadcast', msg);
+            }
+            this.broadcastAll('chat:broadcast', msg);
+        }
+    }
+
+    handleChatGetHistory(userId) {
+        this.sendEventToUser(userId, 'chat:history', {
+            messages: this.recentGlobalChat
+        });
+    }
+
+    // [BẢNG XẾP HẠNG TỶ PHÚ]
+    handleGetBillionaires(userId, data) {
+        const filterCity = data?.city || 'all';
+        const list = this.getBillionaires(filterCity);
+        this.sendEventToUser(userId, 'billionaires:list', { list });
+    }
+
+    generateMockBillionaires() {
+        return [
+            { id: 'bil_1', name: 'Tập Đoàn Cơm Nắm Sài Gòn 👑', netWorth: 285400000, level: 35, city: 'hcm', isOnline: true },
+            { id: 'bil_2', name: 'Onigiri Hoàng Gia Hà Nội ⭐', netWorth: 215000000, level: 32, city: 'hanoi', isOnline: true },
+            { id: 'bil_3', name: 'Bếp Cao Nguyên BMT Đắk Lắk 🌾', netWorth: 188500000, level: 30, city: 'daklak', isOnline: true },
+            { id: 'bil_4', name: 'Đế Chế Cơm Nắm Xứ Nghệ - Vinh 💎', netWorth: 165000000, level: 28, city: 'vinh', isOnline: true },
+            { id: 'bil_5', name: 'Xưởng Cơm Nắm Chợ Lớn Q.5', netWorth: 142000000, level: 26, city: 'hcm', isOnline: false },
+            { id: 'bil_6', name: 'Bếp Nắm Hồ Gươm 36 Phố Cổ', netWorth: 128000000, level: 25, city: 'hanoi', isOnline: false },
+            { id: 'bil_7', name: 'Onigiri Buôn Ma Thuột Vàng', netWorth: 114000000, level: 23, city: 'daklak', isOnline: false },
+            { id: 'bil_8', name: 'Tiệm Cơm Nắm Cửa Lò Bến Thủy', netWorth: 99000000, level: 22, city: 'vinh', isOnline: false },
+            { id: 'bil_9', name: 'Chuỗi Cơm Nắm Thủ Đức High-Tech', netWorth: 88500000, level: 20, city: 'hcm', isOnline: true },
+            { id: 'bil_10', name: 'Bếp Cơm Nắm Cầu Giấy Sinh Viên', netWorth: 76000000, level: 19, city: 'hanoi', isOnline: false },
+            { id: 'bil_11', name: 'Nông Trường Cơm Nắm Krông Pắk', netWorth: 68000000, level: 18, city: 'daklak', isOnline: false },
+            { id: 'bil_12', name: 'Tiệm Bánh Nắm Chợ Vinh Cũ', netWorth: 59000000, level: 17, city: 'vinh', isOnline: false },
+            { id: 'bil_13', name: 'Onigiri Bến Thành Đệ Nhất', netWorth: 52000000, level: 16, city: 'hcm', isOnline: false },
+            { id: 'bil_14', name: 'Tiệm Cơm Nắm Phố Huế Hà Nội', netWorth: 47500000, level: 15, city: 'hanoi', isOnline: false },
+            { id: 'bil_15', name: 'Bếp Cơm Nắm Rừng Cao Su BMT', netWorth: 42000000, level: 14, city: 'daklak', isOnline: false }
+        ];
+    }
+
+    getBillionaires(filterCity = 'all') {
+        const pool = [...this.mockBillionaires];
+
+        // Đưa người chơi online thật vào danh sách Tỷ Phú
+        for (const p of this.players.values()) {
+            const netWorth = typeof p.netWorth === 'number' && p.netWorth > 0
+                ? p.netWorth
+                : (p.totalRevenue || 0) + (p.level * 3000000) + 15000000;
+
+            pool.push({
+                id: p.id,
+                name: p.brandName,
+                netWorth,
+                level: p.level || 1,
+                city: p.city || 'hcm',
+                isOnline: true,
+                isRealPlayer: true
+            });
+        }
+
+        // Lọc theo chi nhánh nếu được yêu cầu
+        let filtered = pool;
+        if (filterCity && filterCity !== 'all') {
+            const cleanCity = filterCity.replace('branch_', '');
+            filtered = pool.filter(b => b.city === cleanCity);
+        }
+
+        // Sắp xếp giảm dần theo Tổng Tài Sản Ròng
+        const sorted = filtered.sort((a, b) => b.netWorth - a.netWorth).slice(0, 50);
+
+        // Gán huy chương cho Top 1-2-3
+        return sorted.map((b, idx) => ({
+            ...b,
+            rank: idx + 1,
+            medal: idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`
+        }));
     }
 
     getPlayersInCity(city) {
@@ -650,6 +1126,14 @@ export class OnigiriServer {
             try { item.res.end(JSON.stringify({ messages: [] })); } catch(e) {}
         }
         this.pollingWaitingRes.clear();
+        for (const inv of this.pendingPvpInvites.values()) {
+            if (inv.timer) clearTimeout(inv.timer);
+        }
+        this.pendingPvpInvites.clear();
+        for (const room of this.arenaRooms.values()) {
+            if (room.timer) clearInterval(room.timer);
+        }
+        this.arenaRooms.clear();
     }
 }
 

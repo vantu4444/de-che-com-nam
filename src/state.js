@@ -887,6 +887,11 @@ class GameState {
                 this.save();
             }, 5000);
         }
+
+        // [KẾT BẠN & TRÒ CHUYỆN] Danh sách bạn bè & Lịch sử tin nhắn riêng tư
+        this.friends = []; // [{ id, name, level, city, addedAt }]
+        this.privateMessages = {}; // { [friendId]: [{ from, text, time, unread }] }
+        this.unreadMessagesCount = 0;
     }
 
     onUpdate(fn) {
@@ -1364,6 +1369,120 @@ class GameState {
             return true;
         }
         return false;
+    }
+
+    // [BẢNG XẾP HẠNG TỶ PHÚ] Tính Tổng Tài Sản Ròng = Tiền mặt + Giá trị Xưởng, Xe và Chi nhánh
+    getNetWorth() {
+        let total = typeof this.money === 'number' && !isNaN(this.money) ? this.money : 0;
+
+        // Giá trị tài sản phương tiện
+        const vehicleValues = {
+            walk: 0,
+            bicycle: 500000,
+            scooter: 3000000,
+            van: 15000000
+        };
+        const vehicles = Array.isArray(this.unlockedVehicles) ? this.unlockedVehicles : ['walk'];
+        vehicles.forEach(v => {
+            total += vehicleValues[v] || 0;
+        });
+
+        // Giá trị Xưởng bếp & Dây chuyền tự động
+        total += (this.kitchenTier || 1) * 2000000;
+        total += (this.kitchenAutoLevel || 0) * 5000000;
+
+        // Giá trị các Chi nhánh toàn quốc
+        const branchBaseValues = {
+            branch_hcm: 5000000,
+            branch_daklak: 20000000,
+            branch_vinh: 50000000,
+            branch_hanoi: 100000000
+        };
+        for (const [bKey, bData] of Object.entries(this.branches || {})) {
+            if (bData && bData.unlocked) {
+                total += (branchBaseValues[bKey] || 5000000) + ((bData.level || 1) * 3000000);
+            }
+        }
+
+        return total;
+    }
+
+    // [KẾT BẠN] Thêm bạn bè vào danh sách lưu trữ
+    addFriend(friendData) {
+        if (!friendData || !friendData.name) return false;
+        if (!Array.isArray(this.friends)) this.friends = [];
+
+        const cleanName = String(friendData.name).trim();
+        const existingIdx = this.friends.findIndex(f => f.id === friendData.id || f.name.toLowerCase() === cleanName.toLowerCase());
+        if (existingIdx !== -1) {
+            this.friends[existingIdx] = {
+                ...this.friends[existingIdx],
+                ...friendData,
+                name: cleanName
+            };
+            this.save();
+            this.notify({ friendsUpdated: true });
+            return true;
+        }
+
+        this.friends.push({
+            id: friendData.id || 'f_' + Date.now(),
+            name: cleanName,
+            level: Number(friendData.level) || 1,
+            city: friendData.city || 'hcm',
+            addedAt: Date.now()
+        });
+
+        this.save();
+        this.notify({ friendsUpdated: true });
+        return true;
+    }
+
+    removeFriend(friendId) {
+        if (!Array.isArray(this.friends)) return false;
+        this.friends = this.friends.filter(f => f.id !== friendId && f.name !== friendId);
+        this.save();
+        this.notify({ friendsUpdated: true });
+        return true;
+    }
+
+    isFriend(targetIdOrName) {
+        if (!Array.isArray(this.friends) || !targetIdOrName) return false;
+        const targetClean = String(targetIdOrName).trim().toLowerCase();
+        return this.friends.some(f => f.id === targetIdOrName || f.name.toLowerCase() === targetClean);
+    }
+
+    addPrivateMessage(friendId, msg) {
+        if (!this.privateMessages) this.privateMessages = {};
+        if (!Array.isArray(this.privateMessages[friendId])) {
+            this.privateMessages[friendId] = [];
+        }
+        this.privateMessages[friendId].push({
+            from: msg.from || 'friend',
+            senderName: msg.senderName || '',
+            text: msg.text || '',
+            time: msg.time || Date.now(),
+            unread: msg.unread !== undefined ? msg.unread : true
+        });
+        if (msg.unread) {
+            this.unreadMessagesCount = (this.unreadMessagesCount || 0) + 1;
+        }
+        this.save();
+        this.notify({ messageReceived: true, friendId });
+    }
+
+    markMessagesAsRead(friendId) {
+        if (!this.privateMessages || !Array.isArray(this.privateMessages[friendId])) return;
+        let readCount = 0;
+        this.privateMessages[friendId].forEach(m => {
+            if (m.unread) {
+                m.unread = false;
+                readCount++;
+            }
+        });
+        this.unreadMessagesCount = Math.max(0, (this.unreadMessagesCount || 0) - readCount);
+        this.save();
+        this.notify({ messagesRead: true, friendId });
     }
 
     record1v1Win() {
@@ -2159,7 +2278,9 @@ class GameState {
                 isOperatingHalted: Boolean(this.isOperatingHalted),
                 dailyRevenue: this.dailyRevenue || 0,
                 dailyTips: this.dailyTips || 0,
-                gameDay: this.gameDay || 1
+                gameDay: this.gameDay || 1,
+                friends: Array.isArray(this.friends) ? this.friends : [],
+                privateMessages: this.privateMessages || {}
             };
             localStorage.setItem(this.saveKey, JSON.stringify(data));
         } catch (e) {
@@ -2278,6 +2399,13 @@ class GameState {
             }
             if (typeof data.staffCount === 'number' && data.staffCount >= 0) {
                 this.staffCount = data.staffCount;
+            }
+
+            if (Array.isArray(data.friends)) {
+                this.friends = data.friends;
+            }
+            if (data.privateMessages && typeof data.privateMessages === 'object') {
+                this.privateMessages = data.privateMessages;
             }
 
             this.ensureIntegrity();

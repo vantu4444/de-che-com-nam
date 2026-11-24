@@ -5723,3 +5723,844 @@ body, html {
     color: #ffffff;
 }
 
+/* ==========================================================================
+   HỆ THỐNG THÁCH ĐẤU 1V1, KẾT BẠN, TRÒ CHUYỆN & BXH TỶ PHÚ (ENTERPRISE UI)
+   ========================================================================== */
+
+/* 1. THẺ THÔNG BÁO MỜI THÁCH ĐẤU NỔI (15s Countdown) */
+.pvp-invite-card {
+    position: fixed;
+    top: calc(75px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 105;
+    width: 90%;
+    max-width: 420px;
+    pointer-events: auto;
+}
+
+.pip-inner {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    border: 2.5px solid #f97316;
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 16px 40px rgba(249, 115, 22, 0.5), 0 0 20px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    text-align: center;
+    color: #ffffff;
+}
+
+.pip-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.pip-header h4 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #fb923c;
+    letter-spacing: 0.5px;
+}
+
+.pip-from {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #f8fafc;
+}
+
+.pip-details {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.pip-details strong {
+    color: #38bdf8;
+}
+
+.pip-details .pip-bet {
+    color: #4ade80;
+    font-weight: 800;
+}
+
+.pip-countdown-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.pip-countdown-bar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #f59e0b, #ef4444);
+    transition: width 0.1s linear;
+}
+
+.pip-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-pip-accept {
+    flex: 1;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border: 2px solid #86efac;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.5);
+    transition: transform 0.1s;
+}
+
+.btn-pip-decline {
+    flex: 1;
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: 2px solid #fca5a5;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.5);
+    transition: transform 0.1s;
+}
+
+.btn-pip-accept:active, .btn-pip-decline:active {
+    transform: scale(0.95);
+}
+
+/* 2. THẺ THÔNG BÁO LỜI MỜI KẾT BẠN NỔI */
+.friend-invite-card {
+    position: fixed;
+    top: calc(85px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 105;
+    width: 90%;
+    max-width: 380px;
+    pointer-events: auto;
+}
+
+.fip-inner {
+    background: rgba(15, 23, 42, 0.98);
+    border: 2px solid #38bdf8;
+    border-radius: 18px;
+    padding: 16px;
+    text-align: center;
+    color: #ffffff;
+    box-shadow: 0 12px 30px rgba(56, 189, 248, 0.4);
+}
+
+.fip-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.fip-header h4 {
+    font-size: 15px;
+    font-weight: 900;
+    color: #38bdf8;
+}
+
+.fip-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.btn-fip-accept {
+    flex: 1;
+    background: #16a34a;
+    border: 1px solid #86efac;
+    color: #fff;
+    padding: 9px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-fip-decline {
+    flex: 1;
+    background: #475569;
+    border: 1px solid #94a3b8;
+    color: #fff;
+    padding: 9px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* 3. HỘP THOẠI CHỌN THỂ THỨC & CƯỢC THÁCH ĐẤU */
+.pvp-challenge-dialog-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 106;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    pointer-events: auto;
+}
+
+.pcd-card {
+    background: #0f172a;
+    border: 2px solid #f97316;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 440px;
+    padding: 20px;
+    color: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+}
+
+.pcd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.pcd-header h3 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #fb923c;
+}
+
+.btn-pcd-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.pcd-section {
+    margin-bottom: 16px;
+}
+
+.pcd-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.pcd-mode-row, .pcd-bet-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-pcd-mode, .btn-pcd-bet {
+    flex: 1;
+    min-width: 120px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-pcd-mode.active, .btn-pcd-bet.active {
+    background: rgba(249, 115, 22, 0.25);
+    border-color: #f97316;
+    color: #fb923c;
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.4);
+}
+
+.pcd-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-pcd-send {
+    flex: 2;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: none;
+    color: #fff;
+    font-weight: 800;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.btn-pcd-cancel {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #cbd5e1;
+    font-weight: 700;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* 4. BẢNG XẾP HẠNG TỶ PHÚ */
+.billionaires-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+
+.bil-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.bil-filter-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.btn-bil-filter {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-bil-filter.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.btn-bil-refresh {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.bil-table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+}
+
+.bil-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+}
+
+.bil-table th {
+    background: rgba(15, 23, 42, 0.95);
+    position: sticky;
+    top: 0;
+    padding: 10px 8px;
+    color: #94a3b8;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.bil-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    vertical-align: middle;
+}
+
+.bil-rank {
+    font-weight: 900;
+    font-size: 14px;
+    width: 38px;
+    text-align: center;
+}
+
+.bil-brand-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.bil-brand-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bil-brand-name strong {
+    color: #f8fafc;
+    font-size: 12px;
+}
+
+.bil-online-dot { font-size: 10px; }
+.bil-offline-dot { font-size: 10px; opacity: 0.6; }
+
+.bil-lvl {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.bil-city {
+    color: #38bdf8;
+    font-weight: 700;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.bil-wealth {
+    color: #facc15;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.bil-actions-cell {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.btn-action-sm {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-action-sm:hover {
+    background: #0284c7;
+    border-color: #38bdf8;
+}
+
+.badge-self {
+    color: #4ade80;
+    font-weight: 800;
+    font-size: 11px;
+}
+
+.badge-friend {
+    color: #38bdf8;
+    font-weight: 700;
+    font-size: 10px;
+}
+
+/* 5. GIAO DIỆN TRÒ CHUYỆN (CHAT) */
+.chat-tab-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 8px;
+}
+
+.chat-channel-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-chat-chan {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #94a3b8;
+    padding: 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.btn-chat-chan.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+.global-chat-container, .friends-chat-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 10px;
+}
+
+.chat-messages-box {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+    min-height: 140px;
+}
+
+.chat-msg-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 85%;
+}
+
+.chat-msg-row.is-self {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.cmr-meta {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 2px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.cmr-sender {
+    color: #38bdf8;
+}
+
+.chat-msg-row.is-self .cmr-sender {
+    color: #4ade80;
+}
+
+.cmr-bubble {
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
+    border-radius: 14px;
+    border-top-left-radius: 2px;
+    font-size: 12px;
+    color: #f8fafc;
+    word-break: break-word;
+}
+
+.chat-msg-row.is-self .cmr-bubble {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    border-radius: 14px;
+    border-top-right-radius: 2px;
+}
+
+.chat-quick-phrases {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 6px 0;
+}
+
+.btn-quick-phrase {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1;
+    padding: 5px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-quick-phrase:hover {
+    background: rgba(249, 115, 22, 0.2);
+    border-color: #f97316;
+    color: #fb923c;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.chat-text-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #ffffff;
+    font-size: 12px;
+    outline: none;
+}
+
+.chat-text-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.btn-chat-send {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    border: none;
+    color: #ffffff;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Chat bạn bè 2 cột */
+.friends-chat-container {
+    flex-direction: row;
+    gap: 10px;
+}
+
+.friends-roster-col {
+    width: 35%;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.frc-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.friends-list-items {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.friend-item-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.friend-item-card.active {
+    background: rgba(2, 132, 199, 0.3);
+    border-color: #38bdf8;
+}
+
+.fic-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.fic-info strong {
+    font-size: 11px;
+    color: #f8fafc;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.fic-info small {
+    font-size: 9px;
+    color: #94a3b8;
+}
+
+.fic-badge {
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.friends-chat-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.fcc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+}
+
+.btn-challenge-friend {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    border: none;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+/* 6. WIDGET CHAT NỔI GÓC MÀN HÌNH (FLOATING CHAT PREVIEW) */
+.floating-chat-preview {
+    position: fixed;
+    left: calc(14px + env(safe-area-inset-left));
+    bottom: calc(248px + env(safe-area-inset-bottom));
+    z-index: 85;
+    pointer-events: auto;
+    width: 260px;
+}
+
+.fcw-container {
+    background: rgba(15, 23, 42, 0.88);
+    border: 1.5px solid rgba(56, 189, 248, 0.4);
+    border-radius: 14px;
+    padding: 8px 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.fcw-container.collapsed .fcw-messages {
+    display: none;
+}
+
+.fcw-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #38bdf8;
+    margin-bottom: 4px;
+}
+
+.btn-fcw-toggle {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.fcw-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.fcw-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fcw-line strong {
+    color: #38bdf8;
+}
+
+/* 7. TOAST THÔNG BÁO TOÀN CỤC */
+.online-toast-notification {
+    position: fixed;
+    top: calc(20px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid #38bdf8;
+    border-radius: 20px;
+    padding: 10px 20px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    z-index: 120;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.online-toast-notification.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Tiến độ Arena Header */
+.arena-progress-bar-wrapper {
+    display: flex;
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+    gap: 2px;
+}
+
+.arena-progress-p1 {
+    height: 100%;
+    background: #0284c7;
+    transition: width 0.15s ease;
+}
+
+.arena-progress-p2 {
+    height: 100%;
+    background: #f97316;
+    margin-left: auto;
+    transition: width 0.15s ease;
+}
+
+.timer-pot {
+    font-size: 11px;
+    color: #facc15;
+    font-weight: 800;
+    display: block;
+}
+
+

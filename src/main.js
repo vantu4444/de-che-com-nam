@@ -205,14 +205,21 @@ class GameApp {
                 '#phoneModal',
                 '#dailyBillModal',
                 '#onlineQuickMenu',
-                '#brandNameModal'
+                '#brandNameModal',
+                '#pvpChallengeDialog',
+                '#pvpInviteNotification:not(.hidden)',
+                '#friendInviteNotification:not(.hidden)'
             ];
             const isAnyOpen = modalSelectors.some(sel => {
                 const el = document.querySelector(sel);
                 return el && !el.classList.contains('hidden') && el.style.display !== 'none';
             });
 
-            if (isAnyOpen) {
+            // Nếu đang focus vào ô input (ví dụ ô nhập chat, đổi tên)
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            const isTyping = (activeTag === 'INPUT' || activeTag === 'TEXTAREA');
+
+            if (isAnyOpen || isTyping) {
                 if (!touchLayer.classList.contains('hidden')) {
                     wasTouchActiveBeforeModal = true;
                     touchLayer.classList.add('hidden');
@@ -229,12 +236,16 @@ class GameApp {
                 const observer = new MutationObserver(() => {
                     checkModalVisibility();
                 });
-                ['kitchenModal', 'marketModal', 'phoneModal', 'dailyBillModal', 'onlineQuickMenu', 'brandNameModal'].forEach(id => {
+                ['kitchenModal', 'marketModal', 'phoneModal', 'dailyBillModal', 'onlineQuickMenu', 'brandNameModal', 'pvpChallengeDialog', 'pvpInviteNotification', 'friendInviteNotification'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) {
                         observer.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
                     }
                 });
+
+                // Lắng nghe sự kiện focus/blur trên toàn document để ẩn/hiện phím ảo khi gõ phím
+                document.addEventListener('focusin', checkModalVisibility);
+                document.addEventListener('focusout', () => setTimeout(checkModalVisibility, 100));
             }
         } catch (e) {}
 
