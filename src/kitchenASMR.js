@@ -1,5 +1,4 @@
-// src/kitchenASMR.js - Popup toàn màn hình Bếp ASMR: Menu 15 vị, lọc theo 3 nhóm giá, kiểm tra sức chứa thùng xe & tiêu hao nguyên liệu
-
+// src/kitchenASMR.js - Kho Bếp Cơm Nắm Chuẩn Studio: Bố Cục 4 Tầng Gọn Đẹp, Nấu Nhanh & Nấu Đầy Thùng, 100% Không Cắt Nút
 import { state, FILLINGS, KITCHEN_MANUAL_TIERS } from './state.js';
 import { audio } from './audio.js';
 
@@ -13,12 +12,12 @@ export class KitchenASMR {
         this.priceFilter = 'all'; // 'all' | '20k' | '22k' | '25k'
         this.step = 1; // 1: Múc cơm & thanh lực, 2: Ép 3 lần, 3: Vuốt bọc rong biển, 4: Thành phẩm
 
-        // Bước 1: Giữ chuột múc cơm & thanh lực
+        // Bước 1: Giữ múc cơm & thanh lực
         this.isHoldingPower = false;
         this.power = 0;
         this.powerDirection = 1;
         this.powerInterval = null;
-        this.step1Score = 3; // 3 đến 5 sao
+        this.step1Score = 5; // 3 đến 5 sao
 
         // Bước 2: Nhấn 3 lần ép khuôn
         this.pressCount = 0;
@@ -28,6 +27,8 @@ export class KitchenASMR {
         this.swipeStartX = 0;
         this.isSwiping = false;
         this.wrapped = false;
+        this.toastMessage = '';
+        this.toastTimer = null;
     }
 
     open() {
@@ -36,11 +37,15 @@ export class KitchenASMR {
         this.isHoldingPower = false;
         this.pressCount = 0;
         this.wrapped = false;
-        
-        // Đảm bảo vị được chọn hợp lệ
+        this.toastMessage = '';
+
         if (!FILLINGS[this.selectedFilling]) {
             this.selectedFilling = 'crab_egg_mayo';
         }
+
+        // Tự động ẩn toàn bộ cụm phím điều khiển ảo bên ngoài
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
 
         this.container.classList.remove('hidden');
         this.render();
@@ -51,13 +56,130 @@ export class KitchenASMR {
             clearInterval(this.powerInterval);
             this.powerInterval = null;
         }
+        if (this.toastTimer) {
+            clearTimeout(this.toastTimer);
+            this.toastTimer = null;
+        }
         window.onmousemove = null;
         window.onmouseup = null;
         window.ontouchmove = null;
         window.ontouchend = null;
         window.ontouchcancel = null;
+
         this.container.classList.add('hidden');
+
+        // Phục hồi cụm phím ảo khi quay lại đường phố
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) {
+            virtualControls.classList.remove('hidden');
+        }
+
         if (this.onClose) this.onClose();
+    }
+
+    showToast(msg) {
+        this.toastMessage = msg;
+        if (this.toastTimer) clearTimeout(this.toastTimer);
+        const toastEl = this.container.querySelector('#kitchenToastBanner');
+        if (toastEl) {
+            toastEl.textContent = msg;
+            toastEl.classList.remove('hidden');
+            toastEl.classList.add('animate-pop');
+        }
+        this.toastTimer = setTimeout(() => {
+            this.toastMessage = '';
+            const tEl = this.container.querySelector('#kitchenToastBanner');
+            if (tEl) tEl.classList.add('hidden');
+        }, 3200);
+    }
+
+    // ⚡ NẤU NHANH (+1 NẮM): Trừ đúng 1 Gạo + 1 Nhân + 1 Sốt, không cần chơi mini-game
+    quickCookOne() {
+        audio.resume();
+        const currentRice = state.getTotalRiceCount();
+        const maxCap = state.getMaxCapacity();
+        if (currentRice >= maxCap) {
+            this.showToast(`🚨 Thùng xe đã đầy (${currentRice}/${maxCap} nắm)! Hãy ra phố bán bớt.`);
+            return false;
+        }
+
+        if ((state.ingredients.rice_seaweed || 0) < 1 || (state.ingredients.meat_seafood || 0) < 1 || (state.ingredients.cheese_sauce || 0) < 1) {
+            this.showToast('⚠️ Hết nguyên liệu! Hãy ghé Chợ Đầu Mối để nhập thêm (cần 1 Gạo, 1 Nhân, 1 Sốt).');
+            return false;
+        }
+
+        state.ingredients.rice_seaweed -= 1;
+        state.ingredients.meat_seafood -= 1;
+        state.ingredients.cheese_sauce -= 1;
+
+        state.addRiceBall(this.selectedFilling, 5);
+        state.recordCooked(1);
+        state.addExp(50);
+
+        audio.playTingComplete();
+        audio.playSizzleHotKitchen();
+
+        try {
+            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                navigator.vibrate(40);
+            }
+        } catch (e) {}
+
+        const filling = FILLINGS[this.selectedFilling] || FILLINGS.crab_egg_mayo;
+        this.showToast(`⚡ Đã nấu nhanh 1 Cơm Nắm ${filling.name} chuẩn ISO 5 sao!`);
+        this.render();
+        return true;
+    }
+
+    // 📦 NẤU ĐẦY THÙNG: Tự động lấp đầy sức chứa xe theo nguyên liệu hiện có
+    fillBagCook() {
+        audio.resume();
+        const currentRice = state.getTotalRiceCount();
+        const maxCap = state.getMaxCapacity();
+        const spaceLeft = maxCap - currentRice;
+
+        if (spaceLeft <= 0) {
+            this.showToast(`🚨 Thùng xe đã đầy (${currentRice}/${maxCap} nắm)! Hãy ra phố bán bớt.`);
+            return false;
+        }
+
+        const maxByIngredients = Math.min(
+            state.ingredients.rice_seaweed || 0,
+            state.ingredients.meat_seafood || 0,
+            state.ingredients.cheese_sauce || 0
+        );
+
+        if (maxByIngredients <= 0) {
+            this.showToast('⚠️ Hết nguyên liệu! Hãy ghé Chợ Đầu Mối để nhập thêm.');
+            return false;
+        }
+
+        const countToCook = Math.min(spaceLeft, maxByIngredients);
+
+        state.ingredients.rice_seaweed -= countToCook;
+        state.ingredients.meat_seafood -= countToCook;
+        state.ingredients.cheese_sauce -= countToCook;
+
+        for (let i = 0; i < countToCook; i++) {
+            state.addRiceBall(this.selectedFilling, 5);
+        }
+
+        state.recordCooked(countToCook);
+        state.addExp(50 * countToCook);
+
+        audio.playTingComplete();
+        audio.playSizzleHotKitchen();
+
+        try {
+            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                navigator.vibrate(60);
+            }
+        } catch (e) {}
+
+        const filling = FILLINGS[this.selectedFilling] || FILLINGS.crab_egg_mayo;
+        this.showToast(`📦 Đã nấu đầy +${countToCook} Cơm Nắm ${filling.name} chuẩn ISO vào thùng xe!`);
+        this.render();
+        return true;
     }
 
     render() {
@@ -88,68 +210,68 @@ export class KitchenASMR {
         this.container.innerHTML = `
             <div class="kitchen-fullscreen-backdrop">
                 <div class="kitchen-modal-panel">
-                    <!-- Header -->
+                    <!-- TẦNG 1: Thanh Tiêu Đề & Kho Nguyên Liệu (Cao ~48px, 1 dòng gọn) -->
                     <div class="kitchen-topbar">
-                        <div class="kitchen-heading">
-                            <span class="kitchen-tag">BẾP ASMR CẬN CẢNH</span>
-                            <h2>Nấu Cơm Nắm Tam Giác • Menu 15 Vị</h2>
+                        <div class="kitchen-topbar-left">
+                            <span class="kitchen-badge-iso">🍙 KHO BẾP ISO</span>
+                            <span class="stat-badge stat-bag">🎒 Thùng: <strong>${currentRice}/${maxCap}</strong></span>
                         </div>
-                        <div class="kitchen-topbar-stats">
-                            <span class="stat-badge">🎒 Thùng xe: ${currentRice} / ${maxCap}</span>
-                            <span class="stat-badge">🌾 Gạo: ${state.ingredients.rice_seaweed}</span>
-                            <span class="stat-badge">🥩 Thịt: ${state.ingredients.meat_seafood}</span>
-                            <span class="stat-badge">🧀 Sốt: ${state.ingredients.cheese_sauce}</span>
+                        <div class="kitchen-topbar-center">
+                            <span class="stat-pill">🌾 Gạo: <strong>${state.ingredients.rice_seaweed || 0}</strong></span>
+                            <span class="stat-pill">🥩 Nhân: <strong>${state.ingredients.meat_seafood || 0}</strong></span>
+                            <span class="stat-pill">🥫 Sốt: <strong>${state.ingredients.cheese_sauce || 0}</strong></span>
                         </div>
-                        <button type="button" class="btn-exit-kitchen" id="btnExitKitchen">✕ Rời Bếp</button>
+                        <div class="kitchen-topbar-right">
+                            <button type="button" class="btn-exit-kitchen" id="btnExitKitchen">✕ Rời Bếp</button>
+                        </div>
                     </div>
 
-                    <!-- Bộ lọc nhanh 3 nhóm giá bán lẻ & Danh sách 15 vị nhân -->
-                    <div class="fillings-selector">
-                        <div class="selector-header-row">
-                            <span class="selector-label">Chọn nhân (Menu 15 vị):</span>
-                            <div class="price-filter-tabs">
+                    <!-- TẦNG 2: Bộ Lọc & Thanh Chọn 15 Vị Cuộn Ngang (Cao ~95px) -->
+                    <div class="kitchen-selector-tier">
+                        <div class="selector-filter-row">
+                            <span class="selector-label">Menu 15 Vị Chuẩn ISO:</span>
+                            <div class="price-filter-chips">
                                 <button type="button" class="btn-filter-tab ${this.priceFilter === 'all' ? 'active' : ''}" data-filter="all">Tất cả (15)</button>
                                 <button type="button" class="btn-filter-tab ${this.priceFilter === '20k' ? 'active' : ''}" data-filter="20k">20.000đ (11)</button>
                                 <button type="button" class="btn-filter-tab ${this.priceFilter === '22k' ? 'active' : ''}" data-filter="22k">22.000đ (3)</button>
                                 <button type="button" class="btn-filter-tab ${this.priceFilter === '25k' ? 'active' : ''}" data-filter="25k">25.000đ (1)</button>
                             </div>
                         </div>
-
-                        <div class="fillings-options">
+                        <div class="fillings-options fillings-scroll-track">
                             ${displayedFillings.map(f => `
-                                <button type="button" class="btn-filling-tab ${f.id === this.selectedFilling ? 'active' : ''}" data-fid="${f.id}" title="${f.desc}">
-                                    <span class="f-icon">${f.icon}</span>
-                                    <span class="f-name">${f.name}</span>
-                                    <span class="f-price-tag">${f.price.toLocaleString('vi-VN')}đ</span>
+                                <button type="button" class="btn-filling-tab btn-filling-card ${f.id === this.selectedFilling ? 'active' : ''}" data-fid="${f.id}" title="${f.name}">
+                                    <span class="fc-icon f-icon">${f.icon}</span>
+                                    <span class="fc-name f-name">${f.name}</span>
+                                    <span class="fc-price f-price-tag">${f.price.toLocaleString('vi-VN')}đ</span>
                                 </button>
                             `).join('')}
                         </div>
                     </div>
 
-                    <!-- Thanh bám bước 1 -> 2 -> 3 -->
-                    <div class="step-breadcrumbs">
-                        <div class="step-chip ${this.step === 1 ? 'current' : this.step > 1 ? 'done' : ''}">
-                            <span>1</span> Múc cơm & Canh lực
-                        </div>
-                        <div class="chip-divider">➔</div>
-                        <div class="step-chip ${this.step === 2 ? 'current' : this.step > 2 ? 'done' : ''}">
-                            <span>2</span> Nhấn ép 3 lần
-                        </div>
-                        <div class="chip-divider">➔</div>
-                        <div class="step-chip ${this.step === 3 ? 'current' : this.step > 3 ? 'done' : ''}">
-                            <span>3</span> Vuốt bọc rong biển
-                        </div>
+                    <!-- Thông báo trạng thái nổi (Toast banner) -->
+                    <div class="kitchen-toast-banner ${this.toastMessage ? '' : 'hidden'}" id="kitchenToastBanner">
+                        ${this.toastMessage}
                     </div>
 
-                    <!-- Vùng tương tác chính -->
+                    <!-- TẦNG 3: Bàn Chế Biến Trung Tâm (Chiếm phần lớn không gian ở giữa) -->
                     <div class="kitchen-arena">
                         ${content}
                     </div>
 
-                    <!-- Linh vật thương hiệu đồng hành trong Bếp ASMR -->
-                    <div class="kitchen-mascot-box ${this.step === 4 && this.step1Score === 5 ? 'celebrate-jump' : ''}">
-                        ${this.step === 4 && this.step1Score === 5 ? '<div class="mascot-speech-bubble">🎉 5 SAO TUYỆT PHẨM!</div>' : ''}
-                        <img src="assets/linh_vat_1.JPG" alt="Linh vật Onigiri" class="kitchen-mascot-img" onerror="this.style.display='none';">
+                    <!-- TẦNG 4: Thanh Hành Động Đáy Cố Định (Luôn nằm trọn trong vùng an toàn) -->
+                    <div class="kitchen-bottom-action-bar">
+                        <button type="button" class="btn-kitchen-action btn-quick-cook" id="btnQuickCook" title="Nấu nhanh 1 nắm cơm chuẩn ISO không cần chơi mini-game">
+                            <span class="bka-icon">⚡</span>
+                            <span class="bka-text">Nấu Nhanh (+1)</span>
+                        </button>
+                        <button type="button" class="btn-kitchen-action btn-fill-bag" id="btnFillBag" title="Tự động nấu đầy thùng xe theo nguyên liệu hiện có">
+                            <span class="bka-icon">📦</span>
+                            <span class="bka-text">Nấu Đầy Thùng</span>
+                        </button>
+                        <button type="button" class="btn-kitchen-action btn-finish-kitchen" id="btnFinishKitchen" title="Quay lại đường phố bán cơm">
+                            <span class="bka-icon">🛵</span>
+                            <span class="bka-text">Ra Phố Bán Hàng</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -158,31 +280,28 @@ export class KitchenASMR {
         this.bindEvents();
     }
 
-    // --- BƯỚC 1: CHẠM & GIỮ NGÓN TAY MÚC CƠM & DỪNG TRONG VÙNG XANH ---
+    // --- BƯỚC 1: CHẠM & GIỮ ĐỂ MÚC CƠM ---
     renderStep1(filling, isFull, hasIngredients, currentRice, maxCap, batchSize) {
         let warningHtml = '';
         let disabledAttr = '';
-        let btnText = '👆 CHẠM & GIỮ NGÓN TAY ĐỂ MÚC CƠM';
+        let btnText = '👆 CHẠM & GIỮ ĐỂ MÚC CƠM';
 
         if (isFull) {
             warningHtml = `
                 <div class="kitchen-alert-box alert-error">
-                    🚨 <strong>THÙNG XE ĐÃ ĐẦY (${currentRice} / ${maxCap} NẮM)!</strong><br>
-                    Không thể lấy thêm cơm từ Xưởng ra xe. Vui lòng mang cơm đi bán hoặc nâng cấp phương tiện trong iGiri Phone!
+                    🚨 <strong>THÙNG XE ĐÃ ĐẦY (${currentRice}/${maxCap} NẮM)!</strong> Bấm <strong>🛵 Ra Phố Bán Hàng</strong> để kinh doanh.
                 </div>
             `;
             disabledAttr = 'disabled';
-            btnText = `❌ THÙNG XE ĐÃ ĐẦY (${currentRice}/${maxCap} NẮM)`;
+            btnText = `❌ THÙNG XE ĐÃ ĐẦY (${currentRice}/${maxCap})`;
         } else if (!hasIngredients) {
             warningHtml = `
                 <div class="kitchen-alert-box alert-warning">
-                    ⚠️ <strong>HẾT NGUYÊN LIỆU NẤU CƠM!</strong><br>
-                    Mỗi lần nấu cần ${batchSize} phần mỗi loại nguyên liệu. Bạn đang thiếu nguyên liệu.<br>
-                    Hãy ghé <strong>Chợ Đầu Mối</strong> (đến cổng chợ và nhấn E) để nhập thêm các gói nguyên liệu!
+                    ⚠️ <strong>HẾT NGUYÊN LIỆU!</strong> Ghé <strong>Chợ Đầu Mối</strong> để nhập thêm Gạo, Nhân, Sốt.
                 </div>
             `;
             disabledAttr = 'disabled';
-            btnText = '❌ THIẾU NGUYÊN LIỆU (GHÉ CHỢ ĐẦU MỐI ĐỂ NHẬP)';
+            btnText = '❌ THIẾU NGUYÊN LIỆU';
         }
 
         return `
@@ -190,26 +309,26 @@ export class KitchenASMR {
                 ${warningHtml}
 
                 <div class="step-instruction">
-                    <h3>Bước 1: Chạm & Giữ ngón tay để múc cơm & nhân ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
-                    <p>Chạm giữ ngón tay (hoặc chuột) vào nút bên dưới để thanh lực tăng dần. <strong>Thả ngón tay đúng vùng XANH LÁ</strong> để cơm dẻo đạt chuẩn ISO & ATVSTP!</p>
+                    <div class="iso-mini-badge">🛡️ CHUẨN ISO & ATVSTP 100%</div>
+                    <h3>Chế Biến: Cơm Nắm ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
+                    <p>Chạm & giữ ngón tay vào nút bên dưới để thanh lực tăng. <strong>Thả đúng vùng XANH LÁ</strong> để cơm dẻo ngon nhất!</p>
                 </div>
 
                 <div class="power-gauge-wrapper">
                     <div class="power-gauge-track">
-                        <!-- Vùng xanh lý tưởng từ 65% đến 85% -->
                         <div class="power-gauge-target"></div>
                         <div class="power-gauge-bar" id="powerGaugeBar" style="width: ${this.power}%;"></div>
                     </div>
                     <div class="gauge-labels">
-                        <span>0% (Thiếu)</span>
+                        <span>0%</span>
                         <span class="target-label">🎯 VÙNG CHUẨN (65% - 85%)</span>
-                        <span>100% (Quá tay)</span>
+                        <span>100%</span>
                     </div>
                 </div>
 
                 <div class="mold-visual-step1">
                     <div class="mold-wood-box">
-                        <div class="rice-fill-preview" style="height: ${this.power}%; background: ${filling.color}22;">
+                        <div class="rice-fill-preview" style="height: ${this.power}%; background: ${filling.color || '#f97316'}22;">
                             <span class="rice-grains">🍚 ${filling.icon}</span>
                         </div>
                     </div>
@@ -222,13 +341,14 @@ export class KitchenASMR {
         `;
     }
 
-    // --- BƯỚC 2: NHẤN NHỊP NHÀNG 3 LẦN ĐỂ ÉP KHUÔN ---
+    // --- BƯỚC 2: CHẠM 3 LẦN ĐỂ ÉP KHUÔN ---
     renderStep2(filling) {
         return `
             <div class="step-content animate-fade">
                 <div class="step-instruction">
-                    <h3>Bước 2: Nhấn nhịp nhàng 3 lần để ép khuôn chặt</h3>
-                    <p>Mỗi lần nhấn sẽ nén chặt cơm tam giác. Tiến độ: <strong>${this.pressCount} / 3 lần</strong></p>
+                    <div class="iso-mini-badge">🛡️ CHUẨN ISO & ATVSTP 100%</div>
+                    <h3>Chạm 3 lần để ép khuôn tam giác chặt tay</h3>
+                    <p>Mỗi lần chạm sẽ nén chặt cơm. Tiến độ: <strong>${this.pressCount} / 3 lần</strong></p>
                 </div>
 
                 <div class="press-mold-arena">
@@ -237,24 +357,25 @@ export class KitchenASMR {
                         <div class="cap-plate">NẮP ÉP TAM GIÁC</div>
                     </div>
                     <div class="press-base">
-                        <div class="triangle-rice-blob" style="border-bottom-color: ${filling.color};"></div>
+                        <div class="triangle-rice-blob" style="border-bottom-color: ${filling.color || '#f97316'};"></div>
                     </div>
                 </div>
 
                 <button type="button" class="btn-press-action" id="btnPressMold">
-                    💥 NHẤN ÉP KHUÔN (${this.pressCount}/3)
+                    💥 CHẠM 3 LẦN ĐỂ ÉP KHUÔN (${this.pressCount}/3)
                 </button>
             </div>
         `;
     }
 
-    // --- BƯỚC 3: VUỐT CHUỘT QUA LÁ RONG BIỂN ĐỂ BỌC KÍN ---
+    // --- BƯỚC 3: VUỐT NHẸ ĐỂ BỌC RONG BIỂN ---
     renderStep3(filling) {
         return `
             <div class="step-content animate-fade">
                 <div class="step-instruction">
-                    <h3>Bước 3: Vuốt chuột qua lá rong biển để bọc kín</h3>
-                    <p>Nhấp giữ và <strong>vuốt chuột ngang sang phải</strong> qua lá rong biển Nori giòn rụm!</p>
+                    <div class="iso-mini-badge">🛡️ CHUẨN ISO & ATVSTP 100%</div>
+                    <h3>Vuốt nhẹ ngón tay sang phải để bọc rong biển</h3>
+                    <p>Chạm giữ và <strong>vuốt nhẹ sang phải</strong> qua lá rong biển Nori giòn rụm!</p>
                 </div>
 
                 <div class="wrap-workbench" id="wrapBench">
@@ -264,7 +385,7 @@ export class KitchenASMR {
                         </div>
                     </div>
                     <div class="swipe-hint-arrow ${this.wrapped ? 'hidden' : ''}">
-                        👉 Vuốt chuột từ trái sang phải tại đây
+                        👉 Vuốt ngón tay từ trái sang phải tại đây
                     </div>
                 </div>
 
@@ -275,16 +396,16 @@ export class KitchenASMR {
         `;
     }
 
-    // --- MÀN HÌNH THÀNH PHẨM & CỘNG EXP ---
+    // --- BƯỚC 4: THÀNH PHẨM & CỘNG EXP ---
     renderResult(filling, currentRice, maxCap) {
         const starsText = '⭐'.repeat(this.step1Score);
         const batchSize = this.lastCookCount || state.getKitchenBatchSize();
         const curTierCfg = KITCHEN_MANUAL_TIERS[state.kitchenManualTier || state.kitchenTier || 1];
         const tierName = curTierCfg ? curTierCfg.name : 'Nồi Cơm Điện';
+
         return `
             <div class="step-content animate-pop">
                 <div class="result-banner">
-                    <!-- Con dấu chứng nhận ISO & ATVSTP phát sáng vàng kim -->
                     <div class="iso-gold-stamp animate-stamp">
                         <span class="stamp-icon">🛡️</span>
                         <span class="stamp-text">CHỨNG NHẬN ISO & ATVSTP 100%</span>
@@ -296,17 +417,15 @@ export class KitchenASMR {
                     <div class="result-icon-large">🍙</div>
                     <h3>Cơm Nắm ${filling.name}</h3>
                     <div class="result-price-badge">Giá bán lẻ: ${filling.price.toLocaleString('vi-VN')}đ</div>
-                    <p class="result-desc">${filling.desc}</p>
-                    
+
                     <div class="result-reward-badges">
                         <span class="badge-item">+${batchSize} Cơm vào thùng xe (${tierName})</span>
-                        <span class="badge-item">Kho xe hiện tại: ${state.getTotalRiceCount()} / ${maxCap} nắm</span>
+                        <span class="badge-item">Kho xe: ${state.getTotalRiceCount()} / ${maxCap} nắm</span>
                         <span class="badge-item">+${this.step1Score * 10 * batchSize} EXP Bếp</span>
                     </div>
 
                     <div class="result-actions-row">
                         <button type="button" class="btn-cook-more" id="btnCookMore">🍙 Làm Thêm Mẻ Nữa</button>
-                        <button type="button" class="btn-finish-kitchen" id="btnFinishKitchen">🚶 Ra Phố Bán Cơm</button>
                     </div>
                 </div>
             </div>
@@ -314,21 +433,20 @@ export class KitchenASMR {
     }
 
     bindEvents() {
-        // Nút thoát bếp
+        // Nút thoát bếp trên Tầng 1
         const btnExit = document.getElementById('btnExitKitchen');
         if (btnExit) btnExit.onclick = () => {
             audio.playClick();
             this.close();
         };
 
-        // Chuyển tab lọc giá bán lẻ
+        // Chuyển tab lọc giá bán lẻ trên Tầng 2
         const filterBtns = this.container.querySelectorAll('.btn-filter-tab');
         filterBtns.forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
                 audio.playClick();
                 this.priceFilter = btn.dataset.filter;
-                // Nếu vị hiện tại không nằm trong bộ lọc mới, chọn vị đầu tiên của bộ lọc
                 const allFillings = Object.values(FILLINGS);
                 const matched = this.priceFilter === 'all'
                     ? allFillings
@@ -340,22 +458,54 @@ export class KitchenASMR {
             };
         });
 
-        // Chuyển vị nhân (chỉ cho phép ở Bước 1)
-        if (this.step === 1) {
-            const fillingBtns = this.container.querySelectorAll('.btn-filling-tab');
-            fillingBtns.forEach(btn => {
-                btn.onclick = () => {
-                    const fid = btn.dataset.fid;
-                    if (FILLINGS[fid]) {
-                        audio.playClick();
-                        this.selectedFilling = fid;
-                        this.render();
-                    }
-                };
-            });
+        // Chuyển vị nhân trên Tầng 2
+        const fillingBtns = this.container.querySelectorAll('.btn-filling-tab');
+        fillingBtns.forEach(btn => {
+            btn.onclick = () => {
+                const fid = btn.dataset.fid;
+                if (FILLINGS[fid]) {
+                    audio.playClick();
+                    this.selectedFilling = fid;
+                    this.render();
+                }
+            };
+        });
+
+        // Nút Tầng 4: ⚡ Nấu Nhanh (+1)
+        const btnQuick = document.getElementById('btnQuickCook');
+        if (btnQuick) {
+            btnQuick.onclick = () => {
+                this.quickCookOne();
+            };
         }
 
-        // --- Xử lý Bước 1: Nhấn giữ chuột để múc cơm ---
+        // Nút Tầng 4: 📦 Nấu Đầy Thùng
+        const btnFill = document.getElementById('btnFillBag');
+        if (btnFill) {
+            btnFill.onclick = () => {
+                this.fillBagCook();
+            };
+        }
+
+        // Nút Tầng 4: 🛵 Ra Phố Bán Hàng
+        const btnFinish = document.getElementById('btnFinishKitchen');
+        if (btnFinish) {
+            btnFinish.onclick = () => {
+                audio.playClick();
+                this.close();
+            };
+        }
+
+        // Nút Bước 4: Làm Thêm Mẻ Nữa
+        const btnCookMore = document.getElementById('btnCookMore');
+        if (btnCookMore) {
+            btnCookMore.onclick = () => {
+                audio.playClick();
+                this.open();
+            };
+        }
+
+        // --- Xử lý Bước 1: Nhấn giữ để múc cơm ---
         const btnHold = document.getElementById('btnHoldScoop');
         if (btnHold && this.step === 1 && !btnHold.disabled) {
             const startHold = (e) => {
@@ -363,7 +513,7 @@ export class KitchenASMR {
                 audio.resume();
                 if (this.isHoldingPower) return;
                 this.isHoldingPower = true;
-                audio.playScoopRice(); // Âm thanh xào xạc múc cơm
+                audio.playScoopRice();
 
                 const speedBuff = state.permanentBuffs?.cookSpeed || 0;
                 const powerStep = 2.5 * (1 + speedBuff);
@@ -394,10 +544,6 @@ export class KitchenASMR {
                     this.powerInterval = null;
                 }
 
-                // Tính điểm sao dựa trên độ chính xác
-                // Vùng xanh lý tưởng: 65% đến 85% -> 5 sao
-                // Vùng 50-65 hoặc 85-95 -> 4 sao
-                // Còn lại -> 3 sao
                 if (this.power >= 65 && this.power <= 85) {
                     this.step1Score = 5;
                 } else if ((this.power >= 50 && this.power < 65) || (this.power > 85 && this.power <= 95)) {
@@ -406,7 +552,6 @@ export class KitchenASMR {
                     this.step1Score = 3;
                 }
 
-                // Chuyển sang Bước 2
                 setTimeout(() => {
                     this.step = 2;
                     this.render();
@@ -429,7 +574,7 @@ export class KitchenASMR {
                 this.pressCooldown = true;
 
                 this.pressCount += 1;
-                audio.playRiceMolding(); // Tiếng nén cơm
+                audio.playRiceMolding();
 
                 const cap = this.container.querySelector('.press-cap');
                 if (cap) cap.classList.add('active-slam');
@@ -439,13 +584,12 @@ export class KitchenASMR {
                     this.pressCooldown = false;
 
                     if (this.pressCount >= 3) {
-                        // Đủ 3 lần, chuyển Bước 3
                         setTimeout(() => {
                             this.step = 3;
                             this.render();
                         }, 250);
                     } else {
-                        btnPress.innerText = `💥 NHẤN ÉP KHUÔN (${this.pressCount}/3)`;
+                        btnPress.innerText = `💥 CHẠM 3 LẦN ĐỂ ÉP KHUÔN (${this.pressCount}/3)`;
                     }
                 }, 160);
             };
@@ -454,7 +598,7 @@ export class KitchenASMR {
             btnPress.ontouchend = handlePress;
         }
 
-        // --- Xử lý Bước 3: Vuốt chuột hoặc vuốt ngón tay bọc rong biển ---
+        // --- Xử lý Bước 3: Vuốt bọc rong biển ---
         const wrapBench = document.getElementById('wrapBench');
         if (wrapBench && this.step === 3) {
             const onSwipeStart = (clientX) => {
@@ -470,15 +614,13 @@ export class KitchenASMR {
                     this.wrapped = true;
                     this.isSwiping = false;
 
-                    audio.playSeaweedCrisp(); // Tiếng sột soạt giòn rụm của rong biển
+                    audio.playSeaweedCrisp();
 
                     const nori = this.container.querySelector('.nori-flat-sheet');
                     if (nori) nori.classList.add('nori-folded');
 
-                    // Hoàn thành: Tiêu hao nguyên liệu và cộng cơm vào inventory theo batchSize của xưởng bếp
                     setTimeout(() => {
                         const batchSize = state.getKitchenBatchSize();
-                        // Tiêu hao nguyên liệu
                         state.consumeIngredients(batchSize);
 
                         let actualAdded = 0;
@@ -490,12 +632,10 @@ export class KitchenASMR {
                         this.lastCookCount = actualAdded > 0 ? actualAdded : 1;
                         state.recordCooked(this.lastCookCount);
                         state.addExp(this.step1Score * 10 * this.lastCookCount);
-                        
-                        // Âm thanh hoàn thành & xèo xèo ấm nóng
+
                         audio.playTingComplete();
                         audio.playSizzleHotKitchen();
 
-                        // Phản hồi xúc giác rung nhẹ trên thiết bị cảm ứng Mobile / iPad
                         try {
                             if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
                                 navigator.vibrate(50);
@@ -530,22 +670,6 @@ export class KitchenASMR {
             };
             window.ontouchend = onSwipeEnd;
             window.ontouchcancel = onSwipeEnd;
-        }
-
-        // --- Xử lý Thành Phẩm ---
-        const btnCookMore = document.getElementById('btnCookMore');
-        const btnFinish = document.getElementById('btnFinishKitchen');
-        if (btnCookMore) {
-            btnCookMore.onclick = () => {
-                audio.playClick();
-                this.open();
-            };
-        }
-        if (btnFinish) {
-            btnFinish.onclick = () => {
-                audio.playClick();
-                this.close();
-            };
         }
     }
 }

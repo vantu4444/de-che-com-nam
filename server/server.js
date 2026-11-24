@@ -83,6 +83,12 @@ export class OnigiriServer {
         // [BẢNG XẾP HẠNG TỶ PHÚ] Danh sách Top 50 đại gia ẩm thực Cơm Nắm Onigiri
         this.mockBillionaires = this.generateMockBillionaires();
 
+        // Danh sách Khách Hàng / Leads thu thập từ Màn hình chào
+        this.leads = [
+            { phone: '0901234567', brandName: 'Tiệm Cơm Nắm Sài Gòn', city: 'hcm', timestamp: new Date(Date.now() - 3600000).toISOString() },
+            { phone: '0987654321', brandName: 'Bếp Cơm Nắm BMT', city: 'daklak', timestamp: new Date(Date.now() - 7200000).toISOString() }
+        ];
+
         // Quỹ Đơn Hàng Hợp Tác Liên Tỉnh (Co-op)
         this.coopOrder = {
             id: 'coop_' + Date.now(),
@@ -193,7 +199,48 @@ export class OnigiriServer {
             return;
         }
 
-        // 4. Phục vụ Web tĩnh (Static Files: index.html, style.css, src/, assets/)
+        // 4. API Thu thập Leads / Số điện thoại đăng ký nhận quà (+200.000đ)
+        if (pathname === '/api/leads') {
+            if (req.method === 'POST') {
+                let body = '';
+                req.on('data', chunk => { body += chunk; });
+                req.on('end', () => {
+                    try {
+                        const data = JSON.parse(body || '{}');
+                        const phone = String(data.phone || '').trim();
+                        const brandName = String(data.brandName || '').trim() || 'Tiệm Cơm Nắm';
+                        const city = String(data.city || 'hcm').trim();
+                        const timestamp = new Date().toISOString();
+
+                        if (phone && phone.length >= 8) {
+                            this.leads.unshift({ phone, brandName, city, timestamp });
+                        }
+                        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({
+                            success: true,
+                            message: 'Đăng ký thành công! Đã gửi +200.000đ vốn khởi nghiệp vào tài khoản!'
+                        }));
+                    } catch (e) {
+                        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({ success: false, error: 'Dữ liệu không hợp lệ' }));
+                    }
+                });
+                return;
+            } else if (req.method === 'GET') {
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: true, count: this.leads.length, leads: this.leads }));
+                return;
+            }
+        }
+
+        // 5. Trang Quản Trị Hệ Thống /admin
+        if (pathname === '/admin' || pathname === '/admin/') {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(this.renderAdminDashboard());
+            return;
+        }
+
+        // 6. Phục vụ Web tĩnh (Static Files: index.html, style.css, src/, assets/)
         let reqPath = decodeURI(pathname);
         if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
 
@@ -1235,6 +1282,68 @@ export class OnigiriServer {
     };
 })(typeof window !== 'undefined' ? window : global);
 `;
+    }
+
+    renderAdminDashboard() {
+        const rows = this.leads.map((l, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${l.brandName || 'Tiệm Cơm Nắm'}</strong></td>
+                <td><a href="tel:${l.phone}" style="color: #f97316; font-weight: bold;">${l.phone}</a></td>
+                <td>📍 ${l.city ? l.city.toUpperCase() : 'TP.HCM'}</td>
+                <td>${new Date(l.timestamp).toLocaleString('vi-VN')}</td>
+            </tr>
+        `).join('');
+
+        return `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống - Đế Chế Cơm Nắm</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; margin: 0; }
+        .admin-card { max-width: 960px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #334155; padding-bottom: 16px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 24px; color: #f97316; }
+        .badge { background: #f97316; color: #fff; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #334155; }
+        th { background: #0f172a; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
+        tr:hover { background: rgba(249, 115, 22, 0.08); }
+        .btn-back { display: inline-block; background: #334155; color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; }
+        .btn-back:hover { background: #f97316; }
+    </style>
+</head>
+<body>
+    <div class="admin-card">
+        <div class="header">
+            <div>
+                <h1>🍙 Quản Trị Khách Hàng / Leads</h1>
+                <p style="margin: 4px 0 0; color: #94a3b8; font-size: 13px;">Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ Màn hình chào</p>
+            </div>
+            <div>
+                <span class="badge">Tổng số: ${this.leads.length} khách</span>
+                <a href="/" class="btn-back" style="margin-left: 10px;">← Về Game</a>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Tên Thương Hiệu</th>
+                    <th>Số Điện Thoại</th>
+                    <th>Chi Nhánh</th>
+                    <th>Thời Gian Đăng Ký</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.length > 0 ? rows : '<tr><td colspan="5" style="text-align: center; color: #94a3b8;">Chưa có dữ liệu đăng ký nào.</td></tr>'}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>`;
     }
 
     stop() {

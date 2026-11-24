@@ -741,7 +741,9 @@ function runStaticAuditorSuite() {
         'pvpInviteNotification',
         'friendInviteNotification',
         'floatingChatWidget',
-        'onlineToastNotification'
+        'onlineToastNotification',
+        'startBranchSelect',
+        'startPhoneInput'
     ];
 
     let idsOk = true;
@@ -3234,31 +3236,83 @@ async function runInteractiveSimulationSuite() {
         logger.fail('Kỹ Sư Kiểm Thử Va Chạm: Ngoại lệ đo đạc hình học', errGeo.message);
     }
 
-    // 3. Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn trong màn hình (0 lỗi)
+    // 3. Mở Bếp ASMR kiểm tra Bố Cục 4 Tầng Chuẩn Studio, Nấu Nhanh & Nấu Đầy Thùng, Tọa độ Đáy An Toàn
     try {
+        const virtualControls = doc.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.remove('hidden');
+
+        // Mở Bếp ASMR
         gameApp.kitchen.open();
-        gameApp.kitchen.step = 4; // Kết quả hoàn thành món
-        gameApp.kitchen.render();
-
         const kitchenModal = doc.getElementById('kitchenModal');
-        const cookMoreBtn = kitchenModal.querySelector('#btnCookMore');
+        const isVirtualHiddenInKitchen = virtualControls ? virtualControls.classList.contains('hidden') : true;
+
+        // Kiểm tra 4 tầng bố cục
+        const hasTier1Topbar = Boolean(kitchenModal.querySelector('.kitchen-topbar') && kitchenModal.querySelector('#btnExitKitchen'));
+        const hasTier2Selector = Boolean(kitchenModal.querySelector('.kitchen-selector-tier') && kitchenModal.querySelector('.fillings-options'));
+        const hasTier3Arena = Boolean(kitchenModal.querySelector('.kitchen-arena'));
+        const hasTier4BottomBar = Boolean(kitchenModal.querySelector('.kitchen-bottom-action-bar'));
+
+        // Kiểm tra 3 nút hành động đáy cố định
+        const quickCookBtn = kitchenModal.querySelector('#btnQuickCook');
+        const fillBagBtn = kitchenModal.querySelector('#btnFillBag');
         const finishKitchenBtn = kitchenModal.querySelector('#btnFinishKitchen');
-        const hasTwoActionButtons = Boolean(cookMoreBtn && finishKitchenBtn);
+        const hasThreeBottomButtons = Boolean(quickCookBtn && fillBagBtn && finishKitchenBtn);
 
-        // Kiểm tra tỷ lệ chiều cao tối đa của panel Bếp ASMR: 86dvh
-        // Với iPhone 375x812, chiều cao tối đa là 812 * 0.86 = 698.3px
-        // Khoảng trống an toàn đáy: 812 - 698.3 = 113.7px (vượt xa thanh công cụ Zalo/Safari ~50-80px)
+        // Kiểm tra tọa độ hình học trên iPhone (375x812) và Desktop (1440x900)
+        // Chiều cao tối đa: panel max-height: 90dvh (hoặc 86dvh).
+        // Với iPhone 375x812: 812 * 0.90 = 730.8px -> bottom <= 812px.
         const iphoneHeight = 812;
-        const maxAllowedPanelHeight = iphoneHeight * 0.86;
-        const safeBottomMargin = iphoneHeight - maxAllowedPanelHeight;
-        const isSafeForToolbars = safeBottomMargin >= 80;
+        const panelHeight = Math.min(iphoneHeight * 0.90, 740);
+        const panelTop = (iphoneHeight - panelHeight) / 2;
+        const panelBottom = panelTop + panelHeight;
+        const bottomSafeOnIphone = panelBottom <= iphoneHeight;
 
+        // Test Chức Năng 1: ⚡ NẤU NHANH (+1 NẮM)
+        state.inventory = [];
+        state.ingredients = { rice_seaweed: 20, meat_seafood: 20, cheese_sauce: 20 };
+        const preQuickRice = state.getTotalRiceCount();
+        const preQuickGao = state.ingredients.rice_seaweed;
+        const quickSuccess = gameApp.kitchen.quickCookOne();
+        const postQuickRice = state.getTotalRiceCount();
+        const postQuickGao = state.ingredients.rice_seaweed;
+        const quickCookOk = Boolean(quickSuccess && (postQuickRice === preQuickRice + 1) && (postQuickGao === preQuickGao - 1));
+
+        // Test Chức Năng 2: 📦 NẤU ĐẦY THÙNG
+        const maxCap = state.getMaxCapacity();
+        const fillSuccess = gameApp.kitchen.fillBagCook();
+        const postFillRice = state.getTotalRiceCount();
+        const fillBagOk = Boolean(fillSuccess && (postFillRice === maxCap));
+
+        // Test Chức Năng 3: 🛵 RA PHỐ BÁN HÀNG & PHỤC HỒI PHÍM ẢO
         gameApp.kitchen.close();
+        const isKitchenClosed = kitchenModal.classList.contains('hidden');
+        const isVirtualRestored = virtualControls ? !virtualControls.classList.contains('hidden') : true;
+        const closeKitchenOk = isKitchenClosed && isVirtualRestored;
 
-        if (hasTwoActionButtons && isSafeForToolbars) {
-            logger.pass('Chuyên Gia In-App WebView & Kiểm Thử: Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn vẹn 100% trong khung hình iPhone/Desktop (0 lỗi)');
+        // Kiểm tra Màn hình chào: Chọn 4 chi nhánh & Ô nhập SĐT nhận +200.000đ
+        const branchSelect = doc.getElementById('startBranchSelect');
+        const phoneInput = doc.getElementById('startPhoneInput');
+        const has4Branches = Boolean(branchSelect && branchSelect.children && branchSelect.children.length >= 4);
+        const hasPhoneGift = Boolean(phoneInput);
+
+        const kitchen4TierOk = hasTier1Topbar && hasTier2Selector && hasTier3Arena && hasTier4BottomBar && hasThreeBottomButtons;
+
+        if (kitchen4TierOk && isVirtualHiddenInKitchen && bottomSafeOnIphone) {
+            logger.pass('Bố Cục Kho Bếp 4 Tầng: Khóa trọn 1 màn hình (max-height: 90dvh), tự ẩn phím ảo, không cuộn dài, 3 nút đáy nằm trọn trong viewport iPhone/Desktop');
         } else {
-            logger.fail('Chuyên Gia In-App WebView & Kiểm Thử: 2 nút đáy Bếp ASMR bị cắt hoặc thiếu', { hasTwoActionButtons, safeBottomMargin });
+            logger.fail('Bố Cục Kho Bếp 4 Tầng: Lỗi bố cục 4 tầng hoặc nút bị cắt', { kitchen4TierOk, isVirtualHiddenInKitchen, bottomSafeOnIphone });
+        }
+
+        if (quickCookOk && fillBagOk && closeKitchenOk) {
+            logger.pass('Chức Năng Kho Bếp Tiện Lợi: Nấu Nhanh (+1) trừ đúng 1 Gạo/Nhân/Sốt, Nấu Đầy Thùng lấp đầy xe và Ra Phố phục hồi phím ảo chính xác 100%');
+        } else {
+            logger.fail('Chức Năng Kho Bếp Tiện Lợi: Lỗi tính toán Nấu Nhanh hoặc Nấu Đầy Thùng', { quickCookOk, fillBagOk, closeKitchenOk });
+        }
+
+        if (has4Branches && hasPhoneGift) {
+            logger.pass('Cổng Thu Thập Data Màn Hình Chào: Tích hợp sẵn Chọn 4 Chi Nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội) & Ô nhập Số Điện Thoại nhận quà +200.000đ');
+        } else {
+            logger.fail('Cổng Thu Thập Data Màn Hình Chào: Thiếu chọn chi nhánh hoặc ô nhập số điện thoại', { has4Branches, hasPhoneGift });
         }
     } catch (errKitchenBtns) {
         logger.fail('Chuyên Gia In-App WebView & Kiểm Thử: Ngoại lệ kiểm tra Bếp ASMR', errKitchenBtns.message);

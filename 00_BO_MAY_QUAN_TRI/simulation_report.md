@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 16:20:11, 24/11/2026  
+**Thời điểm thực thi:** 16:30:13, 24/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **135** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **135** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **137** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **137** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
@@ -74,7 +74,7 @@
 - **[PASS]** `Cú pháp JavaScript: server.js`
 - **[PASS]** `Cú pháp JavaScript: server/server.js`
 - **[PASS]** `Đồ thị Module Import/Export: 100% đường dẫn tệp hợp lệ`
-- **[PASS]** `Liên kết HTML-JS: Đầy đủ 41 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
+- **[PASS]** `Liên kết HTML-JS: Đầy đủ 43 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
 - **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (9 nút) có type="button"`
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
@@ -189,7 +189,9 @@
 - **[PASS]** `Mô phỏng Âm Thanh ASMR: Bổ sung đủ hiệu ứng Bếp nóng, Rong biển, Còi xe và Nút Bật/Tắt tiếng (Mute/Unmute) tiện ích trên HUD`
 - **[PASS]** `Kỹ Sư Bàn Phím Ảo: Gõ tên có dấu cách ("Cơm Nắm Sài Gòn") thành công, phím Space không bị preventDefault chặn`
 - **[PASS]** `Kỹ Sư Kiểm Thử Va Chạm: 0 cặp nút HUD nào bị chồng lấn diện tích trên iPhone (375x812) & Desktop (1440x900) - Tách biệt hoàn toàn iGiri, Online & Minimap`
-- **[PASS]** `Chuyên Gia In-App WebView & Kiểm Thử: Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn vẹn 100% trong khung hình iPhone/Desktop (0 lỗi)`
+- **[PASS]** `Bố Cục Kho Bếp 4 Tầng: Khóa trọn 1 màn hình (max-height: 90dvh), tự ẩn phím ảo, không cuộn dài, 3 nút đáy nằm trọn trong viewport iPhone/Desktop`
+- **[PASS]** `Chức Năng Kho Bếp Tiện Lợi: Nấu Nhanh (+1) trừ đúng 1 Gạo/Nhân/Sốt, Nấu Đầy Thùng lấp đầy xe và Ra Phố phục hồi phím ảo chính xác 100%`
+- **[PASS]** `Cổng Thu Thập Data Màn Hình Chào: Tích hợp sẵn Chọn 4 Chi Nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội) & Ô nhập Số Điện Thoại nhận quà +200.000đ`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

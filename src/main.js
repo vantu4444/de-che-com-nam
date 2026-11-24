@@ -148,6 +148,39 @@ class GameApp {
                     network.refreshLeaderboard();
                 }
 
+                // Chọn Chi Nhánh Khởi Nghiệp
+                const branchSelect = document.getElementById('startBranchSelect');
+                if (branchSelect && branchSelect.value) {
+                    const selCity = branchSelect.value;
+                    if (selCity !== state.currentCity) {
+                        this.switchCity(selCity);
+                    }
+                }
+
+                // Ô nhập Số Điện Thoại nhận quà +200.000đ vốn khởi nghiệp
+                const phoneInput = document.getElementById('startPhoneInput');
+                if (phoneInput && phoneInput.value.trim().length >= 8) {
+                    const phoneVal = phoneInput.value.trim();
+                    if (!state.claimedGiftPhone) {
+                        state.claimedGiftPhone = true;
+                        state.addMoney(200000);
+                        if (onlineUI && onlineUI.showToastNotification) {
+                            onlineUI.showToastNotification('🎁 Bạn nhận được +200.000đ vốn khởi nghiệp từ số điện thoại!');
+                        }
+                    }
+                    try {
+                        fetch('/api/leads', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                phone: phoneVal,
+                                brandName: state.brandName || 'Tiệm Cơm Nắm Sài Gòn',
+                                city: state.currentCity || 'hcm'
+                            })
+                        }).catch(() => {});
+                    } catch (eLeads) {}
+                }
+
                 // Hiệu ứng fade-out êm ái
                 startOverlay.classList.add('fade-out');
                 setTimeout(() => {
