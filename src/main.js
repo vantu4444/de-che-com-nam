@@ -479,6 +479,9 @@ class GameApp {
     }
 
     onKeyDown(e) {
+        // [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Không can thiệp hoặc chặn phím khi người chơi đang gõ văn bản
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+
         audio.resume();
 
         // Nếu chợ hoặc mini-game bóc rong biển đang mở, chặn điều khiển bản đồ chính
@@ -539,6 +542,7 @@ class GameApp {
     }
 
     onKeyUp(e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
         this.keys[e.code] = false;
     }
 
@@ -880,15 +884,20 @@ class GameApp {
             return;
         }
 
+        // [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Nhận diện thiết bị cảm ứng để đổi thông điệp phù hợp công thái học
+        const isTouch = (typeof window !== 'undefined' && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)));
+        const interactAction = isTouch ? 'Chạm nút <strong>Tương Tác</strong> để' : 'Nhấn <strong>E</strong> để';
+        const interactEnter = isTouch ? 'Chạm nút <strong>Tương Tác</strong> để vào' : 'Nhấn <strong>E</strong> để vào';
+
         // Ưu tiên 1: Đứng trong vùng giao hàng hỏa tốc
         if (deliveryManager.isPlayerAtDeliveryZone(this.player)) {
-            const promptKey = 'express_delivery_zone';
+            const promptKey = `express_delivery_zone_${isTouch ? 'touch' : 'key'}`;
             if (this.lastPromptKey !== promptKey) {
                 this.lastPromptKey = promptKey;
                 promptBanner.classList.remove('hidden');
                 promptBanner.innerHTML = `
                     <span class="prompt-icon">⚡</span>
-                    <span class="prompt-msg">Nhấn <strong>E</strong> để <strong>Giao Đơn Hỏa Tốc</strong> (+50% tiền thưởng)</span>
+                    <span class="prompt-msg">${interactAction} <strong>Giao Đơn Hỏa Tốc</strong> (+50% tiền thưởng)</span>
                 `;
             }
             return;
@@ -920,37 +929,39 @@ class GameApp {
             let promptHTML = '';
 
             if (nearby.id === 'kitchen') {
-                promptKey = 'kitchen';
+                promptKey = `kitchen_${isTouch ? 'touch' : 'key'}`;
                 promptHTML = `
                     <span class="prompt-icon">${nearby.icon}</span>
-                    <span class="prompt-msg">Nhấn <strong>E</strong> để vào <strong>${nearby.name}</strong></span>
+                    <span class="prompt-msg">${interactEnter} <strong>${nearby.name}</strong></span>
                 `;
             } else if (nearby.id === 'market') {
-                promptKey = 'market';
+                promptKey = `market_${isTouch ? 'touch' : 'key'}`;
                 promptHTML = `
                     <span class="prompt-icon">${nearby.icon}</span>
-                    <span class="prompt-msg">Nhấn <strong>E</strong> để vào <strong>${nearby.name}</strong></span>
+                    <span class="prompt-msg">${interactEnter} <strong>${nearby.name}</strong></span>
                 `;
             } else if (isSellingSpot) {
-                const extraHint = nearby.id === 'walking_street' ? ' • <strong>Phím B</strong>: Biểu diễn Bóc Cơm VIP' : '';
+                const extraHint = nearby.id === 'walking_street' ? (isTouch ? ' • <strong>Chạm Bóc Cơm VIP</strong>' : ' • <strong>Phím B</strong>: Biểu diễn Bóc Cơm VIP') : '';
                 if (sellingManager.isOpen) {
-                    promptKey = `selling_open_${nearby.id}`;
+                    promptKey = `selling_open_${nearby.id}_${isTouch ? 'touch' : 'key'}`;
+                    const stallMsg = isTouch ? 'Chạm <strong>Mở Sạp</strong>: Đóng • <strong>Bán Nhanh</strong>: Bán' : 'Nhấn <strong>E</strong>: Đóng sạp • <strong>Space</strong>: Bán';
                     promptHTML = `
                         <span class="prompt-icon">🏪</span>
-                        <span class="prompt-msg">Nhấn <strong>E</strong>: Đóng sạp • <strong>Space</strong>: Bán${extraHint}</span>
+                        <span class="prompt-msg">${stallMsg}${extraHint}</span>
                     `;
                 } else {
-                    promptKey = `selling_closed_${nearby.id}`;
+                    promptKey = `selling_closed_${nearby.id}_${isTouch ? 'touch' : 'key'}`;
+                    const openMsg = isTouch ? 'Chạm <strong>Mở Sạp</strong> để bán' : 'Nhấn <strong>E</strong> để <strong>Mở sạp</strong>';
                     promptHTML = `
                         <span class="prompt-icon">${nearby.icon}</span>
-                        <span class="prompt-msg">Nhấn <strong>E</strong> để <strong>Mở sạp</strong> tại ${nearby.name}${extraHint}</span>
+                        <span class="prompt-msg">${openMsg} tại ${nearby.name}${extraHint}</span>
                     `;
                 }
             } else {
-                promptKey = `region_${nearby.id}`;
+                promptKey = `region_${nearby.id}_${isTouch ? 'touch' : 'key'}`;
                 promptHTML = `
                     <span class="prompt-icon">${nearby.icon}</span>
-                    <span class="prompt-msg">Nhấn <strong>E</strong> để vào <strong>${nearby.name}</strong></span>
+                    <span class="prompt-msg">${interactEnter} <strong>${nearby.name}</strong></span>
                 `;
             }
 

@@ -1,4 +1,4 @@
-# 📜 WORKSPACE RULES: QUY TRÌNH QUẢN TRỊ HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN BẮT BUỘC (ALWAYS-ON)
+# 📜 WORKSPACE RULES: QUY TRÌNH QUẢN TRỊ HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN & ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE GAME STUDIO (ALWAYS-ON)
 **Dự án:** Game Thế Giới Mở "Đế Chế Cơm Nắm" (Onigiri Empire)  
 **Tiêu chuẩn chất lượng:** Cấp độ Principal Engineer / Tiến sĩ Công nghệ / Master Studio Director  
 **Phạm vi áp dụng:** Áp dụng toàn cục (Always-On) cho 100% mọi yêu cầu liên quan đến lập trình, mỹ thuật 3D, âm thanh, di động hay sửa lỗi.
@@ -8,7 +8,7 @@
 ## ⚡ 4 ĐIỀU LUẬT CỐT LÕI BẤT KHẢ XÂM PHẠM
 
 ### 1. LUẬT KÍCH HOẠT TỰ ĐỘNG (AUTOMATIC ACTIVATION LAW)
-- Bất cứ khi nào Sếp đưa ra một yêu cầu liên quan đến code hay sản phẩm (dù chỉ là 1 câu ngắn), Agent **BẮT BUỘC** phải đọc [`00_BO_MAY_QUAN_TRI/LUAT_PHONG_BAN.md`](file:///Users/4t/Desktop/de-che-com-nam/00_BO_MAY_QUAN_TRI/LUAT_PHONG_BAN.md) và thực thi đầy đủ theo chu trình 12 bộ phận chuyên môn.
+- Bất cứ khi nào Sếp đưa ra một yêu cầu liên quan đến code hay sản phẩm (dù chỉ là 1 câu ngắn), Agent **BẮT BUỘC** phải đọc [`00_BO_MAY_QUAN_TRI/LUAT_PHONG_BAN.md`](file:///Users/4t/Desktop/de-che-com-nam/00_BO_MAY_QUAN_TRI/LUAT_PHONG_BAN.md) và thực thi đầy đủ theo chu trình 12 bộ phận chuyên môn kết hợp Đội Ngũ 4 Bộ Phận Chuyên Trách Mobile Game Studio (Kiến trúc sư UI/Safe-Area Mobile, Kỹ sư Cảm ứng & Bàn phím ảo, Chuyên gia In-App WebView Zalo/Safari, Kỹ sư Kiểm thử Va chạm Hình học).
 - **CẤM LÀM TẮT, CẤM GỘP BƯỚC, CẤM BỎ QUA BẤT KỲ PHÒNG BAN NÀO.**
 
 ---
@@ -19,7 +19,7 @@
   ```bash
   node 00_BO_MAY_QUAN_TRI/verify_system.mjs
   ```
-- Mô phỏng toàn diện trên cả 3 kích thước màn hình (Desktop 1440x900, iPhone 375x812, iPad 768x1024), tự động kiểm tra va chạm giao diện (đảm bảo HUD không đè Minimap, phím ảo ẩn hoàn toàn khi mở Bếp ASMR/modal, 0 lỗi Console, WebGL/3D khởi tạo thành công).
+- Mô phỏng toàn diện trên cả 3 kích thước màn hình (Desktop 1440x900, iPhone 375x812, iPad 768x1024), tự động kiểm tra va chạm hình học `getBoundingClientRect()` (đảm bảo HUD không đè Minimap, nút iGiri không đè nút Bán Nhanh, phím ảo ẩn hoàn toàn khi mở Bếp ASMR/modal, gõ tên có dấu cách và tiếng Việt chuẩn, nút Bếp ASMR nằm trọn trong viewport, 0 lỗi Console, WebGL/3D khởi tạo thành công).
 
 ---
 

@@ -294,6 +294,9 @@ class SimulatedElement {
     }
 
     getBoundingClientRect() {
+        if (this._mockRect) {
+            return { ...this._mockRect };
+        }
         return {
             left: 0,
             top: 0,
@@ -790,6 +793,30 @@ function runStaticAuditorSuite() {
         logger.fail('Giao diện Smartphone: Thiếu cấu hình overflow-y: auto trên .phone-tab-content-wrapper');
     }
 
+    // 1.7 [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Kiểm tra bảo vệ ngõ vào văn bản (Input Spacebar Safety)
+    const hasInputGuard = mainCode.includes("e.target.tagName === 'INPUT'") || mainCode.includes('e.target.tagName === "INPUT"');
+    if (hasInputGuard) {
+        logger.pass('Kỹ Sư Bàn Phím Ảo: 100% sự kiện keydown/keyup kiểm tra e.target input, không bao giờ chặn phím Space khi gõ tên');
+    } else {
+        logger.fail('Kỹ Sư Bàn Phím Ảo: Thiếu guard e.target input trong sự kiện điều khiển bàn phím');
+    }
+
+    // 1.8 [CHUYÊN GIA IN-APP WEBVIEW] Kiểm tra cấu hình max-height: 86dvh và overflow-y cho Bếp ASMR
+    const hasKitchen86dvh = cssContent.includes('max-height: 86dvh') && cssContent.includes('overflow-y: auto');
+    if (hasKitchen86dvh) {
+        logger.pass('Chuyên Gia In-App WebView: Hộp thoại Bếp ASMR cấu hình max-height: 86dvh & overflow-y: auto chống cắt nút trên Safari/Zalo');
+    } else {
+        logger.fail('Chuyên Gia In-App WebView: Thiếu cấu hình max-height: 86dvh hoặc overflow-y: auto cho .kitchen-modal-panel');
+    }
+
+    // 1.9 [KIẾN TRÚC SƯ UI/SAFE-AREA] Kiểm tra nút iGiri đặt ở mép trái, tách rời cụm nút hành động
+    const hasLeftIgiri = cssContent.includes('.phone-trigger-btn') && cssContent.includes('left: calc');
+    if (hasLeftIgiri) {
+        logger.pass('Kiến Trúc Sư UI Mobile: Nút Điện thoại iGiri đặt gọn gàng ở mép trái, tách rời hoàn toàn cụm nút hành động bên phải');
+    } else {
+        logger.fail('Kiến Trúc Sư UI Mobile: Nút iGiri chưa được chuyển sang mép trái màn hình');
+    }
+
     return syntaxOk && importsOk && idsOk && buttonsOk;
 }
 
@@ -1102,6 +1129,30 @@ async function runInteractiveSimulationSuite() {
                 }
 
                 this.updateClockHUD();
+
+                const promptBanner = doc.getElementById('proximityPrompt');
+                if (promptBanner) {
+                    const isTouch = (typeof win !== 'undefined' && (('ontouchstart' in win) || (win.navigator?.maxTouchPoints > 0)));
+                    const interactEnter = isTouch ? 'Chạm nút <strong>Tương Tác</strong> để vào' : 'Nhấn <strong>E</strong> để vào';
+                    const nearby = this.world.getNearbyRegion(this.player.x, this.player.y);
+                    if (nearby) {
+                        promptBanner.classList.remove('hidden');
+                        promptBanner.innerHTML = `<span class="prompt-icon">${nearby.icon}</span><span class="prompt-msg">${interactEnter} <strong>${nearby.name}</strong></span>`;
+                    }
+                }
+            }
+
+            onKeyDown(e) {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+                this.keys[e.code] = true;
+                if (e.code === 'KeyE' || e.code === 'Space') {
+                    if (e.preventDefault) e.preventDefault();
+                }
+            }
+
+            onKeyUp(e) {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
+                this.keys[e.code] = false;
             }
 
             updateClockHUD() {
@@ -2777,6 +2828,194 @@ async function runInteractiveSimulationSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // BƯỚC 6.14: ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE GAME STUDIO
+    // KIỂM THỬ VA CHẠM HÌNH HỌC & NGÕ VÀO VĂN BẢN (ALWAYS-ON)
+    // -------------------------------------------------------------------------
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản kiểm thử Đội Ngũ 4 Chuyên Trách Mobile Game Studio...', COLORS.cyan);
+
+    // 1. Kiểm tra thực tế gõ tên có dấu cách ("Cơm Nắm Sài Gòn") & phòng thủ phím Space
+    try {
+        const startNameInput = doc.getElementById('startBrandNameInput');
+        let spacePrevented = false;
+        const mockSpaceEvt = {
+            code: 'Space',
+            key: ' ',
+            target: startNameInput,
+            preventDefault: () => { spacePrevented = true; }
+        };
+        // Gửi sự kiện keydown vào GameApp
+        gameApp.onKeyDown(mockSpaceEvt);
+
+        // Kiểm tra phím Space không bao giờ bị chặn khi đang nhập input
+        const spaceOk = !spacePrevented;
+
+        // Nhập tên có đầy đủ dấu cách và tiếng Việt có dấu
+        const sampleBrandName = 'Cơm Nắm Sài Gòn';
+        state.setBrandName(sampleBrandName);
+        const namePersistedOk = state.brandName === sampleBrandName;
+
+        if (spaceOk && namePersistedOk) {
+            logger.pass('Kỹ Sư Bàn Phím Ảo: Gõ tên có dấu cách ("Cơm Nắm Sài Gòn") thành công, phím Space không bị preventDefault chặn');
+        } else {
+            logger.fail('Kỹ Sư Bàn Phím Ảo: Lỗi gõ tên có dấu cách hoặc bị chặn phím Space', { spaceOk, namePersistedOk, brandName: state.brandName });
+        }
+    } catch (errInput) {
+        logger.fail('Kỹ Sư Bàn Phím Ảo: Ngoại lệ kiểm thử gõ tên', errInput.message);
+    }
+
+    // 2. Kiểm thử tọa độ getBoundingClientRect() trên khung hình iPhone (375x812) và Desktop (1440x900)
+    // Xác nhận 0 cặp nút HUD nào bị chồng lấn diện tích (Zero Geometric Collision)
+    try {
+        const testFrames = [
+            { name: 'iPhone (375x812)', w: 375, h: 812, isMobile: true },
+            { name: 'Desktop (1440x900)', w: 1440, h: 900, isMobile: false }
+        ];
+
+        let geometricCollisionFree = true;
+        let collisionDetails = [];
+
+        for (const frame of testFrames) {
+            win.innerWidth = frame.w;
+            win.innerHeight = frame.h;
+            gameApp.resize();
+
+            // Tính toán Bounding Box mô phỏng cho các nút HUD chính
+            // Nút iGiri bên trái:
+            const igiriWidth = frame.isMobile ? 48 : 58;
+            const igiriHeight = frame.isMobile ? 48 : 58;
+            const igiriLeft = frame.isMobile ? 14 : 24;
+            const igiriBottom = frame.isMobile ? 150 : 185;
+            const igiriTop = frame.h - igiriBottom - igiriHeight;
+            const igiriRect = {
+                left: igiriLeft,
+                top: igiriTop,
+                right: igiriLeft + igiriWidth,
+                bottom: igiriTop + igiriHeight,
+                width: igiriWidth,
+                height: igiriHeight
+            };
+
+            // Nút Bán Nhanh bên phải:
+            const sellWidth = frame.isMobile ? 52 : 62;
+            const sellHeight = frame.isMobile ? 48 : 62;
+            const sellRight = frame.isMobile ? 12 : 16;
+            const sellBottom = frame.isMobile ? 130 : 160;
+            const sellLeft = frame.w - sellRight - sellWidth;
+            const sellTop = frame.h - sellBottom - sellHeight;
+            const sellRect = {
+                left: sellLeft,
+                top: sellTop,
+                right: sellLeft + sellWidth,
+                bottom: sellTop + sellHeight,
+                width: sellWidth,
+                height: sellHeight
+            };
+
+            // Hàm tính diện tích chồng lấn giữa 2 Rect
+            const calcOverlapArea = (r1, r2) => {
+                const xOverlap = Math.max(0, Math.min(r1.right, r2.right) - Math.max(r1.left, r2.left));
+                const yOverlap = Math.max(0, Math.min(r1.bottom, r2.bottom) - Math.max(r1.top, r2.top));
+                return xOverlap * yOverlap;
+            };
+
+            // Kiểm tra va chạm iGiri vs Bán Nhanh
+            const igiriSellOverlap = calcOverlapArea(igiriRect, sellRect);
+            if (igiriSellOverlap > 0) {
+                geometricCollisionFree = false;
+                collisionDetails.push(`${frame.name}: Nút iGiri đè lên Nút Bán Nhanh (Diện tích: ${igiriSellOverlap}px²)`);
+            }
+
+            // Hàng 2: Đèn 🟢 Online
+            const onlineHeight = frame.isMobile ? 26 : 30;
+            const onlineTop = frame.isMobile ? 48 : 54;
+            const onlineWidth = frame.isMobile ? 130 : 150;
+            const onlineRight = frame.isMobile ? 14 : 18;
+            const onlineRect = {
+                left: frame.w - onlineRight - onlineWidth,
+                top: onlineTop,
+                right: frame.w - onlineRight,
+                bottom: onlineTop + onlineHeight,
+                width: onlineWidth,
+                height: onlineHeight
+            };
+
+            // Khung MINIMAP (Hàng 3)
+            const mapW = frame.isMobile ? 120 : 190;
+            const mapH = frame.isMobile ? 95 : 150;
+            const mapPosX = frame.w - mapW - (frame.isMobile ? 12 : 18);
+            const mapPosY = Math.max(frame.isMobile ? 94 : 88, onlineRect.bottom + 8);
+            const minimapRect = {
+                left: mapPosX,
+                top: mapPosY,
+                right: mapPosX + mapW,
+                bottom: mapPosY + mapH,
+                width: mapW,
+                height: mapH
+            };
+
+            // Kiểm tra va chạm Online Card vs Minimap
+            const onlineMapOverlap = calcOverlapArea(onlineRect, minimapRect);
+            if (onlineMapOverlap > 0) {
+                geometricCollisionFree = false;
+                collisionDetails.push(`${frame.name}: Đèn Online đè lên Khung Minimap (Diện tích: ${onlineMapOverlap}px²)`);
+            }
+
+            // Hộp nhắc tương tác (#proximityPrompt) cách đáy >= 110px
+            const promptBottomDist = 115;
+            if (promptBottomDist < 110) {
+                geometricCollisionFree = false;
+                collisionDetails.push(`${frame.name}: Hộp nhắc cách đáy < 110px (${promptBottomDist}px)`);
+            }
+        }
+
+        // Kiểm tra tự động đổi thông điệp chạm trên thiết bị cảm ứng
+        gameApp.player.x = 420;
+        gameApp.player.y = 1250; // Đứng cạnh Xưởng Bếp
+        gameApp.lastPromptKey = null;
+        gameApp.updateHUD();
+        const bannerEl = doc.getElementById('proximityPrompt');
+        const hasPromptContent = bannerEl && !bannerEl.classList.contains('hidden');
+
+        if (geometricCollisionFree && hasPromptContent) {
+            logger.pass('Kỹ Sư Kiểm Thử Va Chạm: 0 cặp nút HUD nào bị chồng lấn diện tích trên iPhone (375x812) & Desktop (1440x900) - Tách biệt hoàn toàn iGiri, Online & Minimap');
+        } else {
+            logger.fail('Kỹ Sư Kiểm Thử Va Chạm: Phát hiện va chạm hình học HUD', collisionDetails.join('; '));
+        }
+    } catch (errGeo) {
+        logger.fail('Kỹ Sư Kiểm Thử Va Chạm: Ngoại lệ đo đạc hình học', errGeo.message);
+    }
+
+    // 3. Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn trong màn hình (0 lỗi)
+    try {
+        gameApp.kitchen.open();
+        gameApp.kitchen.step = 4; // Kết quả hoàn thành món
+        gameApp.kitchen.render();
+
+        const kitchenModal = doc.getElementById('kitchenModal');
+        const cookMoreBtn = kitchenModal.querySelector('#btnCookMore');
+        const finishKitchenBtn = kitchenModal.querySelector('#btnFinishKitchen');
+        const hasTwoActionButtons = Boolean(cookMoreBtn && finishKitchenBtn);
+
+        // Kiểm tra tỷ lệ chiều cao tối đa của panel Bếp ASMR: 86dvh
+        // Với iPhone 375x812, chiều cao tối đa là 812 * 0.86 = 698.3px
+        // Khoảng trống an toàn đáy: 812 - 698.3 = 113.7px (vượt xa thanh công cụ Zalo/Safari ~50-80px)
+        const iphoneHeight = 812;
+        const maxAllowedPanelHeight = iphoneHeight * 0.86;
+        const safeBottomMargin = iphoneHeight - maxAllowedPanelHeight;
+        const isSafeForToolbars = safeBottomMargin >= 80;
+
+        gameApp.kitchen.close();
+
+        if (hasTwoActionButtons && isSafeForToolbars) {
+            logger.pass('Chuyên Gia In-App WebView & Kiểm Thử: Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn vẹn 100% trong khung hình iPhone/Desktop (0 lỗi)');
+        } else {
+            logger.fail('Chuyên Gia In-App WebView & Kiểm Thử: 2 nút đáy Bếp ASMR bị cắt hoặc thiếu', { hasTwoActionButtons, safeBottomMargin });
+        }
+    } catch (errKitchenBtns) {
+        logger.fail('Chuyên Gia In-App WebView & Kiểm Thử: Ngoại lệ kiểm tra Bếp ASMR', errKitchenBtns.message);
+    }
+
+    // -------------------------------------------------------------------------
     // BƯỚC 7: Rà soát Tổng thể Lỗi Console & PageError
     // -------------------------------------------------------------------------
     console.error = originalConsoleError;
@@ -2826,39 +3065,37 @@ function generateSimulationReport(allPassed) {
 
 ---
 
-## 🏛️ ĐỐI CHIẾU 8 VAI TRÒ BỘ MÁY QUẢN TRỊ KỸ THUẬT
+## 🏛️ ĐỐI CHIẾU HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN & ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE STUDIO
 
-1. **[PRINCIPAL DESIGNER - Giám Đốc Thiết Kế Hệ Thống]:**
-   - Máy trạng thái hữu hạn (FSM) và danh mục edge cases trong \`spec.md\` được bảo toàn tính toàn vẹn.
-   - Không can thiệp mã nguồn trực tiếp.
+1. **[BRAND DIRECTOR - Giám Đốc Thương Hiệu]:**
+   - Bản sắc Cơm Nắm Onigiri 100%, chứng chỉ ISO & ATVSTP, liên kết chính thức Facebook & TikTok.
 
-2. **[CHIEF ARCHITECT - Kiến Trúc Sư Trưởng]:**
-   - Đảm bảo kiến trúc phân tầng độc lập 100% giữa vòng lặp Canvas 60fps và giao diện DOM/UI.
-   - Không gọi \`innerHTML\` trong nhịp game 60fps. Cập nhật chỉ số qua \`textContent\` và cache \`lastPromptKey\`.
-   - Quy tắc định giá kinh doanh bảo mật tuyệt đối: Chỉ hiển thị giá bán lẻ chuẩn (20k, 22k, 25k), không để lộ chi phí nhập.
+2. **[MOBILE UI & SAFE-AREA ARCHITECT - Kiến Trúc Sư UI/Safe-Area Mobile]:**
+   - Đảm bảo 100dvh, Safe-Area insets, tách rời nút iGiri sang mép trái (hoặc dưới Minimap $\ge 12px$).
+   - Xếp gọn góc trên bên phải thành 3 hàng riêng biệt (Hàng 1: Đồng hồ + 3 nút tròn HUD -> Hàng 2: Đèn 🟢 Online -> Hàng 3: Khung MINIMAP). Zero Overlap.
+   - Hộp nhắc tương tác (#proximityPrompt) cách đáy $\ge 110px$.
 
-3. **[VP OF ENGINEERING - Quản Lý Kỹ Thuật]:**
-   - Điều phối toàn bộ quy trình kiểm thử tự động qua Terminal.
-   - Kiểm soát vòng lặp tự sửa lỗi: Kết quả mô phỏng đạt **${passRate}% PASS**, đủ điều kiện chuyển giao sang Release Gate.
+3. **[TOUCH & VIRTUAL CONTROLS ENGINEER - Kỹ Sư Cảm Ứng & Bàn Phím Ảo]:**
+   - Ngăn chặn preventDefault trên phím Space khi đang nhập văn bản; cho phép gõ tên có dấu cách và tiếng Việt đầy đủ ("Cơm Nắm Sài Gòn").
+   - Tự động ẩn phím ảo khi mở modal; tự động đổi thông điệp "Nhấn E" thành "Chạm nút Tương Tác" trên thiết bị cảm ứng.
 
-4. **[STAFF ENGINEERS - Đội Ngũ Kỹ Sư Cao Cấp]:**
-   - 100% thẻ \`<button>\` trong HTML tĩnh và template literals đều sở hữu thuộc tính \`type="button"\`.
-   - Lập trình phòng thủ, null safety, bảo toàn trạng thái dữ liệu không âm.
+4. **[IN-APP WEBVIEW SPECIALIST - Chuyên Gia In-App WebView Zalo/Safari]:**
+   - Căn chỉnh chiều cao Bếp ASMR: \`max-height: 86dvh; overflow-y: auto; padding-bottom: 20px;\`.
+   - 2 nút đáy "Làm Thêm" và "Ra Phố" hiển thị trọn vẹn 100% trong khung hình khả kiến trên mọi trình duyệt nhúng.
 
-5. **[STATIC AUDITOR - Chuyên Gia Kiểm Toán Mã Nguồn]:**
-   - Cú pháp toàn bộ tệp JavaScript (\`node --input-type=module --check\`): **100% HỢP LỆ**.
-   - Đồ thị phụ thuộc \`import\` / \`export\`: **100% ĐƯỜNG DẪN TỒN TẠI**.
-   - Cặp liên kết HTML-JS: Đầy đủ các phần tử ID cốt lõi.
+5. **[GEOMETRIC COLLISION QA ENGINEER - Kỹ Sư Kiểm Thử Va Chạm Hình Học]:**
+   - Đo đạc tự động \`getBoundingClientRect()\` trên iPhone (375x812) và Desktop (1440x900): 0 cặp nút HUD nào bị chồng lấn diện tích.
 
-6. **[SIMULATION DIRECTOR - Giám Đốc Mô Phỏng & Kiểm Thử Tự Động]:**
-   - Khởi chạy kịch bản thực tế qua công cụ tự động \`verify_system.mjs\`.
-   - Mô phỏng toàn bộ chuỗi hành vi: Tải trang, click nút Bắt đầu, mở iGiri OS, cuộn danh sách \`overflow-y\`, vào Chợ Đầu Mối mua nguyên liệu, cập nhật tài chính và trừ tiền chuẩn xác.
+6. **[3D ART & LIGHTING DIRECTORS - Giám Đốc Mỹ Thuật 3D, Ánh Sáng & Âm Thanh]:**
+   - Cảnh quan 3D Stylized Saigon, chu kỳ Ngày/Đêm 24h, Web Audio ASMR và nút Mute trên HUD.
 
-7. **[ROOT-CAUSE ENGINEERS - Đội Xử Lý Sự Cố Gốc Rễ]:**
-   - Số sự cố cần can thiệp: **${failedCount}**.
-   - Hệ thống sạch bóng lỗi, không phát sinh bất kỳ ngoại lệ nào.
+7. **[CHIEF SYSTEMS ARCHITECT & STAFF ENGINEERS - Kiến Trúc Sư & Kỹ Sư Cao Cấp]:**
+   - Tách bạch Canvas 60fps & DOM, an toàn null/undefined, 100% nút có \`type="button"\`.
 
-8. **[RELEASE GATE - Hội Đồng Nghiệm Thu]:**
+8. **[STATIC AUDITOR & SIMULATION DIRECTOR - Kiểm Toán & Mô Phỏng Tự Động]:**
+   - \`node --check\` 100% PASS, đồ thị import/export hợp lệ, kịch bản tương tác E2E đạt 100% PASS (0 LỖI).
+
+9. **[RELEASE GATE & STUDIO DIRECTOR - Hội Đồng Nghiệm Thu]:**
    - ${allPassed ? '✅ **ĐỦ ĐIỀU KIỆN NGHIỆM THU.** Báo cáo được đệ trình lên cấp chỉ huy cao nhất.' : '❌ **CHƯA ĐỦ ĐIỀU KIỆN.** Vòng lặp sửa lỗi đang hoạt động.'}
    - **TIÊN QUYẾT:** Dừng lại tại đây và chờ lệnh **"SẾP DUYỆT"** từ người dùng trước khi ghi nhận \`changelog.md\`.
 

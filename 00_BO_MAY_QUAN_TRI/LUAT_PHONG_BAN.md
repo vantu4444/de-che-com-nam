@@ -5,9 +5,38 @@
 
 ---
 
-## 🏛️ ĐIỀU LỆ HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN ĐA NGÀNH
+## 🏛️ ĐIỀU LỆ HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN ĐA NGÀNH & ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE GAME STUDIO
 
 Mỗi vai trò sở hữu thẩm quyền độc lập, trách nhiệm pháp lý kỹ thuật và ranh giới bất khả xâm phạm. Tuyệt đối **không làm tắt, không gộp bước, không kiểm tra qua loa bằng mắt**:
+
+---
+
+### 📱🎮 ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE GAME STUDIO (ALWAYS-ON)
+Nhằm đảm bảo trải nghiệm hoàn mỹ trên 100% thiết bị di động, máy tính bảng và các trình duyệt nhúng In-App WebView, Đội Ngũ 4 Bộ Phận Chuyên Trách Mobile Game Studio hoạt động song hành cùng Hội Đồng 12 Chuyên Ngành:
+
+1. 📐 **[MOBILE UI & SAFE-AREA ARCHITECT - Kiến Trúc Sư UI & Safe-Area Mobile]**:
+   - **Trách nhiệm cốt lõi:** Quản trị bố cục công thái học theo tiêu chuẩn `100dvh` và vùng an toàn `env(safe-area-inset-*)` trên iPhone (375x812, notch & home bar), iPad (768x1024) và Desktop (1440x900).
+   - Thiết lập phân tầng z-index và khoảng cách an toàn tối thiểu giữa các khối giao diện: Đảm bảo nút Điện Thoại iGiri được tách biệt hoàn toàn khỏi cụm nút hành động bên phải (đặt tại mép trái phía trên Joystick hoặc dưới Minimap với khoảng cách $\ge 12px$, chống đè nút Bán Nhanh 100%).
+   - Xếp đặt cụm góc trên bên phải theo 3 hàng dọc riêng biệt: Hàng 1 (Đồng hồ + 3 nút tròn Âm thanh, Phím ảo, Chơi lại) → Hàng 2 (Đèn trạng thái 🟢 Online) → Hàng 3 (Khung MINIMAP). Tuyệt đối không cho phép phần tử nào đè lên khung Minimap.
+   - Định vị hộp nhắc tương tác (`#proximityPrompt`) cách đáy tối thiểu 110px (`bottom: calc(115px + env(safe-area-inset-bottom))`), không bị cụm phím ảo che khuất.
+
+2. 🕹️ **[TOUCH & VIRTUAL CONTROLS ENGINEER - Kỹ Sư Cảm Ứng & Bàn Phím Ảo]**:
+   - **Trách nhiệm cốt lõi:** Quản trị toàn diện Virtual Joystick, cụm nút tròn cảm ứng công thái học (`touch-action-zone`) và bàn phím ảo.
+   - Kích hoạt cơ chế tự động ẩn phím ảo ngay khi mở bất kỳ modal nào (Bếp ASMR, Chợ, Điện thoại, Hóa đơn) và tự khôi phục khi đóng modal.
+   - **Bảo vệ ngõ vào văn bản (Input Safety):** Ở dòng đầu tiên của tất cả sự kiện `keydown` và `keyup`, bắt buộc kiểm tra: `if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;` để phím Space và các phím điều khiển không bao giờ bị `e.preventDefault()` chặn khi người chơi đang gõ tên thương hiệu.
+   - Đảm bảo chuỗi tên hỗ trợ đầy đủ dấu cách giữa các từ ("Cơm Nắm Sài Gòn") và tiếng Việt có dấu Unicode, chỉ dùng `.trim()` khi bấm lưu/bắt đầu.
+   - Tự động chuyển đổi thông điệp gợi ý tương tác: Đổi "Nhấn E để vào..." thành "Chạm nút Tương Tác để vào..." khi phát hiện thiết bị cảm ứng.
+
+3. 🌐 **[IN-APP WEBVIEW & CROSS-BROWSER SPECIALIST - Chuyên Gia In-App WebView Zalo/Safari]**:
+   - **Trách nhiệm cốt lõi:** Xử lý triệt để các hành vi đặc thù trên In-App Browser (Zalo WebView, Facebook In-App, TikTok Browser, Safari Mobile và Chrome Mobile).
+   - Khắc phục lỗi thanh điều hướng đáy (bottom URL bar / toolbar) của Safari và Zalo che mất nút thao tác: Căn chỉnh chiều cao tối đa của hộp thoại Bếp ASMR (`max-height: 86dvh; overflow-y: auto; padding-bottom: 20px;`) đảm bảo 2 nút thao tác dưới đáy ("Làm Thêm Mẻ Nữa" và "Ra Phố Bán Cơm") luôn hiển thị trọn vẹn 100% trong khung hình khả kiến trên mọi dòng điện thoại.
+
+4. 📐🔍 **[GEOMETRIC COLLISION & LAYOUT QA ENGINEER - Kỹ Sư Kiểm Thử Va Chạm Hình Học]**:
+   - **Trách nhiệm cốt lõi:** Kiểm thử va chạm tọa độ hình học tự động (`getBoundingClientRect()`) trên cả 2 khung hình chuẩn Desktop (1440x900) và iPhone (375x812).
+   - Kiểm tra giao thoa diện tích giữa mọi cặp nút bấm trên màn hình (Đặc biệt: Nút iGiri vs Nút Bán Nhanh, Đèn Online vs Minimap, Nút HUD vs Đồng Hồ): Đạt tiêu chuẩn **Zero Geometric Collision (0 va chạm chồng lấn)**.
+   - Kiểm tra mở Bếp ASMR và xác nhận 2 nút đáy nằm trọn vẹn 100% bên trong viewport khả kiến ($bottom \le viewportHeight$).
+
+---
 
 ---
 

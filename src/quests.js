@@ -317,8 +317,9 @@ export class QuestManager {
             };
         }
 
-        // Lắng nghe phím tắt P để mở điện thoại
+        // Lắng nghe phím tắt P để mở điện thoại (không can thiệp khi đang nhập văn bản)
         window.addEventListener('keydown', (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
             if (e.code === 'KeyP') {
                 e.preventDefault();
                 this.toggle();

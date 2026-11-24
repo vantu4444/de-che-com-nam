@@ -1118,8 +1118,29 @@ export class World {
         const isTablet = screenWidth > 600 && screenWidth <= 1024;
         const mapW = isMobile ? 120 : (isTablet ? 155 : 190);
         const mapH = isMobile ? 95 : (isTablet ? 120 : 150);
-        const posX = screenWidth - mapW - (isMobile ? 10 : 18);
-        const posY = isMobile ? 115 : 75;
+        const posX = screenWidth - mapW - (isMobile ? 12 : 18);
+
+        // [KIẾN TRÚC SƯ UI/SAFE-AREA] Tính posY luôn nằm dưới nhãn Online (Hàng 2) với khoảng cách an toàn >= 10px
+        let posY = isMobile ? 94 : 88;
+        if (typeof document !== 'undefined') {
+            const onlineCard = document.getElementById('hudOnlineCard');
+            if (onlineCard && typeof onlineCard.getBoundingClientRect === 'function') {
+                const rect = onlineCard.getBoundingClientRect();
+                if (rect.bottom > 0) {
+                    posY = Math.max(posY, Math.round(rect.bottom + 10));
+                }
+            }
+        }
+
+        // Lưu thông số hình học Minimap để phục vụ kiểm toán và tránh va chạm
+        this.minimapBounds = {
+            left: posX,
+            top: posY,
+            right: posX + mapW,
+            bottom: posY + mapH,
+            width: mapW,
+            height: mapH
+        };
 
         const scaleX = mapW / this.width;
         const scaleY = mapH / this.height;

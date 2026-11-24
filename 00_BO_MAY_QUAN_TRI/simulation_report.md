@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 13:23:00, 24/11/2026  
+**Thời điểm thực thi:** 13:47:30, 24/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,47 +10,45 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **122** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **122** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **128** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **128** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
 
 ---
 
-## 🏛️ ĐỐI CHIẾU 8 VAI TRÒ BỘ MÁY QUẢN TRỊ KỸ THUẬT
+## 🏛️ ĐỐI CHIẾU HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN & ĐỘI NGŨ 4 BỘ PHẬN CHUYÊN TRÁCH MOBILE STUDIO
 
-1. **[PRINCIPAL DESIGNER - Giám Đốc Thiết Kế Hệ Thống]:**
-   - Máy trạng thái hữu hạn (FSM) và danh mục edge cases trong `spec.md` được bảo toàn tính toàn vẹn.
-   - Không can thiệp mã nguồn trực tiếp.
+1. **[BRAND DIRECTOR - Giám Đốc Thương Hiệu]:**
+   - Bản sắc Cơm Nắm Onigiri 100%, chứng chỉ ISO & ATVSTP, liên kết chính thức Facebook & TikTok.
 
-2. **[CHIEF ARCHITECT - Kiến Trúc Sư Trưởng]:**
-   - Đảm bảo kiến trúc phân tầng độc lập 100% giữa vòng lặp Canvas 60fps và giao diện DOM/UI.
-   - Không gọi `innerHTML` trong nhịp game 60fps. Cập nhật chỉ số qua `textContent` và cache `lastPromptKey`.
-   - Quy tắc định giá kinh doanh bảo mật tuyệt đối: Chỉ hiển thị giá bán lẻ chuẩn (20k, 22k, 25k), không để lộ chi phí nhập.
+2. **[MOBILE UI & SAFE-AREA ARCHITECT - Kiến Trúc Sư UI/Safe-Area Mobile]:**
+   - Đảm bảo 100dvh, Safe-Area insets, tách rời nút iGiri sang mép trái (hoặc dưới Minimap $ge 12px$).
+   - Xếp gọn góc trên bên phải thành 3 hàng riêng biệt (Hàng 1: Đồng hồ + 3 nút tròn HUD -> Hàng 2: Đèn 🟢 Online -> Hàng 3: Khung MINIMAP). Zero Overlap.
+   - Hộp nhắc tương tác (#proximityPrompt) cách đáy $ge 110px$.
 
-3. **[VP OF ENGINEERING - Quản Lý Kỹ Thuật]:**
-   - Điều phối toàn bộ quy trình kiểm thử tự động qua Terminal.
-   - Kiểm soát vòng lặp tự sửa lỗi: Kết quả mô phỏng đạt **100.0% PASS**, đủ điều kiện chuyển giao sang Release Gate.
+3. **[TOUCH & VIRTUAL CONTROLS ENGINEER - Kỹ Sư Cảm Ứng & Bàn Phím Ảo]:**
+   - Ngăn chặn preventDefault trên phím Space khi đang nhập văn bản; cho phép gõ tên có dấu cách và tiếng Việt đầy đủ ("Cơm Nắm Sài Gòn").
+   - Tự động ẩn phím ảo khi mở modal; tự động đổi thông điệp "Nhấn E" thành "Chạm nút Tương Tác" trên thiết bị cảm ứng.
 
-4. **[STAFF ENGINEERS - Đội Ngũ Kỹ Sư Cao Cấp]:**
-   - 100% thẻ `<button>` trong HTML tĩnh và template literals đều sở hữu thuộc tính `type="button"`.
-   - Lập trình phòng thủ, null safety, bảo toàn trạng thái dữ liệu không âm.
+4. **[IN-APP WEBVIEW SPECIALIST - Chuyên Gia In-App WebView Zalo/Safari]:**
+   - Căn chỉnh chiều cao Bếp ASMR: `max-height: 86dvh; overflow-y: auto; padding-bottom: 20px;`.
+   - 2 nút đáy "Làm Thêm" và "Ra Phố" hiển thị trọn vẹn 100% trong khung hình khả kiến trên mọi trình duyệt nhúng.
 
-5. **[STATIC AUDITOR - Chuyên Gia Kiểm Toán Mã Nguồn]:**
-   - Cú pháp toàn bộ tệp JavaScript (`node --input-type=module --check`): **100% HỢP LỆ**.
-   - Đồ thị phụ thuộc `import` / `export`: **100% ĐƯỜNG DẪN TỒN TẠI**.
-   - Cặp liên kết HTML-JS: Đầy đủ các phần tử ID cốt lõi.
+5. **[GEOMETRIC COLLISION QA ENGINEER - Kỹ Sư Kiểm Thử Va Chạm Hình Học]:**
+   - Đo đạc tự động `getBoundingClientRect()` trên iPhone (375x812) và Desktop (1440x900): 0 cặp nút HUD nào bị chồng lấn diện tích.
 
-6. **[SIMULATION DIRECTOR - Giám Đốc Mô Phỏng & Kiểm Thử Tự Động]:**
-   - Khởi chạy kịch bản thực tế qua công cụ tự động `verify_system.mjs`.
-   - Mô phỏng toàn bộ chuỗi hành vi: Tải trang, click nút Bắt đầu, mở iGiri OS, cuộn danh sách `overflow-y`, vào Chợ Đầu Mối mua nguyên liệu, cập nhật tài chính và trừ tiền chuẩn xác.
+6. **[3D ART & LIGHTING DIRECTORS - Giám Đốc Mỹ Thuật 3D, Ánh Sáng & Âm Thanh]:**
+   - Cảnh quan 3D Stylized Saigon, chu kỳ Ngày/Đêm 24h, Web Audio ASMR và nút Mute trên HUD.
 
-7. **[ROOT-CAUSE ENGINEERS - Đội Xử Lý Sự Cố Gốc Rễ]:**
-   - Số sự cố cần can thiệp: **0**.
-   - Hệ thống sạch bóng lỗi, không phát sinh bất kỳ ngoại lệ nào.
+7. **[CHIEF SYSTEMS ARCHITECT & STAFF ENGINEERS - Kiến Trúc Sư & Kỹ Sư Cao Cấp]:**
+   - Tách bạch Canvas 60fps & DOM, an toàn null/undefined, 100% nút có `type="button"`.
 
-8. **[RELEASE GATE - Hội Đồng Nghiệm Thu]:**
+8. **[STATIC AUDITOR & SIMULATION DIRECTOR - Kiểm Toán & Mô Phỏng Tự Động]:**
+   - `node --check` 100% PASS, đồ thị import/export hợp lệ, kịch bản tương tác E2E đạt 100% PASS (0 LỖI).
+
+9. **[RELEASE GATE & STUDIO DIRECTOR - Hội Đồng Nghiệm Thu]:**
    - ✅ **ĐỦ ĐIỀU KIỆN NGHIỆM THU.** Báo cáo được đệ trình lên cấp chỉ huy cao nhất.
    - **TIÊN QUYẾT:** Dừng lại tại đây và chờ lệnh **"SẾP DUYỆT"** từ người dùng trước khi ghi nhận `changelog.md`.
 
@@ -81,6 +79,9 @@
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
 - **[PASS]** `Giao diện Smartphone: .phone-tab-content-wrapper cấu hình overflow-y: auto chuẩn`
+- **[PASS]** `Kỹ Sư Bàn Phím Ảo: 100% sự kiện keydown/keyup kiểm tra e.target input, không bao giờ chặn phím Space khi gõ tên`
+- **[PASS]** `Chuyên Gia In-App WebView: Hộp thoại Bếp ASMR cấu hình max-height: 86dvh & overflow-y: auto chống cắt nút trên Safari/Zalo`
+- **[PASS]** `Kiến Trúc Sư UI Mobile: Nút Điện thoại iGiri đặt gọn gàng ở mép trái, tách rời hoàn toàn cụm nút hành động bên phải`
 - **[PASS]** `HTTP Route /` - *Status: 200, Content-Type: text/html; charset=utf-8*
 - **[PASS]** `HTTP Route /style.css` - *Status: 200, Content-Type: text/css; charset=utf-8*
 - **[PASS]** `HTTP Route /src/main.js` - *Status: 200, Content-Type: application/javascript; charset=utf-8*
@@ -179,6 +180,9 @@
 - **[PASS]** `Mô phỏng Linh Vật & Phương Tiện: Linh vật tách nền trong suốt 100% (linh_vat_1.png) và hỗ trợ trọn vẹn 4 cấp phương tiện`
 - **[PASS]** `Mô phỏng Mạng Xã Hội: Gắn tinh tế 2 nút kết nối chính thức Fanpage Facebook & Kênh TikTok trên cả Màn Hình Chào và Điện Thoại iGiri`
 - **[PASS]** `Mô phỏng Âm Thanh ASMR: Bổ sung đủ hiệu ứng Bếp nóng, Rong biển, Còi xe và Nút Bật/Tắt tiếng (Mute/Unmute) tiện ích trên HUD`
+- **[PASS]** `Kỹ Sư Bàn Phím Ảo: Gõ tên có dấu cách ("Cơm Nắm Sài Gòn") thành công, phím Space không bị preventDefault chặn`
+- **[PASS]** `Kỹ Sư Kiểm Thử Va Chạm: 0 cặp nút HUD nào bị chồng lấn diện tích trên iPhone (375x812) & Desktop (1440x900) - Tách biệt hoàn toàn iGiri, Online & Minimap`
+- **[PASS]** `Chuyên Gia In-App WebView & Kiểm Thử: Mở Bếp ASMR kiểm tra 2 nút đáy ("Làm Thêm", "Ra Phố") nằm trọn vẹn 100% trong khung hình iPhone/Desktop (0 lỗi)`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

@@ -71,14 +71,52 @@ body, html {
    =================================================== */
 #topHUD {
     position: absolute;
-    top: 14px;
-    left: 16px;
-    right: 16px;
+    top: calc(10px + env(safe-area-inset-top));
+    left: calc(14px + env(safe-area-inset-left));
+    right: calc(14px + env(safe-area-inset-right));
     z-index: 10;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     pointer-events: none;
+    gap: 10px;
+}
+
+/* Cụm bên trái: Avatar, Tiền, Level, Kho hàng */
+.hud-left-cluster {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    pointer-events: none;
+}
+
+.hud-left-cluster .hud-item {
+    pointer-events: auto;
+}
+
+/* Cụm bên phải: Xếp 3 tầng dọc riêng biệt không đè lên nhau */
+.hud-right-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.hud-right-row-1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+}
+
+.hud-right-row-2 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: auto;
+    width: 100%;
 }
 
 .hud-item {
@@ -209,7 +247,7 @@ body, html {
    =================================================== */
 .proximity-banner {
     position: absolute;
-    bottom: 28px;
+    bottom: calc(115px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     z-index: 15;
@@ -217,10 +255,10 @@ body, html {
     backdrop-filter: blur(12px);
     border: 2px solid #f97316;
     border-radius: 30px;
-    padding: 12px 28px;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     box-shadow: 0 10px 30px rgba(249, 115, 22, 0.4);
     cursor: pointer;
     animation: floatBounce 2s infinite ease-in-out;
@@ -284,11 +322,12 @@ body, html {
     border-radius: 24px;
     width: 100%;
     max-width: 780px;
-    height: 92vh;
-    max-height: 700px;
+    height: auto;
+    max-height: 86dvh;
+    overflow-y: auto;
+    padding-bottom: 20px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
 }
 
@@ -759,6 +798,11 @@ body, html {
 .result-actions-row {
     display: flex;
     gap: 12px;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+    padding-bottom: 16px;
 }
 
 .btn-cook-more {
@@ -1102,14 +1146,15 @@ body, html {
    BƯỚC 4: HỆ THỐNG SMARTPHONE IGIRI OS (GTA STYLE) & ĐẾ CHẾ TYCOON
    ========================================================================== */
 
-/* Nút biểu tượng Điện Thoại nổi ở góc dưới bên phải màn hình */
+/* Nút biểu tượng Điện Thoại nổi ở mép trái màn hình phía trên Joystick (tách rời hoàn toàn khỏi cụm nút hành động bên phải) */
 .phone-trigger-btn {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    left: calc(24px + env(safe-area-inset-left));
+    bottom: calc(185px + env(safe-area-inset-bottom));
+    right: auto;
     z-index: 95;
-    width: 64px;
-    height: 64px;
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
     background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
     border: 3px solid rgba(255, 255, 255, 0.6);
@@ -2826,7 +2871,9 @@ body, html {
    GÓI 4A: BẾP ASMR 15 VỊ & LỌC 3 NHÓM GIÁ
    =================================================== */
 .kitchen-modal-panel {
-    max-height: 820px;
+    max-height: 86dvh;
+    overflow-y: auto;
+    padding-bottom: 20px;
 }
 
 .kitchen-topbar-stats {
@@ -4032,6 +4079,21 @@ body, html {
     touch-action: manipulation;
 }
 
+.hud-btn-round {
+    border-radius: 50% !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.hud-btn-round .hud-btn-text {
+    display: none !important;
+}
+
 .hud-btn-action:hover, .hud-btn-action:active {
     background: rgba(51, 65, 85, 0.95);
     transform: translateY(-1px);
@@ -4279,8 +4341,9 @@ body, html {
     }
 
     .phone-trigger-btn {
-        right: calc(14px + env(safe-area-inset-right));
-        bottom: calc(190px + env(safe-area-inset-bottom));
+        left: calc(14px + env(safe-area-inset-left));
+        right: auto;
+        bottom: calc(150px + env(safe-area-inset-bottom));
         width: 48px;
         height: 48px;
     }
@@ -4288,8 +4351,12 @@ body, html {
     /* Cửa sổ Bếp & Chợ responsive toàn màn hình điện thoại */
     .kitchen-modal-panel {
         width: 96vw;
-        max-height: 94vh;
-        padding: 12px;
+        max-height: 86dvh;
+        overflow-y: auto;
+        padding-bottom: 20px;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-top: 12px;
     }
 
     .kitchen-workbench {
@@ -4339,7 +4406,14 @@ body, html {
         font-size: 14px;
     }
 
-    .kitchen-modal-panel, .market-modal-panel {
+    .kitchen-modal-panel {
+        width: 88vw;
+        max-height: 86dvh;
+        overflow-y: auto;
+        padding-bottom: 20px;
+    }
+
+    .market-modal-panel {
         width: 88vw;
         max-height: 88vh;
     }

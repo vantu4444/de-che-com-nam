@@ -52,63 +52,74 @@
 
         <!-- 1. Thanh trạng thái (HUD) góc trên cùng -->
         <header id="topHUD">
-            <!-- Avatar Linh vật nhận diện thương hiệu -->
-            <div class="hud-item hud-avatar-card">
-                <img src="assets/linh_vat_1.JPG" alt="Avatar Bếp Trưởng" class="hud-avatar-img">
-                <div class="hud-avatar-text">
-                    <span class="hud-avatar-title">Bếp Trưởng</span>
-                    <span class="hud-avatar-role">🍙 Onigiri</span>
+            <!-- Cụm bên trái: Avatar, Tiền, Cấp độ, Kho mang theo -->
+            <div class="hud-left-cluster">
+                <!-- Avatar Linh vật nhận diện thương hiệu -->
+                <div class="hud-item hud-avatar-card">
+                    <img src="assets/linh_vat_1.JPG" alt="Avatar Bếp Trưởng" class="hud-avatar-img">
+                    <div class="hud-avatar-text">
+                        <span class="hud-avatar-title">Bếp Trưởng</span>
+                        <span class="hud-avatar-role">🍙 Onigiri</span>
+                    </div>
+                </div>
+
+                <!-- Tiền & Logo -->
+                <div class="hud-item hud-money-card">
+                    <span class="hud-icon">💰</span>
+                    <span class="hud-val" id="hudMoney">50.000đ</span>
+                </div>
+
+                <!-- Cấp độ (Level) & Thanh EXP -->
+                <div class="hud-item hud-level-card">
+                    <div class="hud-level-badge" id="hudLevel">Cấp 1</div>
+                    <div class="hud-exp-track">
+                        <div class="hud-exp-bar" id="hudExpFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Số cơm nắm đang mang theo (Kho thùng xe) -->
+                <div class="hud-item hud-inventory-card">
+                    <span class="hud-icon">🎒</span>
+                    <span class="hud-val" id="hudRiceCount">Kho mang theo: 0 / 10 nắm</span>
                 </div>
             </div>
 
-            <!-- Tiền & Logo -->
-            <div class="hud-item hud-money-card">
-                <span class="hud-icon">💰</span>
-                <span class="hud-val" id="hudMoney">50.000đ</span>
-            </div>
+            <!-- Cụm bên phải: Xếp 3 tầng dọc riêng biệt không đè lên nhau -->
+            <div class="hud-right-cluster" id="hudRightCluster">
+                <!-- HÀNG 1: Đồng hồ 24h + 3 nút tròn công cụ nằm thành 1 thanh ngang gọn gàng -->
+                <div class="hud-right-row-1">
+                    <div class="hud-item hud-clock-card" id="hudClockCard">
+                        <span class="hud-icon">⏰</span>
+                        <div class="hud-clock-text">
+                            <span class="hud-val" id="hudClockTime">07:00</span>
+                            <span class="hud-subval" id="hudClockStatus">Giờ Vàng Cổng Trường</span>
+                        </div>
+                    </div>
 
-            <!-- Đồng hồ 24h & Khung giờ -->
-            <div class="hud-item hud-clock-card" id="hudClockCard">
-                <span class="hud-icon">⏰</span>
-                <div class="hud-clock-text">
-                    <span class="hud-val" id="hudClockTime">07:00</span>
-                    <span class="hud-subval" id="hudClockStatus">Giờ Vàng Cổng Trường</span>
+                    <div class="hud-actions-group">
+                        <button type="button" id="btnToggleAudio" class="hud-btn-action hud-btn-round" title="Bật/Tắt âm thanh ASMR">
+                            <span class="hud-btn-icon" id="hudAudioIcon">🔊</span>
+                            <span class="hud-btn-text">Âm Thanh</span>
+                        </button>
+                        <button type="button" id="btnToggleTouch" class="hud-btn-action hud-btn-round" title="Bật/Tắt phím ảo cảm ứng (Mobile / Tablet)">
+                            <span class="hud-btn-icon">🎮</span>
+                            <span class="hud-btn-text">Phím Ảo</span>
+                        </button>
+                        <button type="button" id="btnResetGame" class="hud-btn-action hud-btn-danger hud-btn-round" title="Xóa dữ liệu và chơi lại từ đầu">
+                            <span class="hud-btn-icon">🔄</span>
+                            <span class="hud-btn-text">Chơi Lại</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Cấp độ (Level) & Thanh EXP -->
-            <div class="hud-item hud-level-card">
-                <div class="hud-level-badge" id="hudLevel">Cấp 1</div>
-                <div class="hud-exp-track">
-                    <div class="hud-exp-bar" id="hudExpFill" style="width: 0%;"></div>
+                <!-- HÀNG 2: Đèn báo trạng thái kết nối Online / Offline -->
+                <div class="hud-right-row-2">
+                    <div class="hud-item hud-online-card" id="hudOnlineCard">
+                        <span class="hud-online-status is-connecting" id="hudOnlineStatus">🟡 Đang kết nối máy chủ...</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Số cơm nắm đang mang theo (Kho thùng xe) -->
-            <div class="hud-item hud-inventory-card">
-                <span class="hud-icon">🎒</span>
-                <span class="hud-val" id="hudRiceCount">Kho mang theo: 0 / 10 nắm</span>
-            </div>
-
-            <!-- Đèn báo trạng thái kết nối Online / Offline -->
-            <div class="hud-item hud-online-card" id="hudOnlineCard">
-                <span class="hud-online-status is-connecting" id="hudOnlineStatus">🟡 Đang kết nối máy chủ...</span>
-            </div>
-
-            <!-- Các nút tiện ích góc trên: Âm Thanh, Bật/Tắt Phím Ảo & Chơi Lại Từ Đầu -->
-            <div class="hud-actions-group">
-                <button type="button" id="btnToggleAudio" class="hud-btn-action" title="Bật/Tắt âm thanh ASMR">
-                    <span class="hud-btn-icon" id="hudAudioIcon">🔊</span>
-                    <span class="hud-btn-text">Âm Thanh</span>
-                </button>
-                <button type="button" id="btnToggleTouch" class="hud-btn-action" title="Bật/Tắt phím ảo cảm ứng (Mobile / Tablet)">
-                    <span class="hud-btn-icon">🎮</span>
-                    <span class="hud-btn-text">Phím Ảo</span>
-                </button>
-                <button type="button" id="btnResetGame" class="hud-btn-action hud-btn-danger" title="Xóa dữ liệu và chơi lại từ đầu">
-                    <span class="hud-btn-icon">🔄</span>
-                    <span class="hud-btn-text">Chơi Lại</span>
-                </button>
+                <!-- HÀNG 3: Vùng khung MINIMAP trên Canvas được vẽ ngay bên dưới Hàng 2 với khoảng cách an toàn -->
             </div>
         </header>
 

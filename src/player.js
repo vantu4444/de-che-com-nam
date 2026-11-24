@@ -33,6 +33,9 @@ export class Player {
     }
 
     update(keys, world, isStallOpen = false, isFrozen = false) {
+        // [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Không di chuyển khi phím bị khóa hoặc đang tương tác văn bản
+        if (!keys) return;
+
         // Cập nhật tốc độ di chuyển kết hợp giữa Cấp độ RPG (+5%/cấp), Phương tiện (+30%, +60%, +100%) và Buff Vĩnh Viễn
         const moveBuff = state.permanentBuffs?.moveSpeedBonus || 0;
         this.speed = this.baseSpeed * state.getSpeedMultiplier() * state.getVehicleSpeedMultiplier() * (1 + moveBuff);

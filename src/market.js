@@ -100,6 +100,7 @@ export class MarketManager {
 
         // Lắng nghe sự kiện bàn phím khi ở trong chợ
         this.onKeyDown = (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
             if (!this.isOpen) return;
             if (e.code === 'Escape') {
                 if (this.activeStall) {
@@ -124,6 +125,7 @@ export class MarketManager {
         };
 
         this.onKeyUp = (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) return;
             if (!this.isOpen) return;
             this.keys[e.code] = false;
         };
