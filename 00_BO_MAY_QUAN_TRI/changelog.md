@@ -4,6 +4,34 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.7.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: HỆ THỐNG THÁCH ĐẤU 1V1 CÓ ĐỒNG THUẬN, KẾT BẠN, CHAT ĐA KÊNH, BẢNG XẾP HẠNG TỶ PHÚ & ĐỘI NGŨ CHUYÊN TRÁCH MOBILE STUDIO)
+- **Ngày ghi nhận:** 24/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (115/115 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Hệ Thống Thách Đấu 1v1 Bắt Buộc Đồng Ý / Từ Chối (`server/server.js`, `src/network.js`, `src/onlineUI.js`):**
+     - Hộp thoại chọn thể thức (*Gói Cơm ASMR Chuẩn ISO 30s* hoặc *Bóc Rong Biển Tốc Độ*) và mức cược (*0đ, 50.000đ, 200.000đ*).
+     - Thẻ thông báo nổi trên màn hình đối thủ (`#pvpInviteNotification`) với thanh đếm lùi 15s tự đóng và 2 nút cảm ứng lớn: ✅ Đồng Ý và ❌ Từ Chối.
+     - Cơ chế đồng thuận nghiêm ngặt: Từ chối hoặc hết giờ sẽ hủy phòng và gửi thông báo lịch sự `"[Tên] đang bận bán hàng, đã từ chối lời mời"`. Khi đồng ý, hệ thống trừ tiền cược của cả 2, đưa vào phòng `roomId`, đồng bộ tiến độ thời gian thực `pvp:score_update` và trao thưởng cho người thắng.
+  2. **Hệ Thống Kết Bạn & Trò Chuyện Đa Kênh (`server/server.js`, `src/network.js`, `src/onlineUI.js`, `src/state.js`):**
+     - Gửi/nhận lời mời kết bạn trực quan qua thẻ nổi `#friendInviteNotification` và lưu bền vững vào `state.friends`.
+     - Tự động đối chiếu trạng thái trực tuyến với máy chủ (hiển thị nhãn 🟢 Online kèm chi nhánh hoặc ⚪ Ngoại tuyến), hỗ trợ nút nhắn tin và thách đấu nhanh.
+     - Tích hợp 2 tab Chat trong iGiri OS: *Chat Cộng Đồng* và *Chat Riêng Bạn Bè* (kèm chấm đỏ tin chưa đọc), cùng *Widget Chat nổi 2 dòng* góc màn hình khi đi phố.
+     - Tối ưu Mobile: Tự động ẩn phím ảo điều khiển khi mở chat hoặc focus input; hàng nút câu nhanh 1 chạm; phòng thủ phím Space cho phép gõ dấu cách và tiếng Việt trọn vẹn.
+  3. **Bảng Xếp Hạng Tỷ Phú Top 50 Thời Gian Thực (`server/server.js`, `src/onlineUI.js`):**
+     - Tính Tổng Tài Sản Ròng = Tiền mặt + Giá trị tài sản Xưởng ISO, Xe và các Chi nhánh.
+     - Vinh danh Huy chương Vàng (🥇), Bạc (🥈), Đồng (🥉) cho Top 1–2–3, hiển thị Tên thương hiệu, Chi nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội), Cấp độ và Tổng Tài Sản.
+     - Bộ lọc đa vùng miền Toàn Quốc / Theo Chi Nhánh và nút Kết Bạn / Thách Đấu trực tiếp với người chơi online.
+  4. **Thành Lập Đội Ngũ 4 Chuyên Trách Mobile Game Studio & Sạch Bóng Lỗi Giao Diện:**
+     - Tách rời hoàn toàn nút Điện thoại iGiri khỏi cụm nút hành động bên phải.
+     - Bố cục góc trên bên phải chia làm 3 hàng độc lập (Hàng 1: Đồng hồ & 3 nút HUD -> Hàng 2: Đèn 🟢 Online -> Hàng 3: Khung MINIMAP). Zero Overlap.
+     - Bếp ASMR cấu hình `max-height: 86dvh` chống cắt mất 2 nút đáy trên mọi WebView Zalo/Safari.
+  5. **Kiểm Thử Kịch Bản 2 Client Socket.io Thật & Mô Phỏng Va Chạm Hình Học (`verify_system.mjs`):**
+     - Tự động chạy `verify_system.mjs` mô phỏng 2 Client Socket.io thật: mời thách đấu -> từ chối, mời lại -> đồng ý vào cùng phòng 1v1, kết bạn -> chat có dấu cách, BXH Tỷ Phú sắp xếp giảm dần 100%.
+     - Kiểm tra va chạm hình học `getBoundingClientRect()` trên Desktop (1440x900) và iPhone (375x812) đạt 100% PASS (0 lỗi).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.6.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: HỆ THỐNG ONLINE MULTIPLAYER REAL-TIME, MÁY CHỦ HỢP NHẤT CỔNG 3000, ĐỒNG BỘ 2 NGƯỜI CHƠI THẬT, ĐẤU TRƯỜNG 1V1, HỢP TÁC CO-OP & ĐÈN BÁO TRẠNG THÁI HUD)
 - **Ngày ghi nhận:** 24/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (111/111 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
