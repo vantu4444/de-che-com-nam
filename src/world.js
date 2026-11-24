@@ -1,6 +1,7 @@
 // src/world.js - Bản đồ TP.HCM thu nhỏ & 4 Bản Đồ Thành Phố Liên Tỉnh: HCM, Buôn Ma Thuột, TP. Vinh, Hà Nội
 
 import { state } from './state.js';
+import { city3D } from './city3D.js';
 
 export const CITY_DATA = {
     branch_hcm: {
@@ -326,7 +327,12 @@ export class World {
     }
 
     // Cập nhật di chuyển & va chạm xe cộ giao thông tự động
-    updateTraffic(player) {
+    updateTraffic(player, dt = 0.016) {
+        // Cập nhật hiệu ứng thời tiết, khói cơm & hạt 3D
+        try {
+            city3D.update(dt, state.getTimePeriodInfo ? state.getTimePeriodInfo() : {});
+        } catch (e) {}
+
         // Cập nhật vị trí xe đối thủ AI quanh các điểm bán nóng
         if (Array.isArray(this.competitorCarts)) {
             this.competitorCarts.forEach(c => {
@@ -785,6 +791,15 @@ export class World {
             if (nightAlpha > 0.01) {
                 ctx.fillStyle = `rgba(15, 23, 42, ${nightAlpha.toFixed(3)})`;
                 ctx.fillRect(0, 0, this.width, this.height);
+            }
+        }
+
+        // 8. Vẽ Đại Cảnh 3D Phong Cách Hóa TP.HCM (Chợ Bến Thành, Nguyễn Huệ, Bitexco, Landmark 81, Xưởng ISO, Mưa)
+        if (this.currentCityId === 'branch_hcm') {
+            try {
+                city3D.renderStylizedSaigon(ctx, camera, timeInfo);
+            } catch (err3D) {
+                // An toàn tuyệt đối
             }
         }
 

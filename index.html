@@ -19,10 +19,14 @@
                     <img src="assets/Bản sao logo.JPG" alt="Logo Thương Hiệu" class="start-logo" onerror="this.onerror=null;this.src=encodeURI('assets/Bản sao logo.JPG');">
                 </div>
                 <h1 class="start-title">ĐẾ CHẾ CƠM NẮM</h1>
-                <p class="start-subtitle">Onigiri Empire 2D • Hành Trình Ẩm Thực Đường Phố</p>
+                <p class="start-subtitle">Onigiri Empire • Hành Trình Ẩm Thực Đường Phố</p>
+                <div class="start-iso-badge">
+                    <span class="iso-icon">🛡️</span>
+                    <span class="iso-text">ĐẠT CHUẨN ISO & ATVSTP • NGUYÊN LIỆU TƯƠI MỚI MỖI NGÀY</span>
+                </div>
                 <div class="start-showcase">
                     <div class="start-mascot-frame">
-                        <img src="assets/linh_vat_1.JPG" alt="Linh Vật Cơm Nắm" class="start-mascot-img">
+                        <img src="assets/linh_vat_1.png" alt="Linh Vật Cơm Nắm" class="start-mascot-img" onerror="this.onerror=null;this.src='assets/linh_vat_1.JPG';">
                     </div>
                 </div>
                 <div class="start-brand-input-box">
@@ -33,6 +37,16 @@
                     🍙 BẮT ĐẦU KINH DOANH
                 </button>
                 <div class="start-audio-tip">🔊 Kích hoạt âm thanh ASMR sống động khi vào game</div>
+                
+                <!-- Kết nối mạng xã hội chính thức của thương hiệu -->
+                <div class="start-social-links">
+                    <a href="https://www.facebook.com/onigiriviet" target="_blank" rel="noopener noreferrer" class="btn-start-social btn-social-fb" title="Fanpage Facebook Chính Thức">
+                        <span>📘 Fanpage Facebook</span>
+                    </a>
+                    <a href="https://www.tiktok.com/@comnam_onigiriviet?_r=1&_t=ZS-9BdKFHssRQC" target="_blank" rel="noopener noreferrer" class="btn-start-social btn-social-tt" title="Kênh TikTok Chính Thức">
+                        <span>🎵 Kênh TikTok</span>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -81,8 +95,12 @@
                 <span class="hud-online-status is-connecting" id="hudOnlineStatus">🟡 Đang kết nối máy chủ...</span>
             </div>
 
-            <!-- Các nút tiện ích góc trên: Bật/Tắt Phím Ảo & Chơi Lại Từ Đầu -->
+            <!-- Các nút tiện ích góc trên: Âm Thanh, Bật/Tắt Phím Ảo & Chơi Lại Từ Đầu -->
             <div class="hud-actions-group">
+                <button type="button" id="btnToggleAudio" class="hud-btn-action" title="Bật/Tắt âm thanh ASMR">
+                    <span class="hud-btn-icon" id="hudAudioIcon">🔊</span>
+                    <span class="hud-btn-text">Âm Thanh</span>
+                </button>
                 <button type="button" id="btnToggleTouch" class="hud-btn-action" title="Bật/Tắt phím ảo cảm ứng (Mobile / Tablet)">
                     <span class="hud-btn-icon">🎮</span>
                     <span class="hud-btn-text">Phím Ảo</span>
@@ -156,6 +174,8 @@
         <div id="brandNameModal" class="brand-name-modal-layer hidden"></div>
     </div>
 
+    <!-- Nạp Three.js 3D Engine (CDN với Fallback tự động an toàn) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Nạp thư viện Socket.IO Client từ máy chủ Node.js -->
     <script src="/socket.io/socket.io.js"></script>
     <!-- Script nạp ES Modules -->

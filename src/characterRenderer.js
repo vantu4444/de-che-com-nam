@@ -29,13 +29,14 @@ export class CharacterRenderer {
         this.initVariantOverrides();
     }
 
-    // Tự động tìm nạp sprite gốc với các đuôi mở rộng phổ biến
+    // Tự động tìm nạp sprite gốc với ưu tiên ảnh trong suốt PNG đã xử lý
     loadBaseSprite() {
         const candidatePaths = [
-            'assets/linh_vat_1.JPG',
-            'assets/linh_vat_1.jpg',
             'assets/linh_vat_1.png',
-            'assets/linh_vat_1.webp'
+            'assets/linh_vat_1.PNG',
+            'assets/linh_vat_1.webp',
+            'assets/linh_vat_1.JPG',
+            'assets/linh_vat_1.jpg'
         ];
 
         let index = 0;
@@ -50,6 +51,10 @@ export class CharacterRenderer {
                 this.baseSprite = img;
                 this.baseSpriteLoaded = true;
                 this.baseSpriteError = false;
+                // Nếu nguồn là JPG, tiến hành lọc tách nền đen trên canvas đệm
+                if (path.toLowerCase().endsWith('.jpg') || path.toLowerCase().endsWith('.jpeg')) {
+                    this.processChromaKey(img);
+                }
             };
             img.onerror = () => {
                 tryNext();
@@ -59,29 +64,62 @@ export class CharacterRenderer {
         tryNext();
     }
 
+    // Tự động tách nền đen trong bộ nhớ nếu nạp phải file JPG
+    processChromaKey(img) {
+        try {
+            if (typeof document === 'undefined' || !document.createElement) return;
+            const bufferCanvas = document.createElement('canvas');
+            const w = img.naturalWidth || img.width;
+            const h = img.naturalHeight || img.height;
+            if (!w || !h) return;
+            bufferCanvas.width = w;
+            bufferCanvas.height = h;
+            const bCtx = bufferCanvas.getContext('2d');
+            if (!bCtx || !bCtx.getImageData) return;
+            bCtx.drawImage(img, 0, 0);
+            const imgData = bCtx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            // Xóa màu đen nền viền ngoài
+            for (let i = 0; i < d.length; i += 4) {
+                const r = d[i], g = d[i+1], b = d[i+2];
+                if (r < 30 && g < 30 && b < 30) {
+                    d[i+3] = 0;
+                }
+            }
+            bCtx.putImageData(imgData, 0, 0);
+            this.baseSprite = bufferCanvas;
+        } catch (e) {
+            // Safe fallback
+        }
+    }
+
     // Khởi tạo cơ chế kiểm tra và ưu tiên nạp ảnh riêng nếu có trong assets/
     initVariantOverrides() {
         const variants = ['player', 'student', 'office', 'market', 'vip', 'staff'];
-        const extensions = ['.png', '.PNG', '.jpg', '.JPG', '.webp'];
 
         variants.forEach(variant => {
-            const checkExt = (extIndex) => {
-                if (extIndex >= extensions.length) return;
-                const ext = extensions[extIndex];
-                const customPath = `assets/linh_vat_${variant}${ext}`;
-                const img = new Image();
-                img.onload = () => {
-                    this.overrideSprites.set(variant, img);
-                    this.overrideLoaded.set(variant, true);
-                };
-                img.onerror = () => {
-                    // Thử đuôi mở rộng tiếp theo trong im lặng, không văng lỗi console
-                    checkExt(extIndex + 1);
-                };
-                img.src = customPath;
+            const customPath = `assets/linh_vat_${variant}.png`;
+            const img = new Image();
+            img.onload = () => {
+                this.overrideSprites.set(variant, img);
+                this.overrideLoaded.set(variant, true);
             };
-            checkExt(0);
+            img.onerror = () => {
+                // Không tìm thấy ảnh riêng -> mặc định dùng linh_vat_1 + phụ kiện vector
+                this.overrideLoaded.set(variant, false);
+            };
+            img.src = customPath;
         });
+    }
+
+    // Cơ chế nâng cấp mở rộng: Cho phép đăng ký ảnh sprite riêng cho bất kỳ biến thể nào
+    registerOverride(variant, imagePath) {
+        const img = new Image();
+        img.onload = () => {
+            this.overrideSprites.set(variant, img);
+            this.overrideLoaded.set(variant, true);
+        };
+        img.src = imagePath;
     }
 
     /**
@@ -163,12 +201,31 @@ export class CharacterRenderer {
         ctx.restore();
     }
 
-    // Vẽ bóng đổ cố định trên mặt đất
+    // Vẽ bóng đổ mềm mại dưới mặt đất (Soft Radial Gradient Shadow)
     drawShadow(ctx, scale) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        ctx.save();
+        const radX = 18 * scale;
+        const radY = 8 * scale;
+        const posY = 20 * scale;
+
+        if (ctx.createRadialGradient) {
+            try {
+                const grad = ctx.createRadialGradient(0, posY, 2 * scale, 0, posY, radX);
+                grad.addColorStop(0, 'rgba(15, 23, 42, 0.45)');
+                grad.addColorStop(0.6, 'rgba(15, 23, 42, 0.22)');
+                grad.addColorStop(1, 'rgba(15, 23, 42, 0)');
+                ctx.fillStyle = grad;
+            } catch (e) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+            }
+        } else {
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
+        }
+
         ctx.beginPath();
-        ctx.ellipse(0, 20 * scale, 18 * scale, 8 * scale, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, posY, radX, radY, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
     }
 
     // Vẽ hào quang vàng kim nhẹ nhàng dưới chân khách VIP
@@ -609,7 +666,8 @@ export class CharacterRenderer {
     // 1. Lớp sau của phương tiện (Vẽ trước khi vẽ thân nhân vật)
     drawVehicleBack(ctx, vehicle) {
         ctx.save();
-        switch (vehicle) {
+        const vType = (vehicle === 'bicycle' ? 'bike' : (vehicle === 'scooter' ? 'motorcycle' : (vehicle === 'van' ? 'truck' : vehicle)));
+        switch (vType) {
             case 'bike':
                 // Bánh xe sau
                 ctx.fillStyle = '#1e293b';
@@ -704,7 +762,8 @@ export class CharacterRenderer {
     // 2. Lớp trước của phương tiện (Vẽ sau khi vẽ thân nhân vật)
     drawVehicleFront(ctx, vehicle) {
         ctx.save();
-        switch (vehicle) {
+        const vType = (vehicle === 'bicycle' ? 'bike' : (vehicle === 'scooter' ? 'motorcycle' : (vehicle === 'van' ? 'truck' : vehicle)));
+        switch (vType) {
             case 'bike':
                 // Bánh xe trước
                 ctx.fillStyle = '#1e293b';

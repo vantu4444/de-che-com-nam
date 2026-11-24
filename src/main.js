@@ -160,6 +160,23 @@ class GameApp {
             };
         }
 
+        // Nút Bật/Tắt âm thanh toàn cục (Mute/Unmute) trên HUD
+        const btnAudio = document.getElementById('btnToggleAudio');
+        const audioIcon = document.getElementById('hudAudioIcon');
+        const updateAudioIcon = () => {
+            if (audioIcon) {
+                audioIcon.textContent = audio.isMuted ? '🔇' : '🔊';
+            }
+        };
+        updateAudioIcon();
+        if (btnAudio) {
+            btnAudio.onclick = () => {
+                audio.resume();
+                audio.toggleMute();
+                updateAudioIcon();
+            };
+        }
+
         // Khởi tạo bộ điều khiển cảm ứng chuẩn Mobile & iPad
         this.initTouchControls();
 
@@ -177,6 +194,49 @@ class GameApp {
         if (touchLayer && isTouchDevice) {
             touchLayer.classList.remove('hidden');
         }
+
+        // 1b. TỰ ĐỘNG ẨN CỤM PHÍM ẢO KHI MỞ BẤT KỲ CỬA SỔ MODAL NÀO (Bếp ASMR, Chợ, Điện Thoại, BXH, Hóa Đơn)
+        let wasTouchActiveBeforeModal = false;
+        const checkModalVisibility = () => {
+            if (!touchLayer) return;
+            const modalSelectors = [
+                '#kitchenModal',
+                '#marketModal',
+                '#phoneModal',
+                '#dailyBillModal',
+                '#onlineQuickMenu',
+                '#brandNameModal'
+            ];
+            const isAnyOpen = modalSelectors.some(sel => {
+                const el = document.querySelector(sel);
+                return el && !el.classList.contains('hidden') && el.style.display !== 'none';
+            });
+
+            if (isAnyOpen) {
+                if (!touchLayer.classList.contains('hidden')) {
+                    wasTouchActiveBeforeModal = true;
+                    touchLayer.classList.add('hidden');
+                }
+            } else if (wasTouchActiveBeforeModal) {
+                touchLayer.classList.remove('hidden');
+                wasTouchActiveBeforeModal = false;
+            }
+        };
+
+        // Theo dõi thay đổi trạng thái của các Modal qua MutationObserver
+        try {
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(() => {
+                    checkModalVisibility();
+                });
+                ['kitchenModal', 'marketModal', 'phoneModal', 'dailyBillModal', 'onlineQuickMenu', 'brandNameModal'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        observer.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
+                    }
+                });
+            }
+        } catch (e) {}
 
         // Nút bật/tắt phím ảo trên thanh HUD
         if (btnToggle && touchLayer) {

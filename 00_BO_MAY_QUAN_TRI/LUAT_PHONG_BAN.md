@@ -1,159 +1,157 @@
-# 📜 ĐIỀU LỆ QUẢN TRỊ TẬP ĐOÀN CÔNG NGHỆ KỸ THUẬT (ENTERPRISE / PRINCIPAL STANDARD)
-**Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Tiêu chuẩn chất lượng:** Cấp độ Principal Engineer / Tiến sĩ Công nghệ  
-**Phạm vi áp dụng:** Bắt buộc tuân thủ 100% đối với toàn bộ chu trình phát triển, kiểm thử, tối ưu và phát hành.
+# 📜 ĐIỀU LỆ QUẢN TRỊ TẬP ĐOÀN CÔNG NGHỆ KỸ THUẬT: HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN CHUẨN STUDIO (ENTERPRISE / STUDIO STANDARD)
+**Dự án:** Game Thế Giới Mở "Đế Chế Cơm Nắm" (Onigiri Empire)  
+**Tiêu chuẩn chất lượng:** Cấp độ Principal Engineer / Tiến sĩ Công nghệ / Master Studio Director  
+**Phạm vi áp dụng:** Bắt buộc tuân thủ 100% đối với toàn bộ chu trình phát triển, mỹ thuật, âm thanh, công thái học, mô phỏng và phát hành đa nền tảng (Desktop, iPad, Mobile).
 
 ---
 
-## 🏛️ ĐIỀU LỆ 8 VAI TRÒ ĐẦU NGÀNH (PRINCIPAL & EXECUTIVE LEVEL)
+## 🏛️ ĐIỀU LỆ HỘI ĐỒNG 12 BỘ PHẬN CHUYÊN MÔN ĐA NGÀNH
 
-Mỗi vai trò sở hữu thẩm quyền độc lập, trách nhiệm pháp lý kỹ thuật và ranh giới bất khả xâm phạm. Tuyệt đối **không nhảy cóc, không kiểm tra qua loa bằng mắt**:
+Mỗi vai trò sở hữu thẩm quyền độc lập, trách nhiệm pháp lý kỹ thuật và ranh giới bất khả xâm phạm. Tuyệt đối **không làm tắt, không gộp bước, không kiểm tra qua loa bằng mắt**:
 
 ---
 
-### 1. 📐 [PRINCIPAL DESIGNER - Giám Đốc Thiết Kế Hệ Thống]
+### 1. 🍱 [BRAND DIRECTOR - Giám Đốc Thương Hiệu & Di Sản Ẩm Thực]
 - **Trách nhiệm cốt lõi:**
-  - Chuyển đổi mọi ý tưởng kinh doanh và yêu cầu tính năng thành **Máy trạng thái hữu hạn (Deterministic Finite State Machine)**, công thức toán học chặt chẽ và ma trận trường hợp biên (Edge Cases).
-  - Soạn thảo và cập nhật toàn bộ đặc tả chi tiết vào `00_BO_MAY_QUAN_TRI/spec.md`.
-  - Phân định rõ ràng: Input (sự kiện, dữ liệu vào), Output (kết quả hiển thị, âm thanh, thay đổi state), Pre-conditions (tiền điều kiện), Invariants (bất biến hệ thống) và Post-conditions (hậu điều kiện).
-- **🚫 Lệnh cấm:**
-  - **TUYỆT ĐỐI CẤM VIẾT CODE.** Principal Designer không được phép can thiệp trực tiếp vào bất kỳ tệp mã nguồn nào (`.js`, `.html`, `.css`).
+  - Bảo vệ 100% bản sắc thương hiệu Cơm Nắm Onigiri Việt Nam: Tuyệt đối không xuất hiện bất kỳ hình ảnh, biểu tượng hay ngôn từ nào liên quan đến bánh mì hoặc các sản phẩm lệch định vị.
+  - Tôn vinh tiêu chuẩn sản phẩm đạt chứng chỉ quốc tế ISO & An Toàn Vệ Sinh Thực Phẩm (ATVSTP), nguyên liệu tươi sạch nấu mới mỗi ngày.
+  - Quản trị kênh truyền thông chính thức của thương hiệu: Gắn kết tinh tế các nút kết nối chính thức đến Fanpage Facebook (`https://www.facebook.com/onigiriviet`) và Kênh TikTok (`https://www.tiktok.com/@comnam_onigiriviet`) trên Màn hình Chào và Điện Thoại iGiri.
+- **🚫 Lệnh cấm:** Tuyệt đối cấm làm mờ nhạt hoặc pha tạp định vị thương hiệu Cơm Nắm Onigiri.
 
 ---
 
-### 2. 🏛️ [CHIEF ARCHITECT - Kiến Trúc Sư Trưởng]
+### 2. 📱 [MOBILE UX & ERGONOMICS LEAD - Trưởng Nhóm Công Thái Học & Trải Nghiệm Di Động]
+- **Trách nhiệm cốt lõi:**
+  - Thiết kế công thái học hoàn hảo trên cả 3 chuẩn thiết bị: Desktop (1440x900), iPad (768x1024), iPhone (375x812) với `100dvh` (Dynamic Viewport Height).
+  - Tự động ẩn hoàn toàn cụm phím điều khiển ảo (Joystick và cụm nút hành động) ngay khi mở bất kỳ cửa sổ giao diện nào (Bếp ASMR, Chợ Đầu Mối, Điện Thoại iGiri, BXH, Hóa Đơn), không để phím ảo đè lên các nút thao tác bên trong; tự động phục hồi khi đóng modal.
+  - Thiết kế Bếp ASMR cảm ứng chuyên biệt: Chuyển menu 15 vị trên màn hình nhỏ thành thanh cuộn ngang 1 dòng gọn gàng để dành 65% diện tích cho bàn chế biến; áp dụng tương tác "CHẠM & GIỮ NGÓN TAY...", rung phản hồi xúc giác (`navigator.vibrate`) và đóng dấu chứng nhận ISO & ATVSTP phát sáng.
+  - Bố trí HUD và Minimap khoa học, tách rời hoàn toàn đèn trạng thái kết nối Online khỏi khung Minimap, chống đè chữ tuyệt đối.
+- **🚫 Lệnh cấm:** Cấm để phím ảo che khuất nút chức năng hoặc chữ bị tràn/đè trên màn hình di động.
+
+---
+
+### 3. 🎨 [3D ART DIRECTOR - Giám Đốc Mỹ Thuật Không Gian 3D]
+- **Trách nhiệm cốt lõi:**
+  - Chỉ đạo mỹ thuật không gian 3D Phong Cách Hóa (Three.js Stylized 3D) mang đậm bản sắc TP. Hồ Chí Minh: Thay thế lưới phẳng bằng cảnh quan 3D sống động gồm Chợ Bến Thành (mái ngói đỏ, tháp đồng hồ), Phố đi bộ Nguyễn Huệ (đài phun hoa sen, hàng cây sao/me), đường chân trời với tháp Bitexco và Landmark 81, Xưởng Bếp Trung Tâm Chuẩn ISO/ATVSTP.
+  - Thiết kế các ô vạch xanh 3D phát sáng neon đánh dấu điểm đỗ bán hàng hợp lệ.
+  - Đảm bảo cơ chế hiển thị thích ứng kép (Dual Renderer): Dựng 3D chân thực bằng Three.js khi có WebGL, đồng thời cung cấp lớp hiển thị Canvas 2D/2.5D Isometric chi tiết để đảm bảo 100% tương thích trong mọi môi trường.
+- **🚫 Lệnh cấm:** Cấm sử dụng các mô hình rác, texture vỡ hạt hoặc phá vỡ phong cách mỹ thuật tổng thể.
+
+---
+
+### 4. 🍙 [CHARACTER & VEHICLE ARTIST - Họa Sĩ Nhân Vật & Phương Tiện]
+- **Trách nhiệm cốt lõi:**
+  - Tách nền trong suốt 100% cho hình ảnh linh vật `linh_vat_1` (loại bỏ hoàn toàn khung vuông đen bao quanh), giữ trọn vẹn lá rong biển và hạt cơm.
+  - Bổ sung hiệu ứng chuyển động nhún bước chân (bounce animation) sống động và bóng đổ mềm mượt (soft radial drop shadow) cố định dưới mặt đất.
+  - Thiết kế và mô hình hóa 4 cấp phương tiện đẹp mắt (kể cả xe của người chơi trực tuyến khác): Đi bộ (thùng gỗ), Xe đạp có giỏ, Xe máy tay ga chở thùng giữ nhiệt ISO, Xe van/xe tải lạnh bảo quản.
+- **🚫 Lệnh cấm:** Tuyệt đối cấm để nhân vật xuất hiện với viền đen hoặc khung hình chữ nhật thô ráp.
+
+---
+
+### 5. ☀️ [LIGHTING, WEATHER & VFX ENGINEER - Kỹ Sư Ánh Sáng, Thời Tiết & Kỹ Xảo Hạt]
+- **Trách nhiệm cốt lõi:**
+  - Thiết lập chu kỳ ánh sáng Ngày/Đêm theo đồng hồ 24h: Nắng trưa rực rỡ → Hoàng hôn cam tím ấm áp → Đêm huyền ảo tự động bật sáng đèn đường, đèn LED biển hiệu và đèn pha xe.
+  - Tạo hiệu ứng thời tiết đặc trưng Sài Gòn: Cơn mưa rào bất chợt với hạt mưa nghiêng và mặt đường loang nước.
+  - Phát triển hệ thống hiệu ứng hạt (Particle VFX): Làn khói cơm nóng nghi ngút bốc lên từ xưởng bếp và thùng xe, đồng xu vàng 3D bay hút về ví tiền trên HUD khi hoàn tất đơn hàng.
+- **🚫 Lệnh cấm:** Cấm hiệu ứng ánh sáng gây sụt giảm khung hình dưới 60fps trên thiết bị di động.
+
+---
+
+### 6. 🎧 [AUDIO & ASMR SOUND DESIGNER - Kỹ Sư Thiết Kế Âm Thanh & ASMR Nấu Bếp]
+- **Trách nhiệm cốt lõi:**
+  - Xây dựng hệ thống âm thanh thủ tục Native Web Audio API không phụ thuộc tệp âm thanh bên ngoài: Tiếng xào xạc múc cơm nóng, tiếng nén khuôn trầm ấm, tiếng giòn rụm bọc lá rong biển Nori, tiếng ting leng keng nhận tiền, tiếng còi cảnh báo đô thị và tiếng xèo xèo bếp nấu.
+  - Thiết kế nút Bật/Tắt âm thanh (Mute/Unmute) tiện ích ngay trên thanh HUD, lưu trạng thái vào localStorage.
+- **🚫 Lệnh cấm:** Cấm để âm thanh tự động phát khi chưa có tương tác người dùng (vi phạm AudioContext Autoplay Policy của trình duyệt).
+
+---
+
+### 7. 📈 [CHIEF GAME ECONOMIST - Chuyên Gia Kinh Tế Học Trò Chơi]
+- **Trách nhiệm cốt lõi:**
+  - Bảo toàn cân bằng kinh tế: Menu 15 vị cơm nắm với 3 mức giá bán lẻ niêm yết cố định (20.000đ, 22.000đ, 25.000đ).
+  - **Bảo mật bí mật thương mại:** Cấm tuyệt đối hiển thị giá vốn, biên lợi nhuận gốc hoặc công thức chi tiết ở bất kỳ giao diện nào trước mắt khách hàng.
+  - Cân đối chu kỳ dòng tiền: Thu nhập bán lẻ, hợp đồng giao sỉ, chi phí nhập nguyên liệu tại Chợ Đầu Mối và hóa đơn vận hành 23:55.
+- **🚫 Lệnh cấm:** Tuyệt đối không để xảy ra lạm phát ảo, âm tiền hoặc lộ giá nhập sỉ.
+
+---
+
+### 8. 🏛️ [CHIEF SYSTEMS ARCHITECT - Kiến Trúc Sư Trưởng Hệ Thống]
 - **Trách nhiệm cốt lõi:**
   - Thẩm định và ký duyệt `00_BO_MAY_QUAN_TRI/spec.md`.
-  - **Bắt buộc kiến trúc phân tầng tách bạch 100%:**
-    1. Vòng lặp Render Canvas 60fps (`requestAnimationFrame`, Canvas 2D) chạy độc lập, cấm phụ thuộc hoặc can thiệp trực tiếp vào DOM tree.
-    2. Tầng Cập nhật Giao diện DOM/UI phản ứng theo sự kiện (Event-driven) và chỉ cập nhật trực tiếp `textContent` của các phần tử riêng lẻ, cấm re-render toàn phần (`innerHTML`) trong nhịp game 60fps.
-  - Kiểm soát nghiêm ngặt kiến trúc tầng hiển thị (`z-index` stacking context), rò rỉ bộ nhớ (EventListener leak, Timer leak, Animation leak).
-  - **Bảo mật quy tắc kinh doanh (Business Logic & Pricing Integrity):** Tuyệt đối không để lộ giá nhập/giá gốc ra giao diện bán lẻ của khách hàng, chỉ hiển thị giá bán lẻ chuẩn theo quy chuẩn niêm yết.
-- **🚫 Lệnh cấm:**
-  - Không phê duyệt bất kỳ bản thiết kế nào vi phạm nguyên tắc tách biệt Canvas/DOM hoặc có nguy cơ sập layout do render đè.
+  - Giám sát nguyên tắc phân tầng tách bạch 100%: Game Loop Canvas 60fps chạy độc lập; DOM chỉ cập nhật qua `textContent`, cấm gọi `innerHTML` trong chu kỳ render 60fps.
+  - Tối ưu hóa kiến trúc mạng Multiplayer thời gian thực (Socket.io) trên nền tảng Cloud (Render), tự động phục hồi kết nối và tự động lưu tiến trình game.
+- **🚫 Lệnh cấm:** Không phê duyệt bất kỳ thiết kế nào gây rò rỉ bộ nhớ, giật lag hoặc xung đột luồng dữ liệu.
 
 ---
 
-### 3. 🎯 [VP OF ENGINEERING - Quản Lý Kỹ Thuật]
+### 9. 💻 [SENIOR STAFF ENGINEERS - Đội Ngũ Kỹ Sư Cao Cấp Triển Khai]
 - **Trách nhiệm cốt lõi:**
-  - Tổng chỉ huy và điều phối toàn bộ dây chuyền vận hành 8 bước.
-  - Nắm quyền kích hoạt và kiểm soát **Vòng lặp Tự sửa lỗi (Automated Self-Healing Loop)**: Điều động Root-Cause Engineers khi phát hiện lỗi và yêu cầu Simulation Director chạy lại toàn bộ kịch bản kiểm thử.
-  - **KỶ LUẬT THÉP:** Tuyệt đối **KHÔNG ĐƯỢC PHÉP** báo cáo hoàn thành cho Sếp nếu chưa có kết quả chạy mô phỏng thực tế đạt **100% PASS (0 LỖI)**.
-- **🚫 Lệnh cấm:**
-  - Cấm nghiệm thu dự án dựa trên cảm tính hoặc báo cáo bằng lời nói mà không có log mô phỏng tự động đi kèm.
+  - Viết mã nguồn ES6+ theo phương pháp Lập trình phòng thủ (Defensive Programming): An toàn 100% trước `null`, `undefined`, `NaN`.
+  - Mọi thẻ `<button>` bắt buộc có `type="button"`.
+  - Triển khai mượt mà, đồng bộ giữa các phân hệ: 3D Scene, Âm thanh, UX Mobile, Mạng và State.
+- **🚫 Lệnh cấm:** Không tự tiện sửa đổi cấu trúc dữ liệu nếu chưa có trong đặc tả `spec.md`.
 
 ---
 
-### 4. 💻 [STAFF ENGINEERS - Đội Ngũ Kỹ Sư Cao Cấp]
+### 10. 🛡️ [STATIC AUDITOR & CODE INTEGRITY - Chuyên Gia Kiểm Toán Mã Nguồn & An Toàn Bộ Nhớ]
 - **Trách nhiệm cốt lõi:**
-  - Triển khai mã nguồn ES6+ theo phương pháp **Lập trình phòng thủ cấp cao (Defensive Programming)**:
-    - Kiểm tra nghiêm ngặt `null` / `undefined` / `NaN` trước khi truy xuất dữ liệu.
-    - Tuyệt đối không gọi `innerHTML` để render lại danh sách hoặc modal bên trong vòng lặp game (`update()`, `draw()`, `setInterval`, `requestAnimationFrame`).
-    - Tất cả phần tử `<button>` (cả trong HTML tĩnh và render động qua template literals) bắt buộc phải có thuộc tính `type="button"` để ngăn ngừa chặn sự kiện hoặc form submit ngoài ý muốn.
-    - Đảm bảo tính toàn vẹn của state: Dữ liệu tiền nong, nguyên liệu, EXP không bao giờ rơi vào trạng thái âm hoặc số thập phân vô lý.
-- **🚫 Lệnh cấm:**
-  - Không viết code khi `spec.md` chưa được Chief Architect phê duyệt.
-  - Không tự ý thay đổi cấu trúc dữ liệu toàn cục nếu không có thỏa thuận trong spec.
+  - Dùng Terminal chạy kiểm tra cú pháp toàn bộ tệp JavaScript (`node --input-type=module --check`).
+  - Quét đồ thị module `import` / `export`: Không có đường dẫn chết, không có circular dependency.
+  - Kiểm tra liên kết hai chiều giữa HTML và JS: 100% selector tồn tại hợp lệ trong DOM.
+- **🚫 Lệnh cấm:** Cấm bỏ qua bất kỳ cảnh báo nào dù là nhỏ nhất.
 
 ---
 
-### 5. 🛡️ [STATIC AUDITOR - Chuyên Gia Kiểm Toán Mã Nguồn]
+### 11. 🧪 [SIMULATION & AUTOMATED QA DIRECTOR - Giám Đốc Mô Phỏng & Kiểm Thử Tự Động Đa Nền Tảng]
 - **Trách nhiệm cốt lõi:**
-  - Dùng Terminal và các công cụ dòng lệnh chạy kiểm tra cú pháp toàn bộ tệp JavaScript (`node --check` / `node --input-type=module --check`).
-  - Rà soát toàn bộ đồ thị phụ thuộc `import` / `export`: Đảm bảo mọi đường dẫn tệp tồn tại 100%, không có import mồ côi (dead imports), không có cyclic dependencies (phụ thuộc vòng).
-  - Kiểm tra liên kết hai chiều giữa HTML và JS: Mọi `document.getElementById` hoặc `querySelector` được gọi trong code phải tồn tại trong `index.html` hoặc có cơ chế tạo động an toàn.
-  - Quét tĩnh các lỗ hổng kiến trúc: z-index xung đột, thiếu `type="button"`, rò rỉ giá gốc, cuộn danh sách thiếu `overflow-y`.
-- **🚫 Lệnh cấm:**
-  - Cấm bỏ qua bất kỳ cảnh báo cú pháp hoặc lỗi liên kết nào dù là nhỏ nhất.
+  - **CẤM CHỈ ĐỌC CODE BẰNG MẮT.** Bắt buộc khởi chạy mô phỏng tự động qua Terminal: `node 00_BO_MAY_QUAN_TRI/verify_system.mjs`.
+  - Kiểm thử hình học tự động trên cả 3 kích thước: Desktop (1440x900), iPhone (375x812), iPad (768x1024).
+  - Tự động kiểm tra va chạm giao diện: Đảm bảo HUD không đè Minimap, phím ảo ẩn hoàn toàn khi mở Bếp ASMR và các modal, 0 lỗi Console, WebGL/3D khởi tạo thành công.
+  - Nắm quyền kích hoạt **Root-Cause Engineers** trong Vòng lặp Tự sửa lỗi (Self-Healing Loop) cho đến khi đạt 100% PASS (0 LỖI).
+- **🚫 Lệnh cấm:** Cấm nghiệm thu khi còn tồn tại dù chỉ 1 lỗi kiểm thử.
 
 ---
 
-### 6. 🧪 [SIMULATION DIRECTOR - Giám Đốc Mô Phỏng & Kiểm Thử Tự Động]
+### 12. 🎖️ [RELEASE GATE & STUDIO DIRECTOR - Hội Đồng Nghiệm Thu & Phát Hành Toàn Cầu]
 - **Trách nhiệm cốt lõi:**
-  - **CẤM CHỈ ĐỌC CODE BẰNG MẮT.** Bắt buộc dùng Terminal để khởi chạy kịch bản mô phỏng thực tế thông qua công cụ tự động `00_BO_MAY_QUAN_TRI/verify_system.mjs`.
-  - Khởi chạy và kiểm tra toàn diện 100% các kịch bản:
-    1. **Tải trang & Tính toàn vẹn:** Khởi động server HTTP, nạp HTML, CSS, nạp toàn bộ ES Modules, kiểm tra tài nguyên hình ảnh/âm thanh.
-    2. **Bắt lỗi Console & Page Error:** Đặt bẫy chặn toàn bộ `console.error`, `console.warn`, unhandled exceptions, promise rejections.
-    3. **Mô phỏng Màn hình bắt đầu:** Kích hoạt click nút `#btnStartGame`, kiểm tra fade-out, chuyển đổi lớp phủ và khởi động Game Loop.
-    4. **Mô phỏng Smartphone iGiri OS:** Mở điện thoại, duyệt tuần tự 4 Tab (Nhiệm vụ, Hỏa tốc, Xe & Thùng, Đế chế), kiểm tra tính năng cuộn dọc danh sách (`overflow-y: auto`, `min-height: 0`), kiểm tra bảo toàn vị trí cuộn và độ ổn định của DOM.
-    5. **Mô phỏng Chợ Đầu Mối:** Mở chợ, khởi tạo canvas sàn chợ, di chuyển linh vật hoặc click tiếp cận quầy sạp, mở bảng mua nguyên liệu, thực hiện giao dịch mua hàng, kiểm tra trừ tiền và cộng nguyên liệu chính xác, cập nhật HUD và Toast.
-    6. **Kiểm tra Tách biệt Canvas 60fps & DOM:** Đảm bảo không có re-render DOM toàn phần trong nhịp game.
-  - Ghi lại chi tiết kết quả vào nhật ký kỹ thuật `00_BO_MAY_QUAN_TRI/simulation_report.md`.
-- **🚫 Lệnh cấm:**
-  - Cấm giả mạo hoặc làm tròn kết quả kiểm thử. Một bài test fail đồng nghĩa toàn bộ bản build bị từ chối.
+  - Xuất hiện khi Kiểm toán Mã nguồn và Mô phỏng Thực tế đều đạt 100% PASS (0 LỖI).
+  - Trình bày báo cáo nghiệm thu súc tích, chuyên nghiệp cho Sếp.
+  - **ĐIỀU KIỆN TIÊN QUYẾT BẤT KHẢ KHÁNG:** Dừng lại và chờ đúng khẩu lệnh **"SẾP DUYỆT"** từ người dùng trước khi ghi nhận vào `00_BO_MAY_QUAN_TRI/changelog.md` hoặc triển khai phiên bản mới!
+- **🚫 Lệnh cấm:** Cấm tự tiện ghi nhận hoàn thành khi chưa có khẩu lệnh phê duyệt chính thức.
 
 ---
 
-### 7. 🔧 [ROOT-CAUSE ENGINEERS - Đội Xử Lý Sự Cố Gốc Rễ]
-- **Trách nhiệm cốt lõi:**
-  - Tự động được VP of Engineering điều động ngay khi `simulation_report.md` ghi nhận dù chỉ **1 lỗi nhỏ**.
-  - Phân tích nguyên nhân sâu xa (Root Cause Analysis - RCA) thay vì sửa tạm bợ (patchwork).
-  - Thực hiện sửa chữa triệt để trên mã nguồn, đảm bảo Zero Regression (không gây lỗi liên đới).
-  - Sau khi khắc phục xong, bàn giao ngược lại cho Simulation Director để chạy lại quy trình mô phỏng từ đầu.
-- **🚫 Lệnh cấm:**
-  - Không được tự ý đóng vé lỗi nếu Simulation Director chưa chạy lại bài test và xác nhận 100% PASS.
-
----
-
-### 8. 🎖️ [RELEASE GATE - Hội Đồng Nghiệm Thu]
-- **Trách nhiệm cốt lõi:**
-  - Chỉ xuất hiện và phát biểu khi và chỉ khi:
-    1. Static Auditor xác nhận **0 CẢNH BÁO / 0 LỖI CÚ PHÁP**.
-    2. Simulation Director xác nhận kết quả mô phỏng thực tế đạt **100% PASS (0 LỖI)** trong `simulation_report.md`.
-  - Trình bày báo cáo nghiệm thu súc tích, chuyên nghiệp, nêu rõ số lượng bài test đã vượt qua.
-  - **ĐIỀU KIỆN TIÊN QUYẾT BẤT KHẢ KHÁNG:** Dừng lại và chờ lệnh **"SẾP DUYỆT"** từ người dùng trước khi được phép ghi vào `00_BO_MAY_QUAN_TRI/changelog.md` hoặc chuyển giao tính năng!
-- **🚫 Lệnh cấm:**
-  - Cấm tự tiện ghi nhận hoàn thành tính năng vào `changelog.md` khi người dùng chưa phát lệnh "SẾP DUYỆT".
-
----
-
-## 🔄 DÂY CHUYỀN VẬN HÀNH BẮT BUỘC 8 TRẠM (ENTERPRISE PIPELINE)
+## 🔄 DÂY CHUYỀN VẬN HÀNH 12 CHUYÊN NGÀNH CHUẨN STUDIO
 
 ```
-[TRẠM 1: PRINCIPAL DESIGNER] ──► Soạn spec.md (Finite State Machine, Edge Cases - CẤM CODE)
-              │
-              ▼
-[TRẠM 2: CHIEF ARCHITECT] ──► Thẩm định Kiến trúc & Bảo mật ──► DUYỆT (hoặc TRẢ VỀ TRẠM 1)
-              │ (Khi đã DUYỆT)
-              ▼
-[TRẠM 3: VP OF ENGINEERING] ──► Phê duyệt Kế hoạch & Điều phối Staff Engineers
-              │
-              ▼
-[TRẠM 4: STAFF ENGINEERS] ──► Code ES6+ Phòng thủ chặt chẽ theo spec.md
-              │
-              ▼
-[TRẠM 5: STATIC AUDITOR] ──► Chạy Terminal: node --check, kiểm tra import graph, liên kết HTML
-              │
-              ▼ (Khi Static Audit PASS)
-[TRẠM 6: SIMULATION DIRECTOR] ──► Khởi chạy Terminal: node 00_BO_MAY_QUAN_TRI/verify_system.mjs
-              │                  (Chạy mô phỏng tải trang, click, phone scroll, chợ, console)
-              │
-              ├──► [CÓ LỖI] ──► [TRẠM 7: ROOT-CAUSE ENGINEERS] Sửa tận gốc ──► Quay lại TRẠM 6
-              │
-              ▼ (Khi 100% PASS - 0 LỖI)
-[TRẠM 8: RELEASE GATE] ──► Trình báo cáo súc tích ──► 🛑 DỪNG LẠI CHỜ LỆNH "SẾP DUYỆT"
-                                                                │
-                                                                ▼ (Sau lệnh "SẾP DUYỆT")
-                                                   Ghi nhận changelog.md ──► Sẵn sàng task mới!
+[1. BRAND DIRECTOR] & [7. GAME ECONOMIST] ──► Định vị Cơm Nắm, Menu 15 vị, Chuẩn ISO/ATVSTP
+                     │
+                     ▼
+[2. MOBILE UX LEAD] & [6. AUDIO DESIGNER] ──► Công thái học 100dvh, Touch ẩn modal, Web Audio
+                     │
+                     ▼
+[3. 3D ART] & [4. CHARACTER] & [5. LIGHTING] ──► Không gian 3D Sài Gòn, Linh vật trong suốt, Ngày/Đêm & Hạt
+                     │
+                     ▼
+[8. CHIEF ARCHITECT] ──► Thẩm định spec.md & Kiểm soát kiến trúc 60fps
+                     │
+                     ▼
+[9. STAFF ENGINEERS] ──► Viết code ES6+ phòng thủ toàn diện
+                     │
+                     ▼
+[10. STATIC AUDITOR] ──► Chạy Terminal: node --check, quét đồ thị import/export
+                     │
+                     ▼ (Khi Static PASS)
+[11. SIMULATION QA]  ──► Khởi chạy: node 00_BO_MAY_QUAN_TRI/verify_system.mjs trên 3 màn hình
+                     │
+                     ├──► [CÓ LỖI] ──► [ROOT-CAUSE ENGINEERS] Sửa tận gốc ──► Chạy lại SIMULATION
+                     │
+                     ▼ (Khi 100% PASS - 0 LỖI)
+[12. RELEASE GATE]   ──► Báo cáo nghiệm thu ──► 🛑 DỪNG LẠI CHỜ LỆNH "SẾP DUYỆT"
+                                                          │
+                                                          ▼ (Sau lệnh "SẾP DUYỆT")
+                                                Ghi changelog.md ──► Sẵn sàng phát hành!
 ```
 
 ---
 
-## 📊 MA TRẬN PHÂN ĐỊNH TRÁCH NHIỆM (RACI MATRIX)
-
-| Công đoạn / Nhiệm vụ | Principal Designer | Chief Architect | VP of Eng | Staff Engineers | Static Auditor | Simulation Director | Root-Cause Engineers | Release Gate |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Đặc tả Toán học & State** | **R / A** | C | I | I | I | I | I | I |
-| **Phê duyệt Kiến trúc & An toàn** | C | **R / A** | C | I | I | I | I | I |
-| **Điều phối & Tự sửa lỗi** | I | C | **R / A** | I | I | I | C | I |
-| **Viết Code Phòng thủ ES6** | I | I | A | **R** | I | I | I | I |
-| **Kiểm toán Cú pháp & Graph** | I | I | A | I | **R** | I | I | I |
-| **Khởi chạy Mô phỏng Thực tế** | I | I | A | I | I | **R** | I | I |
-| **Xử lý Sự cố Gốc rễ (RCA)** | I | C | A | I | I | C | **R** | I |
-| **Nghiệm thu & Chờ Sếp Duyệt** | I | I | C | I | I | I | I | **R / A** |
-
-*(Chú thích: **R** = Responsible [Người trực tiếp thực hiện], **A** = Accountable [Người chịu trách nhiệm cao nhất], **C** = Consulted [Người được tham vấn chuyên môn], **I** = Informed [Người nhận thông tin])*
-
----
-
-**KỶ LUẬT THÉP TẬP ĐOÀN:** Không có chỗ cho sự qua loa, thỏa hiệp hay kiểm tra bằng mắt. Mọi quyết định đều dựa trên dữ liệu mô phỏng tự động thực tế!
+**KỶ LUẬT THÉP STUDIO:** Toàn bộ 12 chuyên ngành đồng tâm hiệp lực, kiến tạo tác phẩm game hoàn hảo nhất trên mọi nền tảng!

@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 11:29:38, 24/11/2026  
+**Thời điểm thực thi:** 13:23:00, 24/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **113** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **113** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **122** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **122** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
@@ -60,6 +60,7 @@
 
 - **[PASS]** `Cú pháp JavaScript: src/audio.js`
 - **[PASS]** `Cú pháp JavaScript: src/characterRenderer.js`
+- **[PASS]** `Cú pháp JavaScript: src/city3D.js`
 - **[PASS]** `Cú pháp JavaScript: src/deliveryMode.js`
 - **[PASS]** `Cú pháp JavaScript: src/kitchenASMR.js`
 - **[PASS]** `Cú pháp JavaScript: src/main.js`
@@ -75,8 +76,8 @@
 - **[PASS]** `Cú pháp JavaScript: server.js`
 - **[PASS]** `Cú pháp JavaScript: server/server.js`
 - **[PASS]** `Đồ thị Module Import/Export: 100% đường dẫn tệp hợp lệ`
-- **[PASS]** `Liên kết HTML-JS: Đầy đủ 32 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
-- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (7 nút) có type="button"`
+- **[PASS]** `Liên kết HTML-JS: Đầy đủ 33 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
+- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (8 nút) có type="button"`
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
 - **[PASS]** `Giao diện Smartphone: .phone-tab-content-wrapper cấu hình overflow-y: auto chuẩn`
@@ -170,6 +171,14 @@
 - **[PASS]** `Mô phỏng Render Bản Đồ 2D: Vẽ linh vật, xe, sạp hàng và bảng tên người chơi trực tuyến trên Canvas hoàn hảo`
 - **[PASS]** `Mô phỏng 2 Người Chơi Thật: Đồng bộ tức thì Player_1 & Player_2 cùng phòng, truyền nhận tọa độ di chuyển chuẩn xác 100%`
 - **[PASS]** `Kiến trúc Canvas-DOM: 100% không render lại innerHTML trong nhịp game 60fps (chỉ dùng textContent)`
+- **[PASS]** `Mô phỏng 3 Kích Thước Màn Hình: Thích ứng hoàn hảo Desktop (1440x900), iPhone (375x812) và iPad (768x1024)`
+- **[PASS]** `Kiểm Tra Va Chạm Giao Diện: Thanh Top HUD và Đèn Báo Online tách biệt hoàn toàn khỏi khung Minimap (Zero Overlap)`
+- **[PASS]** `Công Thái Học Mobile: Phím ảo tự động ẩn hoàn toàn khi mở Bếp ASMR và phục hồi chính xác khi rời bếp`
+- **[PASS]** `Mô phỏng Bếp ASMR Cảm Ứng: Menu 15 vị cuộn ngang 1 dòng gọn gàng, hướng dẫn "CHẠM & GIỮ" và Con dấu vàng ISO & ATVSTP phát sáng`
+- **[PASS]** `Mô phỏng Mỹ Thuật 3D TP.HCM: Khởi tạo Scene 3D Stylized Saigon (Bến Thành, Nguyễn Huệ, Bitexco, Landmark 81, Xưởng ISO, Mưa rào & Hạt) thành công`
+- **[PASS]** `Mô phỏng Linh Vật & Phương Tiện: Linh vật tách nền trong suốt 100% (linh_vat_1.png) và hỗ trợ trọn vẹn 4 cấp phương tiện`
+- **[PASS]** `Mô phỏng Mạng Xã Hội: Gắn tinh tế 2 nút kết nối chính thức Fanpage Facebook & Kênh TikTok trên cả Màn Hình Chào và Điện Thoại iGiri`
+- **[PASS]** `Mô phỏng Âm Thanh ASMR: Bổ sung đủ hiệu ứng Bếp nóng, Rong biển, Còi xe và Nút Bật/Tắt tiếng (Mute/Unmute) tiện ích trên HUD`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

@@ -659,11 +659,23 @@ export class QuestManager {
                             <div class="phone-header-user">
                                 <span class="phone-app-avatar">🍙</span>
                                 <div>
-                                    <h4 class="phone-app-title">Đế Chế Cơm Nắm</h4>
-                                    <small class="phone-app-subtitle" id="phoneAppSubtitle">Cấp ${state.level} • ${state.money.toLocaleString('vi-VN')}đ</small>
+                                    <h4 class="phone-app-title">Đế Chế Cơm Nắm • ISO & ATVSTP</h4>
+                                    <small class="phone-app-subtitle" id="phoneAppSubtitle">Cấp ${state.level} • ${state.money.toLocaleString('vi-VN')}đ • Chuẩn ATVSTP</small>
                                 </div>
                             </div>
                             <button type="button" class="btn-phone-close" id="btnClosePhone" title="Đóng điện thoại">✕</button>
+                        </div>
+
+                        <!-- Kênh Kết Nối Chính Thức Thương Hiệu (Facebook & TikTok) -->
+                        <div class="phone-social-bar">
+                            <a href="https://www.facebook.com/onigiriviet" target="_blank" rel="noopener noreferrer" class="phone-social-btn fb-btn" title="Fanpage Facebook Chính Thức">
+                                <span class="social-icon">📘</span>
+                                <span class="social-label">Fanpage FB</span>
+                            </a>
+                            <a href="https://www.tiktok.com/@comnam_onigiriviet?_r=1&_t=ZS-9BdKFHssRQC" target="_blank" rel="noopener noreferrer" class="phone-social-btn tt-btn" title="Kênh TikTok Chính Thức">
+                                <span class="social-icon">🎵</span>
+                                <span class="social-label">Kênh TikTok</span>
+                            </a>
                         </div>
 
                         <!-- 6 Tab chuyển đổi chức năng iGiri OS -->

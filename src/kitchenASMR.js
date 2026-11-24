@@ -158,11 +158,11 @@ export class KitchenASMR {
         this.bindEvents();
     }
 
-    // --- BƯỚC 1: GIỮ CHUỘT MÚC CƠM & DỪNG TRONG VÙNG XANH ---
+    // --- BƯỚC 1: CHẠM & GIỮ NGÓN TAY MÚC CƠM & DỪNG TRONG VÙNG XANH ---
     renderStep1(filling, isFull, hasIngredients, currentRice, maxCap, batchSize) {
         let warningHtml = '';
         let disabledAttr = '';
-        let btnText = '🥄 NHẤN & GIỮ CHUỘT ĐỂ MÚC CƠM';
+        let btnText = '👆 CHẠM & GIỮ NGÓN TAY ĐỂ MÚC CƠM';
 
         if (isFull) {
             warningHtml = `
@@ -190,8 +190,8 @@ export class KitchenASMR {
                 ${warningHtml}
 
                 <div class="step-instruction">
-                    <h3>Bước 1: Giữ chuột để múc cơm & nhân ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
-                    <p>Nhấn giữ chuột vào nút bên dưới để thanh lực tăng dần. <strong>Thả chuột đúng vùng XANH LÁ</strong> để cơm dẻo chuẩn vị!</p>
+                    <h3>Bước 1: Chạm & Giữ ngón tay để múc cơm & nhân ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
+                    <p>Chạm giữ ngón tay (hoặc chuột) vào nút bên dưới để thanh lực tăng dần. <strong>Thả ngón tay đúng vùng XANH LÁ</strong> để cơm dẻo đạt chuẩn ISO & ATVSTP!</p>
                 </div>
 
                 <div class="power-gauge-wrapper">
@@ -284,6 +284,13 @@ export class KitchenASMR {
         return `
             <div class="step-content animate-pop">
                 <div class="result-banner">
+                    <!-- Con dấu chứng nhận ISO & ATVSTP phát sáng vàng kim -->
+                    <div class="iso-gold-stamp animate-stamp">
+                        <span class="stamp-icon">🛡️</span>
+                        <span class="stamp-text">CHỨNG NHẬN ISO & ATVSTP 100%</span>
+                        <span class="stamp-sub">NGUYÊN LIỆU TƯƠI SẠCH NẤU MỚI MỖI NGÀY</span>
+                    </div>
+
                     <div class="result-stars">${starsText}</div>
                     <h2>TUYỆT TÁC CƠM NẮM RA LÒ!</h2>
                     <div class="result-icon-large">🍙</div>
@@ -483,7 +490,17 @@ export class KitchenASMR {
                         this.lastCookCount = actualAdded > 0 ? actualAdded : 1;
                         state.recordCooked(this.lastCookCount);
                         state.addExp(this.step1Score * 10 * this.lastCookCount);
+                        
+                        // Âm thanh hoàn thành & xèo xèo ấm nóng
                         audio.playTingComplete();
+                        audio.playSizzleHotKitchen();
+
+                        // Phản hồi xúc giác rung nhẹ trên thiết bị cảm ứng Mobile / iPad
+                        try {
+                            if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                                navigator.vibrate(50);
+                            }
+                        } catch (eVib) {}
 
                         this.step = 4;
                         this.render();
