@@ -28,6 +28,8 @@ export class OnlineUIManager {
         this.playerProfileElement = null;
         this.nearbyPlayersElement = null;
         this.btnNearbyPlayers = null;
+        this.btnOpenDirectChat = null;
+        this.unreadChatCount = 0;
         this.sentFriendRequests = new Set();
         this.brandModalElement = null;
         this.pvpInviteElement = null;
@@ -68,6 +70,14 @@ export class OnlineUIManager {
             this.btnNearbyPlayers.onclick = () => {
                 audio.playClick();
                 this.openNearbyModal();
+            };
+        }
+
+        this.btnOpenDirectChat = document.getElementById('btnOpenDirectChat');
+        if (this.btnOpenDirectChat) {
+            this.btnOpenDirectChat.onclick = () => {
+                audio.playClick();
+                this.openDirectChat('global');
             };
         }
 
@@ -123,11 +133,25 @@ export class OnlineUIManager {
             if (this.globalMessages.length > 60) this.globalMessages.shift();
             this.updateFloatingChat(msg);
             this.updateChatContainer();
+
+            const phoneModal = document.getElementById('phoneModal');
+            const isChatOpen = phoneModal && !phoneModal.classList.contains('hidden') && this.activeSubTab === 'chat';
+            if (!isChatOpen) {
+                this.unreadChatCount = (this.unreadChatCount || 0) + 1;
+                this.updateChatBadge(this.unreadChatCount);
+            }
         });
 
         network.on('onPrivateMessage', () => {
             this.updateChatContainer();
             this.showToastNotification('💬 Có tin nhắn riêng mới từ bạn bè!');
+
+            const phoneModal = document.getElementById('phoneModal');
+            const isChatOpen = phoneModal && !phoneModal.classList.contains('hidden') && this.activeSubTab === 'chat';
+            if (!isChatOpen) {
+                this.unreadChatCount = (this.unreadChatCount || 0) + 1;
+                this.updateChatBadge(this.unreadChatCount);
+            }
         });
 
         network.on('onChatHistory', (messages) => {
@@ -498,8 +522,8 @@ export class OnlineUIManager {
     renderGlobalChatView() {
         const quickPhrases = [
             '🍙 Chào cả nhà!',
-            '🚚 Ai góp đơn đại tiệc không?',
-            '⚔️ Làm ván 1v1 nào!',
+            '🚚 Góp đơn đại tiệc nào!',
+            '⚔️ Làm ván 1v1 không?',
             '✨ Chúc buôn may bán đắt!'
         ];
 
@@ -598,6 +622,14 @@ export class OnlineUIManager {
                                 <div class="cmr-bubble">${m.text}</div>
                             </div>
                         `).join('')}
+                    </div>
+
+                    <!-- Hàng nút gửi câu nhanh 1 chạm công thái học Mobile -->
+                    <div class="chat-quick-phrases">
+                        <button type="button" class="btn-quick-phrase" data-phrase="🍙 Chào cả nhà!">🍙 Chào bạn!</button>
+                        <button type="button" class="btn-quick-phrase" data-phrase="🚚 Góp đơn đại tiệc nào!">🚚 Góp đơn tiệc nhé!</button>
+                        <button type="button" class="btn-quick-phrase" data-phrase="⚔️ Làm ván 1v1 không?">⚔️ Làm ván 1v1 không?</button>
+                        <button type="button" class="btn-quick-phrase" data-phrase="✨ Chúc buôn may bán đắt!">✨ Buôn may bán đắt!</button>
                     </div>
 
                     <div class="chat-input-row">
@@ -1249,13 +1281,52 @@ export class OnlineUIManager {
         }
 
         if (container) {
-            container.onclick = () => {
-                if (window.game?.questManager) {
-                    window.game.questManager.open('online');
-                    this.activeSubTab = 'chat';
-                    window.game.questManager.render();
-                }
+            container.onclick = (e) => {
+                e.stopPropagation();
+                this.openDirectChat('global');
             };
+        }
+    }
+
+    // Mở thẳng giao diện Chat đầy đủ 1 chạm không qua nhiều tầng menu
+    openDirectChat(channel = 'global') {
+        this.chatChannel = channel;
+        this.activeSubTab = 'chat';
+        this.unreadChatCount = 0;
+        this.updateChatBadge(0);
+
+        // [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Tự động ẩn cụm phím ảo điều khiển xe để bàn phím ảo hiển thị thoáng đãng
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
+        // Mở thẳng tab Online và render ngay khung Chat
+        if (window.game && window.game.questManager) {
+            window.game.questManager.activeTab = 'online';
+            window.game.questManager.open('online');
+            this.activeSubTab = 'chat';
+            window.game.questManager.render();
+        }
+
+        setTimeout(() => {
+            const chatBox = document.getElementById('globalChatBox') || document.getElementById('privateChatBox');
+            if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+            const inputChat = document.getElementById('inputChatGlobal') || document.getElementById('inputChatPrivate');
+            if (inputChat) {
+                inputChat.focus();
+            }
+        }, 120);
+    }
+
+    // Cập nhật huy hiệu chấm đỏ số tin nhắn mới trên nút Chat HUD
+    updateChatBadge(count) {
+        const badge = document.getElementById('hudChatBadge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
         }
     }
 
@@ -1442,7 +1513,11 @@ export class OnlineUIManager {
             btn.onclick = () => {
                 audio.playClick();
                 const text = btn.dataset.phrase;
-                network.sendChatMessage(text, 'global');
+                if (this.chatChannel === 'friends' && this.selectedFriendId) {
+                    network.sendChatMessage(text, 'private', this.selectedFriendId);
+                } else {
+                    network.sendChatMessage(text, 'global');
+                }
             };
         });
 
@@ -1461,6 +1536,7 @@ export class OnlineUIManager {
         if (btnSendGlobal) btnSendGlobal.onclick = sendGlobalHandler;
         if (inputGlobal) {
             inputGlobal.onkeydown = (e) => {
+                e.stopPropagation();
                 if (e.key === 'Enter') sendGlobalHandler();
             };
         }
@@ -1480,6 +1556,7 @@ export class OnlineUIManager {
         if (btnSendPrivate) btnSendPrivate.onclick = sendPrivateHandler;
         if (inputPrivate) {
             inputPrivate.onkeydown = (e) => {
+                e.stopPropagation();
                 if (e.key === 'Enter') sendPrivateHandler();
             };
         }

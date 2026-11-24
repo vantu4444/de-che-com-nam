@@ -1042,12 +1042,25 @@ export class OnigiriServer {
 
     // [HỆ THỐNG TRÒ CHUYỆN]
     handleChatMessage(senderId, data) {
-        const sender = this.players.get(senderId);
-        if (!sender) return;
+        let sender = this.players.get(senderId);
+        if (!sender && this.persistentPlayers) {
+            const pId = this.socketToPlayerId?.get(senderId);
+            if (pId) sender = this.persistentPlayers.get(pId);
+        }
+        if (!sender) {
+            sender = {
+                id: senderId,
+                brandName: (data && data.senderName) ? String(data.senderName).slice(0, 30) : 'Chủ Tiệm #' + String(senderId).slice(0, 4),
+                level: Number(data?.senderLevel) || 1,
+                city: data?.city || SERVER_CONFIG.DEFAULT_CITY
+            };
+            this.players.set(senderId, sender);
+        }
 
         const rawText = String(data?.text || '').trim();
         if (rawText.length === 0) return;
         const text = rawText.slice(0, 120);
+        console.log(`[CHAT LOG] From ${sender.brandName} (${senderId}): "${text}" (channel: ${data?.channel || 'global'})`);
 
         if (data?.channel === 'private') {
             const targetId = data?.targetId;

@@ -744,7 +744,9 @@ function runStaticAuditorSuite() {
         'onlineToastNotification',
         'startBranchSelect',
         'startPhoneInput',
-        'stallLegalTag'
+        'stallLegalTag',
+        'btnOpenDirectChat',
+        'hudChatBadge'
     ];
 
     let idsOk = true;
@@ -2973,6 +2975,24 @@ async function runInteractiveSimulationSuite() {
         } else {
             logger.fail('Mô phỏng Bảng Xếp Hạng Tỷ Phú: Lỗi sắp xếp tài sản hoặc huy chương', JSON.stringify({ bilLengthOk, bilSortedOk, bilMedalsOk }));
         }
+
+        // 8d. Kiểm tra Nút Mở Chat Trực Tiếp 1 Chạm & Ẩn Phím Ảo
+        const { onlineUI: testOnlineUI } = await import(path.join(ROOT_DIR, 'src', 'onlineUI.js'));
+        const virtControls = doc.getElementById('virtualTouchControls');
+        if (virtControls) virtControls.classList.remove('hidden');
+
+        testOnlineUI.openDirectChat('global');
+        const phoneModalChatEl = doc.getElementById('phoneModal');
+        const isPhoneOpenForChat = phoneModalChatEl && !phoneModalChatEl.classList.contains('hidden');
+        const isVirtualHiddenOnChat = virtControls && virtControls.classList.contains('hidden');
+        const isSubTabChat = testOnlineUI.activeSubTab === 'chat';
+
+        if (isPhoneOpenForChat && isVirtualHiddenOnChat && isSubTabChat) {
+            logger.pass('Mô phỏng Mở Chat Trực Tiếp 1 Chạm: Bấm nút Chat trên HUD mở thẳng khung Chat, ẩn phím ảo di chuyển để bàn phím thoáng đãng');
+        } else {
+            logger.fail('Mô phỏng Mở Chat Trực Tiếp: Thất bại', JSON.stringify({ isPhoneOpenForChat, isVirtualHiddenOnChat, isSubTabChat }));
+        }
+        if (gameApp.questManager) gameApp.questManager.close();
     } catch (errSync2P) {
         logger.fail('Mô phỏng 2 Người Chơi Thật: Ngoại lệ', errSync2P.message);
     }

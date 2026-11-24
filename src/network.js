@@ -703,7 +703,10 @@ export class NetworkManager {
             this.socket.emit('chat:message', {
                 channel,
                 targetId,
-                text: clean
+                text: clean,
+                senderName: state.brandName || 'Bạn',
+                senderLevel: state.level || 1,
+                city: state.currentCity || 'hcm'
             });
         } else {
             // Mô phỏng trò chuyện Offline
@@ -958,11 +961,12 @@ export class NetworkManager {
         }
     }
 
-    // Đăng ký sự kiện
+    // Đăng ký sự kiện (tự động khởi tạo mảng nếu chưa có)
     on(event, fn) {
-        if (this.listeners[event]) {
-            this.listeners[event].push(fn);
+        if (!this.listeners[event]) {
+            this.listeners[event] = [];
         }
+        this.listeners[event].push(fn);
     }
 
     emitEvent(event, data) {

@@ -380,6 +380,11 @@ export class QuestManager {
         }
         this.isOpen = true;
         this.container.classList.remove('hidden');
+
+        // [KỸ SƯ CẢM ỨNG & BÀN PHÍM ẢO] Ẩn phím ảo ngoài phố để màn hình thoáng đãng
+        const virtualControls = document.getElementById('virtualTouchControls');
+        if (virtualControls) virtualControls.classList.add('hidden');
+
         audio.playClick();
         this.render();
     }
@@ -387,6 +392,16 @@ export class QuestManager {
     close() {
         this.isOpen = false;
         this.container.classList.add('hidden');
+
+        // Phục hồi lại cụm phím ảo nếu đang ở chế độ cảm ứng
+        const virtualControls = document.getElementById('virtualTouchControls');
+        const touchBtn = document.getElementById('btnToggleTouch');
+        const isTouchActive = touchBtn && touchBtn.classList.contains('active');
+        const isTouchDevice = (typeof window !== 'undefined') && (('ontouchstart' in window) || (navigator.maxTouchPoints > 0));
+        if (virtualControls && (isTouchActive || isTouchDevice)) {
+            virtualControls.classList.remove('hidden');
+        }
+
         audio.playClick();
     }
 

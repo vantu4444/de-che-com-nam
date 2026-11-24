@@ -60,6 +60,13 @@ class GameApp {
             document.getElementById('phoneTriggerBtn')
         );
 
+        this.network = network;
+        this.onlineUI = onlineUI;
+        if (typeof window !== 'undefined') {
+            window.network = network;
+            window.onlineUI = onlineUI;
+        }
+
         this.init();
     }
 

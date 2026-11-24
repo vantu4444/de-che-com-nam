@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 17:07:11, 24/11/2026  
+**Thời điểm thực thi:** 19:22:55, 24/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **138** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **138** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **139** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **139** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
@@ -74,8 +74,8 @@
 - **[PASS]** `Cú pháp JavaScript: server.js`
 - **[PASS]** `Cú pháp JavaScript: server/server.js`
 - **[PASS]** `Đồ thị Module Import/Export: 100% đường dẫn tệp hợp lệ`
-- **[PASS]** `Liên kết HTML-JS: Đầy đủ 44 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
-- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (9 nút) có type="button"`
+- **[PASS]** `Liên kết HTML-JS: Đầy đủ 46 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
+- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (10 nút) có type="button"`
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
 - **[PASS]** `Giao diện Smartphone: .phone-tab-content-wrapper cấu hình overflow-y: auto chuẩn`
@@ -179,6 +179,7 @@
 - **[PASS]** `Mô phỏng Thách Đấu 1v1 Đồng Ý: Player_A mời -> Player_B đồng ý -> Ghép vào cùng phòng 1v1 và đồng bộ điểm real-time khi thao tác`
 - **[PASS]** `Mô phỏng Kết Bạn & Chat: Gửi/nhận lời mời kết bạn thành công -> Trò chuyện 1-1 gửi nhận chuỗi văn bản có dấu cách ("Chào bạn Cơm Nắm Sài Gòn") trọn vẹn`
 - **[PASS]** `Mô phỏng Bảng Xếp Hạng Tỷ Phú: Sắp xếp theo Tổng Tài Sản Ròng giảm dần 100%, vinh danh Huy chương Top 1-2-3 (Vàng, Bạc, Đồng) và hỗ trợ lọc chi nhánh`
+- **[PASS]** `Mô phỏng Mở Chat Trực Tiếp 1 Chạm: Bấm nút Chat trên HUD mở thẳng khung Chat, ẩn phím ảo di chuyển để bàn phím thoáng đãng`
 - **[PASS]** `Kiến trúc Canvas-DOM: 100% không render lại innerHTML trong nhịp game 60fps (chỉ dùng textContent)`
 - **[PASS]** `Mô phỏng 3 Kích Thước Màn Hình: Thích ứng hoàn hảo Desktop (1440x900), iPhone (375x812) và iPad (768x1024)`
 - **[PASS]** `Kiểm Tra Va Chạm Giao Diện: Thanh Top HUD và Đèn Báo Online tách biệt hoàn toàn khỏi khung Minimap (Zero Overlap)`
