@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 15:11:19, 26/11/2026  
+**Thời điểm thực thi:** 15:24:51, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **157** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **156** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **159** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **158** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **1** | **0** | ❌ Cần khắc phục |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **99.4%** | **100.0%** | ❌ Không đạt |
@@ -90,6 +90,8 @@
 - **[PASS]** `HTTP Route /assets/Ba%CC%89n%20sao%20logo.JPG` - *Status: 200, Content-Type: image/jpeg*
 - **[PASS]** `HTTP Route /../etc/passwd` - *Status: 403, Content-Type: text/plain*
 - **[PASS]** `HTTP Route /non_existent_file.xyz` - *Status: 404, Content-Type: text/plain*
+- **[PASS]** `Cấu hình Khởi Chạy Root package.json` - *scripts.start = "node server.js" chuẩn Render & Production*
+- **[PASS]** `Bảo Mật Trang Quản Trị /admin & Xuất File Excel CSV` - *Màn hình khóa PIN 202688 tuyệt đối, chặn truy cập trái phép 401, xuất file .CSV kèm mã UTF-8 BOM chuẩn font tiếng Việt 100%*
 - **[PASS]** `Nạp & Khởi tạo GameApp: Thành công không phát sinh lỗi`
 - **[PASS]** `Mô phỏng Màn hình bắt đầu: Click #btnStartGame chuyển màn hình mượt mà`
 - **[PASS]** `Mô phỏng Smartphone: Mở iGiri OS thành công qua click #phoneTriggerBtn`
@@ -138,7 +140,7 @@
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: One-Shot Trigger 100% trừ phạt đúng 1 lần, reset heat=0, đóng sạp, vòng lặp chạy mượt & nhân vật di chuyển bình thường`
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() chạy 100% ổn định mượt mà qua ngưỡng phạt 100%, canMove=true không bao giờ đơ game`
 - **[PASS]** `Mô phỏng Ô Vạch Xanh Trường Học: Đứng tâm (790, 625) bán 10s an toàn 100%, huy hiệu xanh sáng, 0 lần bị phạt, tiền tăng chuẩn giá 20.000đ`
-- **[FAIL]** `Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại` - *{"totalSpawned":4,"customerArrivedAtStall":true,"renderWithoutError":true,"sellSuccess":false,"inventoryDecreased":false,"moneyDiff":96000,"happyCustomerOnigiri":false}*
+- **[FAIL]** `Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại` - *{"totalSpawned":4,"customerArrivedAtStall":true,"renderWithoutError":true,"sellSuccess":false,"inventoryDecreased":false,"moneyDiff":115500,"happyCustomerOnigiri":false}*
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Cấu hình ban đầu chuẩn xác (TP.HCM mở sẵn Cấp 1, 3 tỉnh sẵn sàng mở rộng)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở Đắk Lắk khi chưa đạt Level 8 (dù có 20tr trong ví)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở chi nhánh khi không đủ 15.000.000đ (ví không bị trừ âm)`

@@ -4,7 +4,7 @@
   "description": "Đế Chế Cơm Nắm - 2D Open World Onigiri Empire Game",
   "type": "module",
   "scripts": {
-    "start": "npx serve -l 3000 ."
+    "start": "node server.js"
   },
   "keywords": ["game", "canvas", "asmr", "onigiri", "vietnamese"],
   "author": "Antigravity",

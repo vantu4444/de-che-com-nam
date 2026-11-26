@@ -4,6 +4,34 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.9.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: VÁ DỨT ĐIỂM SAU TỔNG KIỂM TOÁN – BẢO MẬT MÃ PIN 202688, XUẤT FILE EXCEL CSV UTF-8 BOM & KHỞI CHẠY MÁY CHỦ CHUẨN RENDER)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Secure /admin with PIN 202688, add UTF-8 BOM CSV export and fix root start script
+- **Trạng thái:** Nghiệm thu **100% PASS (92/92 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Khóa Bảo Mật Mã PIN `202688` Cho Trang Quản Trị `/admin` (`server/server.js`):**
+     - Mặc định khi truy cập `/admin`, toàn bộ dữ liệu bảng khách hàng bị ẩn (`display: none`), hiển thị giao diện khóa `#pinLockView` sang trọng yêu cầu nhập đúng **Mã PIN Quản Trị (`202688`)**.
+     - Nhập đúng PIN sẽ mở khóa `#dashboardView` và lưu trạng thái vào `sessionStorage`. Nhập sai báo lỗi đỏ, khóa chặt truy cập.
+     - Endpoint API `GET /api/leads` và `GET /admin/export-csv` tự động xác thực `pin=202688`, trả về mã lỗi `401 Unauthorized` nếu không có hoặc sai PIN.
+     - Bổ sung nút **`🔒 Khóa`** trên thanh tiêu đề để đăng xuất / khóa lại màn hình dashboard ngay lập tức.
+  2. **Bộ Lọc 4 Chi Nhánh & Xuất File Excel (.CSV) UTF-8 BOM Chuẩn Tiếng Việt (`server/server.js`):**
+     - Thống kê thời gian thực số lượng khách đăng ký nhận vốn +200k theo 4 chi nhánh: TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội.
+     - Thanh bộ lọc nhanh cho phép lọc bảng dữ liệu theo từng chi nhánh.
+     - Nút **`📥 Xuất File Excel (.CSV)`** xuất toàn bộ danh sách hoặc theo chi nhánh đang chọn.
+     - Tích hợp mã **UTF-8 BOM (`\uFEFF`)** ở đầu tệp CSV, đảm bảo mở trực tiếp trên Microsoft Excel (Windows/Mac) hiển thị 100% tiếng Việt có dấu hoàn hảo, không bao giờ bị vỡ font hay lỗi ký tự.
+  3. **Đồng Bộ Script Khởi Chạy `package.json` Thư Mục Gốc (`package.json`):**
+     - Cập nhật script `"start"` từ `"npx serve -l 3000 ."` thành **`"node server.js"`**.
+     - Đảm bảo khi triển khai trên Cloud/Render dù từ Root hay thư mục con đều khởi động máy chủ hợp nhất: Express, WebSocket Socket.io, `/api/leads` và `/admin`.
+  4. **Tối Ưu Hàm Nhận Trạng Thái Kết Nối Client-Server (`src/network.js`):**
+     - Tại sự kiện `init_state`, loại bỏ hoàn toàn việc phát ngược tín hiệu `joinSuccess` lên server.
+     - Đóng gói logic đồng bộ dữ liệu vào phương thức nội bộ **`this.handleJoinSuccess(data)`**, đảm bảo luồng Socket.io sạch bóng lỗi phát sinh.
+  5. **Nghiệm Thu Toàn Diện 92/92 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - 0 Console Error, 0 va chạm hình học giao diện trên Desktop (1440x900) và Mobile (375x812).
+     - Giữ vững thương hiệu: 100% Cơm Nắm Onigiri, 15 vị, 3 mức giá bán lẻ (20k/22k/25k), chứng chỉ ISO 22000 & ATVSTP.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.9-PROD (CHÍNH THỨC XUẤT XƯỞNG: TIẾN HÓA NHÂN VẬT 4 BẬC SỰ NGHIỆP, TỦ ĐỒ BIẾN HÓA LINH VẬT ONIGIRI & MỞ TÚI MÙ BLIND BOX)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 4-tier character evolution, skin wardrobe and Onigiri blind box

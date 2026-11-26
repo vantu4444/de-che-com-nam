@@ -899,6 +899,105 @@ async function runServerAuditorSuite() {
         }
     }
 
+    // Kiểm tra cấu hình khởi chạy package.json ở thư mục gốc
+    try {
+        const pkgRaw = fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf-8');
+        const pkgJson = JSON.parse(pkgRaw);
+        if (pkgJson.scripts && pkgJson.scripts.start === 'node server.js') {
+            logger.pass('Cấu hình Khởi Chạy Root package.json', 'scripts.start = "node server.js" chuẩn Render & Production');
+        } else {
+            serverOk = false;
+            logger.fail('Cấu hình Khởi Chạy Root package.json', `scripts.start hiện tại: "${pkgJson.scripts?.start}", kỳ vọng: "node server.js"`);
+        }
+    } catch (ePkg) {
+        serverOk = false;
+        logger.fail('Kiểm tra package.json', ePkg.message);
+    }
+
+    // Kiểm tra Bảo Mật Mã PIN 202688 & Xuất File Excel (.CSV) của Trang Quản Trị /admin
+    try {
+        const { OnigiriServer } = await import(path.join(ROOT_DIR, 'server', 'server.js'));
+        const mockAdminServer = new OnigiriServer(4001, '127.0.0.1');
+
+        // Giả lập 4 leads cho 4 chi nhánh
+        mockAdminServer.leads = [
+            { phone: '0901111111', brandName: 'Tiệm Sài Gòn', city: 'hcm', timestamp: new Date().toISOString() },
+            { phone: '0902222222', brandName: 'Tiệm Buôn Ma Thuột', city: 'daklak', timestamp: new Date().toISOString() },
+            { phone: '0903333333', brandName: 'Tiệm Vinh', city: 'vinh', timestamp: new Date().toISOString() },
+            { phone: '0904444444', brandName: 'Tiệm Hà Đông', city: 'hanoi', timestamp: new Date().toISOString() }
+        ];
+
+        // 1. Kiểm tra HTML trang /admin có màn hình khóa PIN
+        const adminHtml = mockAdminServer.renderAdminDashboard();
+        const hasPinLock = adminHtml.includes('id="pinLockView"') &&
+                           adminHtml.includes('id="inputPin"') &&
+                           adminHtml.includes('202688') &&
+                           adminHtml.includes('id="dashboardView"') &&
+                           adminHtml.includes('btnExportCsv');
+
+        // Hàm giả lập request vào OnigiriServer
+        const { EventEmitter } = await import('events');
+        const mockServerRequest = (pathStr, method = 'GET') => {
+            return new Promise((resolve) => {
+                const req = new EventEmitter();
+                req.url = pathStr;
+                req.method = method;
+                req.headers = { host: '127.0.0.1:4001' };
+
+                let statusCode = 200;
+                let headers = {};
+                let resBody = '';
+
+                const res = {
+                    setHeader: (k, v) => { headers[k] = v; },
+                    writeHead: (code, hdrs) => { statusCode = code; Object.assign(headers, hdrs); },
+                    end: (data) => {
+                        resBody = data || '';
+                        resolve({ statusCode, headers, body: resBody });
+                    }
+                };
+
+                mockAdminServer.handleHttpRequest(req, res);
+                req.emit('end');
+            });
+        };
+
+        // 2. Kiểm tra chặn API /api/leads khi chưa có PIN hoặc sai PIN
+        const resLeadsNoPin = await mockServerRequest('/api/leads');
+        const isLeadsBlocked = resLeadsNoPin.statusCode === 401;
+
+        // 3. Kiểm tra mở API /api/leads khi nhập đúng PIN 202688
+        const resLeadsWithPin = await mockServerRequest('/api/leads?pin=202688');
+        const leadsData = JSON.parse(resLeadsWithPin.body || '{}');
+        const isLeadsAllowed = resLeadsWithPin.statusCode === 200 && leadsData.count === 4;
+
+        // 4. Kiểm tra chặn Xuất CSV khi sai PIN
+        const resCsvWrongPin = await mockServerRequest('/admin/export-csv?pin=wrong');
+        const isCsvBlocked = resCsvWrongPin.statusCode === 401;
+
+        // 5. Kiểm tra Xuất File Excel (.CSV) UTF-8 BOM chuẩn tiếng Việt khi đúng PIN 202688
+        const resCsvValid = await mockServerRequest('/admin/export-csv?pin=202688&city=all');
+        const isCsvValid = resCsvValid.statusCode === 200 &&
+                           (resCsvValid.headers['Content-Type'] || '').includes('text/csv') &&
+                           resCsvValid.body.startsWith('\uFEFF') &&
+                           resCsvValid.body.includes('Tiệm Sài Gòn') &&
+                           resCsvValid.body.includes('Tiệm Buôn Ma Thuột') &&
+                           resCsvValid.body.includes('Tiệm Vinh') &&
+                           resCsvValid.body.includes('Tiệm Hà Đông');
+
+        if (hasPinLock && isLeadsBlocked && isLeadsAllowed && isCsvBlocked && isCsvValid) {
+            logger.pass('Bảo Mật Trang Quản Trị /admin & Xuất File Excel CSV', 'Màn hình khóa PIN 202688 tuyệt đối, chặn truy cập trái phép 401, xuất file .CSV kèm mã UTF-8 BOM chuẩn font tiếng Việt 100%');
+        } else {
+            serverOk = false;
+            logger.fail('Bảo Mật Trang Quản Trị /admin & Xuất File Excel CSV', JSON.stringify({
+                hasPinLock, isLeadsBlocked, isLeadsAllowed, isCsvBlocked, isCsvValid
+            }));
+        }
+    } catch (eAdminTest) {
+        serverOk = false;
+        logger.fail('Kiểm tra Bảo Mật /admin', eAdminTest.message);
+    }
+
     return serverOk;
 }
 

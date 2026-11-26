@@ -230,43 +230,50 @@ export class NetworkManager {
         this.spawnBotsForCity(state.currentCity);
     }
 
+    handleJoinSuccess(data) {
+        if (!data) return;
+        if (data.selfId) this.selfId = data.selfId;
+        if (data.players && Array.isArray(data.players)) {
+            this.otherPlayers.clear();
+            data.players.forEach(p => {
+                if (p.id !== this.selfId) {
+                    this.otherPlayers.set(p.id, p);
+                }
+            });
+            this.notifyPlayers();
+            this.updateHudOnlineStatus();
+        }
+        if (data.coopOrder) {
+            this.coopOrder = data.coopOrder;
+            this.notifyCoop();
+        }
+        if (data.leaderboard) {
+            this.leaderboard = data.leaderboard;
+        }
+        if (data.territories && Array.isArray(data.territories)) {
+            data.territories.forEach(t => this.territories.set(t.id, t));
+        }
+        if (data.exclusiveContract) {
+            this.exclusiveContract = data.exclusiveContract;
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.updateExclusiveContract(data.exclusiveContract);
+            }
+        }
+    }
+
     setupSocketListeners() {
         if (!this.socket) return;
 
         // Người chơi mới nhận danh sách phòng và dữ liệu thế giới
         this.socket.on('joinSuccess', (data) => {
-            if (data?.selfId) this.selfId = data.selfId;
-            if (data?.players && Array.isArray(data.players)) {
-                this.otherPlayers.clear();
-                data.players.forEach(p => {
-                    if (p.id !== this.selfId) {
-                        this.otherPlayers.set(p.id, p);
-                    }
-                });
-                this.notifyPlayers();
-                this.updateHudOnlineStatus();
-            }
-            if (data?.coopOrder) {
-                this.coopOrder = data.coopOrder;
-                this.notifyCoop();
-            }
-            if (data?.leaderboard) {
-                this.leaderboard = data.leaderboard;
-            }
-            if (data?.territories && Array.isArray(data.territories)) {
-                data.territories.forEach(t => this.territories.set(t.id, t));
-            }
-            if (data?.exclusiveContract) {
-                this.exclusiveContract = data.exclusiveContract;
-                if (typeof window !== 'undefined' && window.onlineUI) {
-                    window.onlineUI.updateExclusiveContract(data.exclusiveContract);
-                }
-            }
+            this.handleJoinSuccess(data);
         });
 
         // Tương thích ngược sự kiện init_state
         this.socket.on('init_state', (data) => {
-            if (data?.players) this.socket.emit('joinSuccess', data);
+            if (data?.players) {
+                this.handleJoinSuccess(data);
+            }
         });
 
         // Người chơi mới gia nhập phòng

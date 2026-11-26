@@ -277,10 +277,55 @@ export class OnigiriServer {
                 });
                 return;
             } else if (req.method === 'GET') {
+                const pin = parsedUrl.searchParams.get('pin');
+                if (pin !== '202688') {
+                    res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ success: false, error: 'Mã PIN Quản Trị không chính xác (Yêu cầu PIN 202688)' }));
+                    return;
+                }
+                const cityFilter = parsedUrl.searchParams.get('city') || 'all';
+                let filtered = this.leads;
+                if (cityFilter !== 'all') {
+                    filtered = this.leads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === cityFilter.toLowerCase().replace('branch_', ''));
+                }
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: true, count: this.leads.length, leads: this.leads }));
+                res.end(JSON.stringify({ success: true, count: filtered.length, leads: filtered }));
                 return;
             }
+        }
+
+        // 4.5. Endpoint Xuất File Excel (.CSV) UTF-8 BOM Chuẩn Tiếng Việt
+        if (pathname === '/admin/export-csv') {
+            const pin = parsedUrl.searchParams.get('pin');
+            if (pin !== '202688') {
+                res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: false, error: 'Mã PIN Quản Trị không chính xác (Yêu cầu PIN 202688)' }));
+                return;
+            }
+            const cityFilter = (parsedUrl.searchParams.get('city') || 'all').toLowerCase().replace('branch_', '');
+            let filtered = this.leads;
+            if (cityFilter !== 'all') {
+                filtered = this.leads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === cityFilter);
+            }
+
+            // UTF-8 BOM (\uFEFF) giúp Microsoft Excel tự động nhận diện tiếng Việt có dấu không bị vỡ font
+            const BOM = '\uFEFF';
+            let csv = BOM + 'STT,Số Điện Thoại,Tên Thương Hiệu,Chi Nhánh,Thời Gian Đăng Ký\r\n';
+            filtered.forEach((l, idx) => {
+                const safePhone = String(l.phone || '').replace(/"/g, '""');
+                const safeBrand = String(l.brandName || 'Tiệm Cơm Nắm').replace(/"/g, '""');
+                const cityName = this.formatCityName(l.city);
+                const safeTime = new Date(l.timestamp).toLocaleString('vi-VN');
+                csv += `"${idx + 1}","${safePhone}","${safeBrand}","${cityName}","${safeTime}"\r\n`;
+            });
+
+            const fileName = `leads_onigiri_${cityFilter}_${Date.now()}.csv`;
+            res.writeHead(200, {
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': `attachment; filename="${fileName}"`
+            });
+            res.end(csv);
+            return;
         }
 
         // 5. Trang Quản Trị Hệ Thống /admin
@@ -1638,16 +1683,17 @@ export class OnigiriServer {
 `;
     }
 
+    formatCityName(city) {
+        const c = String(city || '').toLowerCase().replace('branch_', '');
+        if (c === 'hcm') return 'TP. Hồ Chí Minh';
+        if (c === 'daklak') return 'Đắk Lắk';
+        if (c === 'vinh') return 'TP. Vinh';
+        if (c === 'hanoi') return 'Hà Nội';
+        return city || 'Toàn Quốc';
+    }
+
     renderAdminDashboard() {
-        const rows = this.leads.map((l, i) => `
-            <tr>
-                <td>${i + 1}</td>
-                <td><strong>${l.brandName || 'Tiệm Cơm Nắm'}</strong></td>
-                <td><a href="tel:${l.phone}" style="color: #f97316; font-weight: bold;">${l.phone}</a></td>
-                <td>📍 ${l.city ? l.city.toUpperCase() : 'TP.HCM'}</td>
-                <td>${new Date(l.timestamp).toLocaleString('vi-VN')}</td>
-            </tr>
-        `).join('');
+        const rawLeadsJson = JSON.stringify(this.leads || []);
 
         return `<!DOCTYPE html>
 <html lang="vi">
@@ -1656,46 +1702,388 @@ export class OnigiriServer {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Trị Hệ Thống - Đế Chế Cơm Nắm</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; margin: 0; }
-        .admin-card { max-width: 960px; margin: 0 auto; background: #1e293b; border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #334155; padding-bottom: 16px; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 24px; color: #f97316; }
-        .badge { background: #f97316; color: #fff; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 12px 14px; border-bottom: 1px solid #334155; }
-        th { background: #0f172a; color: #94a3b8; font-size: 13px; text-transform: uppercase; }
-        tr:hover { background: rgba(249, 115, 22, 0.08); }
-        .btn-back { display: inline-block; background: #334155; color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .btn-back:hover { background: #f97316; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 24px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-wrapper { width: 100%; max-width: 1060px; margin: 0 auto; }
+        
+        /* 1. Màn hình Khóa PIN */
+        .pin-lock-card {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 20px;
+            padding: 40px 32px;
+            max-width: 440px;
+            margin: 0 auto;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+        .pin-icon { font-size: 54px; margin-bottom: 12px; }
+        .pin-title { font-size: 22px; font-weight: 800; color: #f97316; margin: 0 0 8px; }
+        .pin-subtitle { font-size: 13px; color: #94a3b8; margin: 0 0 24px; line-height: 1.5; }
+        .pin-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 20px;
+            text-align: center;
+            letter-spacing: 6px;
+            background: #0f172a;
+            border: 2px solid #475569;
+            border-radius: 12px;
+            color: #f8fafc;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 16px;
+        }
+        .pin-input:focus { border-color: #f97316; }
+        .btn-unlock {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+            transition: transform 0.1s, filter 0.1s;
+        }
+        .btn-unlock:active { transform: scale(0.98); }
+        .pin-error { color: #ef4444; font-size: 13px; font-weight: 600; margin-top: 12px; min-height: 20px; }
+        .btn-game-return { display: inline-block; margin-top: 20px; color: #64748b; font-size: 13px; text-decoration: none; }
+        .btn-game-return:hover { color: #94a3b8; text-decoration: underline; }
+
+        /* 2. Màn hình Bảng Điều Khiển (Dashboard) */
+        .dashboard-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header-title h1 { margin: 0; font-size: 24px; color: #f97316; display: flex; align-items: center; gap: 8px; }
+        .header-title p { margin: 6px 0 0; color: #94a3b8; font-size: 13px; }
+        .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+        }
+        .btn-export {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+        .btn-export:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-lock { background: #334155; color: #cbd5e1; }
+        .btn-lock:hover { background: #475569; color: #ffffff; }
+
+        /* Thống kê 4 chi nhánh */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+        .stat-card small { color: #94a3b8; font-size: 11px; text-transform: uppercase; font-weight: 700; }
+        .stat-card .val { font-size: 22px; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+        .stat-card.hcm .val { color: #38bdf8; }
+        .stat-card.daklak .val { color: #facc15; }
+        .stat-card.vinh .val { color: #fb923c; }
+        .stat-card.hanoi .val { color: #f472b6; }
+
+        /* Bộ lọc chi nhánh */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background: #0f172a;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-btn.active {
+            background: #f97316;
+            border-color: #f97316;
+            color: #ffffff;
+        }
+
+        /* Bảng dữ liệu */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; text-align: left; background: #0f172a; }
+        th, td { padding: 14px 16px; border-bottom: 1px solid #1e293b; font-size: 13.5px; }
+        th { background: #0b1120; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: rgba(249, 115, 22, 0.05); }
+        .phone-link { color: #f97316; font-weight: 700; text-decoration: none; }
+        .phone-link:hover { text-decoration: underline; }
+        .city-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+        }
+
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <div class="admin-card">
-        <div class="header">
+    <div class="admin-wrapper">
+        <!-- 1. MÀN HÌNH KHÓA MÃ PIN BẢO MẬT -->
+        <div id="pinLockView" class="pin-lock-card">
+            <div class="pin-icon">🍙</div>
+            <h2 class="pin-title">ĐẾ CHẾ CƠM NẮM</h2>
+            <p class="pin-subtitle">Khu vực bảo mật Quản Trị Hệ Thống. Vui lòng nhập Mã PIN Quản Trị (6 số) để tiếp tục.</p>
+            <input type="password" id="inputPin" class="pin-input" maxlength="6" placeholder="••••••" autofocus />
+            <button type="button" id="btnSubmitPin" class="btn-unlock">🔓 Mở Khóa Quản Trị</button>
+            <div id="pinErrorMsg" class="pin-error"></div>
             <div>
-                <h1>🍙 Quản Trị Khách Hàng / Leads</h1>
-                <p style="margin: 4px 0 0; color: #94a3b8; font-size: 13px;">Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ Màn hình chào</p>
-            </div>
-            <div>
-                <span class="badge">Tổng số: ${this.leads.length} khách</span>
-                <a href="/" class="btn-back" style="margin-left: 10px;">← Về Game</a>
+                <a href="/" class="btn-game-return">← Quay lại Thế Giới Game</a>
             </div>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Tên Thương Hiệu</th>
-                    <th>Số Điện Thoại</th>
-                    <th>Chi Nhánh</th>
-                    <th>Thời Gian Đăng Ký</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${rows.length > 0 ? rows : '<tr><td colspan="5" style="text-align: center; color: #94a3b8;">Chưa có dữ liệu đăng ký nào.</td></tr>'}
-            </tbody>
-        </table>
+
+        <!-- 2. BẢNG ĐIỀU KHIỂN QUẢN TRỊ (DASHBOARD) -->
+        <div id="dashboardView" class="dashboard-card hidden">
+            <div class="header">
+                <div class="header-title">
+                    <h1>🍙 Quản Trị Khách Hàng / Leads</h1>
+                    <p>Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ 4 chi nhánh toàn quốc</p>
+                </div>
+                <div class="header-actions">
+                    <button type="button" id="btnExportCsv" class="btn-action btn-export">
+                        📥 Xuất File Excel (.CSV)
+                    </button>
+                    <button type="button" id="btnLockAdmin" class="btn-action btn-lock">
+                        🔒 Khóa
+                    </button>
+                    <a href="/" class="btn-action btn-lock">← Về Game</a>
+                </div>
+            </div>
+
+            <!-- Thống kê nhanh -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <small>Tổng Số Khách</small>
+                    <div class="val" id="statTotal">0</div>
+                </div>
+                <div class="stat-card hcm">
+                    <small>TP. Hồ Chí Minh</small>
+                    <div class="val" id="statHcm">0</div>
+                </div>
+                <div class="stat-card daklak">
+                    <small>Đắk Lắk</small>
+                    <div class="val" id="statDakLak">0</div>
+                </div>
+                <div class="stat-card vinh">
+                    <small>TP. Vinh</small>
+                    <div class="val" id="statVinh">0</div>
+                </div>
+                <div class="stat-card hanoi">
+                    <small>Hà Nội</small>
+                    <div class="val" id="statHanoi">0</div>
+                </div>
+            </div>
+
+            <!-- Thanh lọc chi nhánh -->
+            <div class="filter-bar">
+                <span style="font-size: 13px; color: #94a3b8; font-weight: 600; margin-right: 4px;">Lọc Chi Nhánh:</span>
+                <button type="button" class="filter-btn active" data-city="all">Tất Cả</button>
+                <button type="button" class="filter-btn" data-city="hcm">TP.HCM</button>
+                <button type="button" class="filter-btn" data-city="daklak">Đắk Lắk</button>
+                <button type="button" class="filter-btn" data-city="vinh">TP. Vinh</button>
+                <button type="button" class="filter-btn" data-city="hanoi">Hà Nội</button>
+            </div>
+
+            <!-- Bảng dữ liệu -->
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">STT</th>
+                            <th>Tên Thương Hiệu</th>
+                            <th>Số Điện Thoại</th>
+                            <th>Chi Nhánh</th>
+                            <th>Thời Gian Đăng Ký</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody">
+                        <!-- Render động qua JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <script>
+        (function() {
+            const CORRECT_PIN = '202688';
+            const allLeads = ${rawLeadsJson};
+
+            const pinLockView = document.getElementById('pinLockView');
+            const dashboardView = document.getElementById('dashboardView');
+            const inputPin = document.getElementById('inputPin');
+            const btnSubmitPin = document.getElementById('btnSubmitPin');
+            const pinErrorMsg = document.getElementById('pinErrorMsg');
+            const btnExportCsv = document.getElementById('btnExportCsv');
+            const btnLockAdmin = document.getElementById('btnLockAdmin');
+            const leadsTableBody = document.getElementById('leadsTableBody');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+
+            let currentFilter = 'all';
+
+            function getCityName(cityKey) {
+                const c = String(cityKey || '').toLowerCase().replace('branch_', '');
+                if (c === 'hcm') return 'TP. Hồ Chí Minh';
+                if (c === 'daklak') return 'Đắk Lắk';
+                if (c === 'vinh') return 'TP. Vinh';
+                if (c === 'hanoi') return 'Hà Nội';
+                return cityKey || 'Toàn Quốc';
+            }
+
+            function updateStats() {
+                document.getElementById('statTotal').textContent = allLeads.length;
+                document.getElementById('statHcm').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hcm').length;
+                document.getElementById('statDakLak').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'daklak').length;
+                document.getElementById('statVinh').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'vinh').length;
+                document.getElementById('statHanoi').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hanoi').length;
+            }
+
+            function renderTable() {
+                let filtered = allLeads;
+                if (currentFilter !== 'all') {
+                    filtered = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === currentFilter);
+                }
+
+                if (filtered.length === 0) {
+                    leadsTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #94a3b8; padding: 32px;">Không có dữ liệu đăng ký nào cho chi nhánh này.</td></tr>';
+                    return;
+                }
+
+                leadsTableBody.innerHTML = filtered.map((l, idx) => {
+                    const cityName = getCityName(l.city);
+                    const formattedTime = new Date(l.timestamp).toLocaleString('vi-VN');
+                    return \`
+                        <tr>
+                            <td>\${idx + 1}</td>
+                            <td><strong>\${escapeHtml(l.brandName || 'Tiệm Cơm Nắm')}</strong></td>
+                            <td><a href="tel:\${escapeHtml(l.phone)}" class="phone-link">\${escapeHtml(l.phone)}</a></td>
+                            <td><span class="city-badge">📍 \${cityName}</span></td>
+                            <td style="color: #94a3b8;">\${formattedTime}</td>
+                        </tr>
+                    \`;
+                }).join('');
+            }
+
+            function escapeHtml(str) {
+                return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            // Xuất file CSV chuẩn UTF-8 BOM
+            function exportCsv() {
+                window.location.href = '/admin/export-csv?pin=' + encodeURIComponent(CORRECT_PIN) + '&city=' + encodeURIComponent(currentFilter);
+            }
+
+            function unlockDashboard() {
+                pinLockView.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                updateStats();
+                renderTable();
+            }
+
+            function checkPin() {
+                const pin = inputPin.value.trim();
+                if (pin === CORRECT_PIN) {
+                    pinErrorMsg.textContent = '';
+                    sessionStorage.setItem('admin_pin_verified', 'true');
+                    unlockDashboard();
+                } else {
+                    pinErrorMsg.textContent = '❌ Mã PIN không chính xác! Vui lòng thử lại.';
+                    inputPin.value = '';
+                    inputPin.focus();
+                }
+            }
+
+            btnSubmitPin.addEventListener('click', checkPin);
+            inputPin.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') checkPin();
+            });
+
+            btnExportCsv.addEventListener('click', exportCsv);
+
+            btnLockAdmin.addEventListener('click', () => {
+                sessionStorage.removeItem('admin_pin_verified');
+                dashboardView.classList.add('hidden');
+                pinLockView.classList.remove('hidden');
+                inputPin.value = '';
+                pinErrorMsg.textContent = '';
+                inputPin.focus();
+            });
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.city;
+                    renderTable();
+                });
+            });
+
+            // Tự động mở khóa nếu phiên làm việc đã xác thực
+            if (sessionStorage.getItem('admin_pin_verified') === 'true') {
+                unlockDashboard();
+            }
+        })();
+    </script>
 </body>
 </html>`;
     }
