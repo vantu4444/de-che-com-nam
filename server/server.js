@@ -124,6 +124,53 @@ export class OnigiriServer {
 
         // [THANH ĐUA CẤP SÁT SƯỜN] Quản lý đối thủ đứng ngay trên để phát hiện VƯỢT MẶT
         this.playerLastRivalAbove = new Map(); // socketId -> { id, name, score }
+
+        // [TRANH ĐOẠT ĐỊA BÀN VÀNG & TƯỢNG LINH VẬT 3D HOLOGRAM]
+        this.territories = new Map([
+            // TP.HCM (4 Địa bàn vàng)
+            ['spot_school_hoamai', { id: 'spot_school_hoamai', name: 'Trường Tiểu Học Hoa Mai', city: 'hcm', type: 'school', rulerId: 'bot_hcm_1', rulerName: 'Cơm Nắm Bến Thành Q.1', rulerScore: 180, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_town', { id: 'spot_university_town', name: 'Công Viên Làng Đại Học', city: 'hcm', type: 'park', rulerId: 'bot_hcm_3', rulerName: 'Onigiri Gen Z Thủ Đức', rulerScore: 220, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_q1', { id: 'spot_office_q1', name: 'Chợ Bến Thành & VP Q1', city: 'hcm', type: 'market', rulerId: 'bot_1', rulerName: 'Tập Đoàn Cơm Nắm Sài Gòn', rulerScore: 350, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_walking_street', { id: 'spot_walking_street', name: 'Phố Đi Bộ Nguyễn Huệ', city: 'hcm', type: 'walking_street', rulerId: 'bot_hcm_2', rulerName: 'Tiệm Bếp Bà Năm Sài Gòn', rulerScore: 200, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            // Đắk Lắk (4 Địa bàn vàng)
+            ['spot_school_ntranglong', { id: 'spot_school_ntranglong', name: 'Trường Tiểu Học N\'Trang Lơng', city: 'daklak', type: 'school', rulerId: 'bot_daklak_1', rulerName: 'Cơm Nắm Buôn Ma Thuột', rulerScore: 160, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_taynguyen', { id: 'spot_university_taynguyen', name: 'Công Viên ĐH Tây Nguyên', city: 'daklak', type: 'park', rulerId: 'bot_daklak_2', rulerName: 'Bếp Cơm Nắm Đắk Lắk', rulerScore: 190, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_bmt_ngasau', { id: 'spot_office_bmt_ngasau', name: 'Chợ BMT & Khu VP Ngã Sáu', city: 'daklak', type: 'market', rulerId: 'bot_2', rulerName: 'Bếp Cơm Nắm BMT Cao Nguyên', rulerScore: 280, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_square_10_3', { id: 'spot_square_10_3', name: 'Phố Đi Bộ Quảng Trường 10/3', city: 'daklak', type: 'walking_street', rulerId: 'bot_daklak_3', rulerName: 'Onigiri Cao Nguyên Xanh', rulerScore: 210, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            // TP. Vinh (4 Địa bàn vàng)
+            ['spot_school_lemao', { id: 'spot_school_lemao', name: 'Trường Tiểu Học Lê Mao', city: 'vinh', type: 'school', rulerId: 'bot_vinh_1', rulerName: 'Cơm Nắm Xứ Nghệ - Vinh', rulerScore: 170, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_vinh', { id: 'spot_university_vinh', name: 'Công Viên Đại Học Vinh', city: 'vinh', type: 'park', rulerId: 'bot_vinh_2', rulerName: 'Tiệm Onigiri Cửa Lò', rulerScore: 180, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_lenin', { id: 'spot_office_lenin', name: 'Chợ Vinh & VP Đại Lộ Lê Nin', city: 'vinh', type: 'market', rulerId: 'bot_4', rulerName: 'Cơm Nắm Xứ Nghệ - TP. Vinh', rulerScore: 260, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_square_songlam', { id: 'spot_square_songlam', name: 'Phố Đi Bộ Quảng Trường Sông Lam', city: 'vinh', type: 'walking_street', rulerId: 'bot_10', rulerName: 'Tiệm Cơm Nắm Bé Bông', rulerScore: 190, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            // Hà Nội (4 Địa bàn vàng)
+            ['spot_school_thanglong', { id: 'spot_school_thanglong', name: 'Trường Tiểu Học Thăng Long', city: 'hanoi', type: 'school', rulerId: 'bot_hanoi_3', rulerName: 'Cơm Nắm Cầu Giấy Sinh Viên', rulerScore: 210, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_dhqghn', { id: 'spot_university_dhqghn', name: 'Công Viên ĐHQG Hà Nội', city: 'hanoi', type: 'park', rulerId: 'bot_hanoi_2', rulerName: 'Bếp Nắm Hồ Gươm 36 Phố', rulerScore: 250, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_caugiay', { id: 'spot_office_caugiay', name: 'Chợ Đồng Xuân & VP Cầu Giấy', city: 'hanoi', type: 'market', rulerId: 'bot_hanoi_1', rulerName: 'Onigiri Phố Cổ Hà Nội', rulerScore: 380, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_walking_street_hoguom', { id: 'spot_walking_street_hoguom', name: 'Phố Đi Bộ Hồ Gươm', city: 'hanoi', type: 'walking_street', rulerId: 'bot_3', rulerName: 'Onigiri Hoàng Gia Hà Nội', rulerScore: 310, royaltyFee: 5000, bonusRate: 0.15 }]
+        ]);
+
+        // Lưu điểm số của từng người chơi theo địa bàn: key = `${territoryId}_${playerId}`
+        this.territoryPlayerScores = new Map();
+
+        // [ĐẤU THẦU HỢP ĐỒNG CUNG ỨNG ĐỘC QUYỀN THEO GIỜ (15 PHÚT)]
+        this.exclusiveContract = {
+            id: 'contract_' + Date.now(),
+            title: 'Cung Ứng 30 Nắm Cơm Chuẩn ISO - Trường Quốc Tế',
+            targetCount: 30,
+            durationSeconds: 300, // 5 phút đua tốc độ
+            startedAt: Date.now(),
+            rewardMoney: 300000,
+            rewardRep: 50,
+            rewardExp: 500,
+            runnerUpMoney: 50000,
+            runnerUpRep: 10,
+            bidders: new Map(), // playerId -> { name, progress, finishedAt }
+            winner: null,
+            status: 'ACTIVE'
+        };
     }
 
     async start() {
@@ -316,7 +363,9 @@ export class OnigiriServer {
                     selfId: socket.id,
                     players: this.getPlayersInCity(validCity),
                     coopOrder: this.coopOrder,
-                    leaderboard: this.getLeaderboard()
+                    leaderboard: this.getLeaderboard(),
+                    territories: this.getTerritoriesList(),
+                    exclusiveContract: this.getExclusiveContractState()
                 });
 
                 // Chống mất lời mời khi chuyển tab Mobile: Gửi lại các lời mời kết bạn đang chờ tới playerId này
@@ -455,6 +504,22 @@ export class OnigiriServer {
                 }
             });
 
+            // [TRANH ĐOẠT ĐỊA BÀN VÀNG & TƯỢNG LINH VẬT 3D HOLOGRAM]
+            socket.on('territory:query', () => {
+                socket.emit('territory:state', this.getTerritoriesList());
+            });
+            socket.on('territory:sales_report', (data) => {
+                this.handleTerritorySales(socket.id, data);
+            });
+
+            // [ĐẤU THẦU HỢP ĐỒNG CUNG ỨNG ĐỘC QUYỀN THEO GIỜ]
+            socket.on('contract:query', () => {
+                socket.emit('contract:state', this.getExclusiveContractState());
+            });
+            socket.on('contract:deliver', (data) => {
+                this.handleContractDelivery(socket.id, data);
+            });
+
             // Sự kiện 5: Ngắt kết nối
             socket.on('disconnect', () => {
                 const playerId = this.socketToPlayerId.get(socket.id);
@@ -581,7 +646,9 @@ export class OnigiriServer {
                 playerId: playerId,
                 players: this.getPlayersInCity(validCity),
                 coopOrder: this.coopOrder,
-                leaderboard: this.getLeaderboard()
+                leaderboard: this.getLeaderboard(),
+                territories: this.getTerritoriesList(),
+                exclusiveContract: this.getExclusiveContractState()
             });
 
             // Gửi playerJoined cho các client khác trong phòng
@@ -701,6 +768,14 @@ export class OnigiriServer {
                 }
                 this.sendToClient(sid, 'rival:radar_update', rInfo);
             }
+        } else if (event === 'territory:query' || event === 'territory_query') {
+            this.sendToClient(sid, 'territory:state', this.getTerritoriesList());
+        } else if (event === 'territory:sales_report' || event === 'territory_sales_report') {
+            this.handleTerritorySales(sid, data);
+        } else if (event === 'contract:query' || event === 'contract_query') {
+            this.sendToClient(sid, 'contract:state', this.getExclusiveContractState());
+        } else if (event === 'contract:deliver' || event === 'contract_deliver') {
+            this.handleContractDelivery(sid, data);
         }
     }
 
@@ -1617,6 +1692,188 @@ export class OnigiriServer {
     </div>
 </body>
 </html>`;
+    }
+
+    // =========================================================================
+    // QUẢN LÝ ĐỊA BÀN VÀNG & TƯỢNG LINH VẬT 3D HOLOGRAM
+    // =========================================================================
+    getTerritoriesList() {
+        return Array.from(this.territories.values());
+    }
+
+    getExclusiveContractState() {
+        const biddersArr = [];
+        for (const [pid, b] of this.exclusiveContract.bidders.entries()) {
+            biddersArr.push({
+                playerId: pid,
+                name: b.name,
+                progress: b.progress,
+                finishedAt: b.finishedAt
+            });
+        }
+        return {
+            id: this.exclusiveContract.id,
+            title: this.exclusiveContract.title,
+            targetCount: this.exclusiveContract.targetCount,
+            durationSeconds: this.exclusiveContract.durationSeconds,
+            startedAt: this.exclusiveContract.startedAt,
+            rewardMoney: this.exclusiveContract.rewardMoney,
+            rewardRep: this.exclusiveContract.rewardRep,
+            rewardExp: this.exclusiveContract.rewardExp,
+            runnerUpMoney: this.exclusiveContract.runnerUpMoney,
+            runnerUpRep: this.exclusiveContract.runnerUpRep,
+            winner: this.exclusiveContract.winner,
+            status: this.exclusiveContract.status,
+            bidders: biddersArr
+        };
+    }
+
+    broadcastToAll(event, data) {
+        if (this.io) {
+            this.io.emit(event, data);
+        }
+        for (const sid of this.pollingQueues.keys()) {
+            this.sendToClient(sid, event, data);
+        }
+    }
+
+    handleTerritorySales(socketId, data) {
+        if (!data || !data.territoryId) return;
+        const territoryId = data.territoryId;
+        const territory = this.territories.get(territoryId);
+        if (!territory) return;
+
+        const count = Math.max(1, Number(data.count) || 1);
+        const sellerName = String(data.sellerName || 'Người chơi ẩn danh').slice(0, 30);
+        const playerId = this.socketToPlayerId.get(socketId) || socketId;
+        const scoreKey = `${territoryId}_${playerId}`;
+
+        const addedScore = count * 10;
+        const currentScore = (this.territoryPlayerScores.get(scoreKey) || 0) + addedScore;
+        this.territoryPlayerScores.set(scoreKey, currentScore);
+
+        const isCurrentRuler = (territory.rulerId === playerId || territory.rulerId === socketId);
+
+        // 1. Nếu người bán là Chủ Tịch Khu Vực: cập nhật điểm thống trị cao nhất
+        if (isCurrentRuler) {
+            territory.rulerScore = Math.max(territory.rulerScore, currentScore);
+        } else {
+            // 2. Nếu người bán KHÔNG phải Chủ Tịch: Chủ tịch nhận được +5.000đ tiền bản quyền thương hiệu
+            const rulerPlayerId = territory.rulerId;
+            const royaltyData = {
+                territoryId,
+                territoryName: territory.name,
+                amount: territory.royaltyFee || 5000,
+                fromSellerName: sellerName
+            };
+
+            // Gửi trực tiếp cho Chủ tịch nếu đang online
+            this.sendEventToUser(rulerPlayerId, 'territory:royalty_received', royaltyData);
+
+            // 3. Cơ chế Soán Ngôi Địa Bàn khi người bán vượt điểm Chủ Tịch
+            if (currentScore > territory.rulerScore) {
+                const oldRulerId = territory.rulerId;
+                const oldRulerName = territory.rulerName;
+
+                territory.rulerId = playerId;
+                territory.rulerName = sellerName;
+                territory.rulerScore = currentScore;
+                territory.lastUpdated = Date.now();
+
+                const overthrowData = {
+                    territoryId,
+                    territoryName: territory.name,
+                    newRulerId: playerId,
+                    newRulerName: sellerName,
+                    newRulerScore: currentScore,
+                    oldRulerId,
+                    oldRulerName
+                };
+
+                // Phát loa thông báo toàn server
+                this.broadcastToAll('territory:overthrown', overthrowData);
+
+                // Gửi thông báo riêng cho cựu chủ tịch kèm nút "Giành Lại Địa Bàn"
+                this.sendEventToUser(oldRulerId, 'territory:lost', {
+                    territoryId,
+                    territoryName: territory.name,
+                    newRulerName: sellerName,
+                    newRulerScore: currentScore
+                });
+
+                // Tự động đẩy thông báo vào kênh Chat chung
+                const chatMsg = {
+                    id: 'chat_ot_' + Date.now(),
+                    senderId: 'sys',
+                    senderName: 'Loa Phát Thanh Đô Thị 👑',
+                    senderLevel: 99,
+                    city: territory.city || 'hcm',
+                    text: `👑 SOÁN NGÔI ĐỊA BÀN! [${sellerName}] đã chiếm lĩnh [${territory.name}] với ${currentScore} điểm thống trị!`,
+                    time: Date.now()
+                };
+                this.recentGlobalChat.push(chatMsg);
+                if (this.recentGlobalChat.length > 50) this.recentGlobalChat.shift();
+                this.broadcastToAll('chat:broadcast', chatMsg);
+            }
+        }
+
+        // Cập nhật lại trạng thái toàn bộ địa bàn cho các client
+        this.broadcastToAll('territory:update', this.getTerritoriesList());
+    }
+
+    handleContractDelivery(socketId, data) {
+        if (!data || this.exclusiveContract.status !== 'ACTIVE') return;
+
+        const count = Math.max(1, Number(data.count) || 1);
+        const playerId = this.socketToPlayerId.get(socketId) || socketId;
+        const playerName = String(data.playerName || 'Người chơi').slice(0, 30);
+
+        let bidder = this.exclusiveContract.bidders.get(playerId);
+        if (!bidder) {
+            bidder = { name: playerName, progress: 0, finishedAt: null };
+            this.exclusiveContract.bidders.set(playerId, bidder);
+        }
+
+        bidder.progress += count;
+
+        // Kiểm tra xem đã hoàn thành mục tiêu chưa
+        if (bidder.progress >= this.exclusiveContract.targetCount && !this.exclusiveContract.winner) {
+            bidder.finishedAt = Date.now();
+            this.exclusiveContract.winner = {
+                id: playerId,
+                name: playerName
+            };
+            this.exclusiveContract.status = 'COMPLETED';
+
+            const winData = {
+                winnerId: playerId,
+                winnerName: playerName,
+                contractTitle: this.exclusiveContract.title,
+                rewardMoney: this.exclusiveContract.rewardMoney || 300000,
+                rewardRep: this.exclusiveContract.rewardRep || 50,
+                rewardExp: this.exclusiveContract.rewardExp || 500
+            };
+
+            // Thông báo người chiến thắng toàn server
+            this.broadcastToAll('contract:winner', winData);
+
+            // Gửi tin nhắn thông báo vào khung Chat
+            const chatMsg = {
+                id: 'chat_con_' + Date.now(),
+                senderId: 'sys',
+                senderName: 'Sở Giao Dịch Hợp Đồng 📜',
+                senderLevel: 99,
+                city: 'all',
+                text: `🏆 HỢP ĐỒNG ĐỘC QUYỀN ĐÃ CÓ CHỦ! [${playerName}] là người đầu tiên cung ứng đủ ${this.exclusiveContract.targetCount} nắm cơm chuẩn ISO! Nhận trọn +300.000đ + 50 Uy Tín!`,
+                time: Date.now()
+            };
+            this.recentGlobalChat.push(chatMsg);
+            if (this.recentGlobalChat.length > 50) this.recentGlobalChat.shift();
+            this.broadcastToAll('chat:broadcast', chatMsg);
+        }
+
+        // Gửi cập nhật tiến trình hợp đồng cho tất cả người chơi
+        this.broadcastToAll('contract:state', this.getExclusiveContractState());
     }
 
     stop() {

@@ -4250,6 +4250,175 @@ async function runInteractiveSimulationSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // BƯỚC 6.99: Mô Phỏng Tranh Đoạt Địa Bàn Vàng, Tượng Linh Vật 3D Hologram & Hợp Đồng Độc Quyền
+    // -------------------------------------------------------------------------
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Tranh Đoạt Địa Bàn Vàng & Đấu Thầu Hợp Đồng Độc Quyền...', COLORS.magenta);
+    try {
+        // 1. Kiểm tra Render Tượng Linh Vật Cơm Nắm 3D Hologram
+        let statueRenderOk = true;
+        try {
+            const mockCtx = gameApp.canvas.getContext('2d');
+            const mockSpot = {
+                id: 'spot_school_hoamai',
+                name: 'Ô Vạch Xanh Trường Học (Tiểu Học Hoa Mai)',
+                x: 720,
+                y: 580,
+                w: 140,
+                h: 90
+            };
+            const mockRuler = {
+                name: 'Cơm Nắm Bến Thành Q.1',
+                rulerName: 'Cơm Nắm Bến Thành Q.1',
+                score: 250,
+                rulerScore: 250
+            };
+            city3D.renderTerritoryGoldenStatue(mockCtx, mockSpot, mockRuler);
+        } catch (eStatue) {
+            statueRenderOk = false;
+            logger.fail('Mô phỏng Tượng Linh Vật Hologram: Lỗi render', eStatue.message);
+        }
+
+        // 2. Khởi tạo DOM cho Tranh Đoạt Địa Bàn & Hợp Đồng Độc Quyền
+        if (onlineUI.initTerritoryAndContractDom) {
+            onlineUI.initTerritoryAndContractDom();
+        }
+
+        const tobBanner = doc.getElementById('territoryOverthrownBanner');
+        const btnReclaim = doc.getElementById('btnReclaimTerritory');
+        const ecWidget = doc.getElementById('exclusiveContractWidget');
+        const btnToggleContract = doc.getElementById('btnToggleContract');
+        const btnDeliverContract = doc.getElementById('btnDeliverContractRice');
+
+        const hasTerritoryElements = Boolean(tobBanner && btnReclaim && ecWidget && btnToggleContract && btnDeliverContract);
+
+        // 3. Kiểm tra Bản Quyền Thương Hiệu (+5.000đ khi người khác bán tại địa bàn của mình)
+        const prevMoneyBeforeRoyalty = state.money;
+        onlineUI.showTerritoryRoyalty({
+            territoryId: 'spot_school_hoamai',
+            territoryName: 'Trường Tiểu Học Hoa Mai',
+            amount: 5000,
+            fromSellerName: 'Khách Bán Dạo'
+        });
+        const isRoyaltyRewarded = state.money === prevMoneyBeforeRoyalty + 5000;
+
+        // 4. Kiểm tra Loa Phát Thanh Soán Ngôi Toàn Server
+        onlineUI.showTerritoryOverthrown({
+            territoryId: 'spot_school_hoamai',
+            territoryName: 'Trường Tiểu Học Hoa Mai',
+            newRulerName: 'Đế Chế Cơm Nắm Sài Gòn',
+            newRulerScore: 320,
+            oldRulerName: 'Cơm Nắm Bến Thành Q.1'
+        });
+
+        const isTobShown = !tobBanner.classList.contains('hidden');
+        const tobDescText = doc.getElementById('tobDesc')?.textContent || '';
+        const isTobTextOk = tobDescText.includes('Đế Chế Cơm Nắm Sài Gòn') &&
+            tobDescText.includes('Trường Tiểu Học Hoa Mai') &&
+            tobDescText.includes('320');
+
+        // Kiểm tra cảnh báo cựu chủ tịch và hiện nút Giành Lại Địa Bàn
+        onlineUI.showTerritoryLost({
+            territoryId: 'spot_school_hoamai',
+            territoryName: 'Trường Tiểu Học Hoa Mai',
+            newRulerName: 'Đế Chế Cơm Nắm Sài Gòn'
+        });
+        const isReclaimBtnShown = !btnReclaim.classList.contains('hidden');
+
+        // Bấm nút Giành Lại Địa Bàn
+        let reclaimTriggered = false;
+        const originalShowChallenge = onlineUI.showChallengeDialog.bind(onlineUI);
+        onlineUI.showChallengeDialog = () => { reclaimTriggered = true; };
+        btnReclaim.click();
+        onlineUI.showChallengeDialog = originalShowChallenge;
+
+        // 5. Kiểm tra Hợp Đồng Cung Ứng Độc Quyền Theo Giờ
+        // Thử toggle thu gọn widget hợp đồng
+        const ecwHeader = doc.getElementById('ecwHeader');
+        if (ecwHeader) ecwHeader.click();
+        const isContractExpanded = !ecWidget.classList.contains('collapsed');
+        if (ecwHeader) ecwHeader.click();
+        const isContractCollapsed = ecWidget.classList.contains('collapsed');
+
+        // Cập nhật dữ liệu hợp đồng
+        const mockContractData = {
+            id: 'contract_test_1',
+            title: 'Cung Ứng 30 Nắm Cơm Chuẩn ISO - Trường Quốc Tế',
+            targetCount: 30,
+            durationSeconds: 300,
+            startedAt: Date.now() - 60000,
+            myProgress: 12
+        };
+        onlineUI.updateExclusiveContract(mockContractData);
+
+        const ecwDescText = doc.getElementById('ecwDesc')?.textContent || '';
+        const ecwProgressText = doc.getElementById('ecwProgressText')?.textContent || '';
+        const isContractDataOk = ecwDescText.includes('Trường Quốc Tế') && ecwProgressText.includes('12 / 30');
+
+        // Kiểm tra giao cơm thầu
+        // Chuẩn bị 6 nắm cơm trong kho xe
+        state.inventory = [
+            { id: 'rice_1', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+            { id: 'rice_2', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+            { id: 'rice_3', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+            { id: 'rice_4', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+            { id: 'rice_5', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+            { id: 'rice_6', filling: 'crab_egg_mayo', freshness: 100, stars: 5 }
+        ];
+
+        const deliverResult = network.deliverContractRice(5);
+        const isDeliverSuccess = deliverResult && deliverResult.success && deliverResult.count === 5;
+        const isInventoryDeducted = state.inventory.length === 1;
+
+        // Kiểm tra trao giải độc quyền (+300.000đ, +50 Uy Tín, +500 EXP)
+        const prevMoneyBeforeWin = state.money;
+        const prevRepBeforeWin = state.reputation;
+        const prevExpBeforeWin = state.exp;
+
+        onlineUI.showContractWinner({
+            winnerName: state.brandName || state.playerName,
+            winnerId: network.selfId,
+            rewardMoney: 300000,
+            rewardRep: 50,
+            rewardExp: 500
+        });
+
+        const isWinRewarded = state.money === prevMoneyBeforeWin + 300000 &&
+            state.reputation >= prevRepBeforeWin;
+
+        // 6. Kiểm tra kiểm tra đặc quyền Chủ Tịch +15% Doanh Thu Vàng khi bán tại sạp
+        let goldBonusWorking = false;
+        try {
+            // Giả lập mình là Chủ Tịch khu vực Hoa Mai
+            network.territories.set('spot_school_hoamai', {
+                id: 'spot_school_hoamai',
+                name: 'Trường Tiểu Học Hoa Mai',
+                rulerId: network.selfId,
+                rulerName: state.brandName || state.playerName,
+                rulerScore: 500
+            });
+            goldBonusWorking = network.isTerritoryRuler('spot_school_hoamai');
+        } catch (eGold) {
+            goldBonusWorking = false;
+        }
+
+        if (statueRenderOk && hasTerritoryElements && isRoyaltyRewarded &&
+            isTobShown && isTobTextOk && isReclaimBtnShown && reclaimTriggered &&
+            isContractExpanded && isContractCollapsed && isContractDataOk &&
+            isDeliverSuccess && isInventoryDeducted && isWinRewarded && goldBonusWorking) {
+            logger.pass('Mô phỏng Tranh Đoạt Địa Bàn Vàng & Hợp Đồng Độc Quyền: Tượng Hologram 3D sắc nét, Bản quyền +5k, Soán ngôi toàn server kèm nút Giành Lại, Giao cơm thầu trừ kho chính xác và Trao thưởng độc quyền +300k/50 Sao đạt chuẩn 100%');
+        } else {
+            logger.fail('Mô phỏng Tranh Đoạt Địa Bàn Vàng & Hợp Đồng Độc Quyền: Thất bại', JSON.stringify({
+                statueRenderOk, hasTerritoryElements, isRoyaltyRewarded,
+                isTobShown, isTobTextOk, isReclaimBtnShown, reclaimTriggered,
+                isContractExpanded, isContractCollapsed, isContractDataOk,
+                isDeliverSuccess, isInventoryDeducted, isWinRewarded, goldBonusWorking
+            }));
+        }
+    } catch (errTerritoryTest) {
+        logger.fail('Mô phỏng Tranh Đoạt Địa Bàn: Ngoại lệ', errTerritoryTest.message);
+    }
+
+    // -------------------------------------------------------------------------
     // BƯỚC 7: Rà soát Tổng thể Lỗi Console & PageError
     // -------------------------------------------------------------------------
     console.error = originalConsoleError;

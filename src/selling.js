@@ -6,6 +6,7 @@ import { characterRenderer } from './characterRenderer.js';
 import { seaweedGame } from './seaweedGame.js';
 import { LEGAL_SELLING_ZONES, isInsideLegalZone } from './world.js';
 import { city3D } from './city3D.js';
+import { network } from './network.js';
 
 export { LEGAL_SELLING_ZONES, isInsideLegalZone };
 
@@ -813,6 +814,21 @@ export class SellingManager {
         state.addMoney(totalEarned);
         state.addExp(expGained);
         state.recordRevenue(basePrice, tip);
+
+        // 5b. Đặc quyền Chủ Tịch Khu Vực: +15% Doanh Thu Vàng & Báo cáo điểm tranh đoạt địa bàn
+        if (this.currentSpot) {
+            const spotId = this.currentSpot.id || this.currentSpot.regionId;
+            const isRuler = network && typeof network.isTerritoryRuler === 'function' && network.isTerritoryRuler(spotId);
+            if (isRuler) {
+                const goldBonus = Math.round(totalEarned * 0.15);
+                state.addMoney(goldBonus);
+                this.addFloatingText(cust.x, cust.y - 48, `👑 +${goldBonus.toLocaleString('vi-VN')}đ (+15% Vàng Chủ Tịch)!`, '#facc15');
+            }
+
+            if (network && typeof network.reportTerritorySales === 'function') {
+                network.reportTerritorySales(spotId, 1, totalEarned, state.brandName || state.playerName);
+            }
+        }
 
         // Nếu người chơi đang nợ hóa đơn vận hành cuối ngày, trích tự động trả nợ
         if (state.unpaidDebt > 0) {

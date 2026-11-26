@@ -284,6 +284,38 @@
 
         <!-- Banner Thông Báo Vượt Mặt Nổi Bật -->
         <div id="overtakeAlertBanner" class="overtake-alert-banner hidden"></div>
+
+        <!-- Loa Phát Thanh Soán Ngôi Địa Bàn Vàng Toàn Server -->
+        <div id="territoryOverthrownBanner" class="territory-overthrown-banner hidden">
+            <div class="tob-content">
+                <div class="tob-title">👑 SOÁN NGÔI ĐỊA BÀN!</div>
+                <div class="tob-desc" id="tobDesc">Một người chơi vừa chiếm lĩnh địa bàn!</div>
+                <button type="button" id="btnReclaimTerritory" class="btn-reclaim-territory hidden">🔥 Giành Lại Địa Bàn</button>
+            </div>
+        </div>
+
+        <!-- Thẻ Hợp Đồng Cung Ứng Độc Quyền Theo Giờ (15 Phút) -->
+        <div id="exclusiveContractWidget" class="exclusive-contract-widget collapsed">
+            <div class="ecw-header" id="ecwHeader">
+                <div class="ecw-title">
+                    <span class="ecw-icon">📜</span>
+                    <span class="ecw-name">Hợp Đồng Độc Quyền</span>
+                    <span class="ecw-timer" id="ecwTimer">⏳ 05:00</span>
+                </div>
+                <button type="button" class="btn-toggle-ecw" id="btnToggleContract" aria-label="Thu gọn hợp đồng">+</button>
+            </div>
+            <div class="ecw-body" id="ecwBody">
+                <div class="ecw-desc" id="ecwDesc">Cung ứng 30 nắm cơm chuẩn ISO cho Trường Quốc Tế</div>
+                <div class="ecw-reward">🏆 Thưởng Nhất: <strong>+300.000đ</strong> • <strong>+50 Uy Tín</strong> • <strong>+500 EXP</strong></div>
+                <div class="ecw-progress-box">
+                    <div class="ecw-progress-bar">
+                        <div class="ecw-progress-fill" id="ecwProgressFill" style="width: 0%;"></div>
+                    </div>
+                    <span class="ecw-progress-text" id="ecwProgressText">0 / 30 nắm</span>
+                </div>
+                <button type="button" id="btnDeliverContractRice" class="btn-deliver-contract">🚚 Giao Cơm Thầu (Giao 5 nắm)</button>
+            </div>
+        </div>
     </div>
 
     <!-- Nạp Three.js 3D Engine (CDN với Fallback tự động an toàn) -->

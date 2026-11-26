@@ -44,8 +44,16 @@ export class OnlineUIManager {
         this.overtakeAlertBanner = null;
         this.currentRivalAbove = null;
 
+        // Tranh đoạt địa bàn vàng & Đấu thầu hợp đồng độc quyền
+        this.territoryOverthrownBanner = null;
+        this.btnReclaimTerritory = null;
+        this.exclusiveContractWidget = null;
+        this.btnToggleContract = null;
+        this.btnDeliverContractRice = null;
+
         this.initDomElements();
         this.initRivalRadarDom();
+        this.initTerritoryAndContractDom();
         this.bindNetworkEvents();
     }
 
@@ -2254,6 +2262,192 @@ export class OnlineUIManager {
         const byName = data.byName || 'Một người chơi';
         try { audio.playError(); } catch (e) {}
         this.showToastNotification(`⚠️ Cảnh báo: ${byName} vừa vượt mặt bạn! Hãy tăng tốc sạp hàng!`);
+    }
+
+    /**
+     * Khởi tạo DOM cho Tranh Đoạt Địa Bàn Vàng & Đấu Thầu Hợp Đồng Độc Quyền
+     */
+    initTerritoryAndContractDom() {
+        if (typeof document === 'undefined') return;
+
+        this.territoryOverthrownBanner = document.getElementById('territoryOverthrownBanner');
+        this.btnReclaimTerritory = document.getElementById('btnReclaimTerritory');
+        this.exclusiveContractWidget = document.getElementById('exclusiveContractWidget');
+        this.btnToggleContract = document.getElementById('btnToggleContract');
+        this.btnDeliverContractRice = document.getElementById('btnDeliverContractRice');
+
+        const ecwHeader = document.getElementById('ecwHeader');
+        if (ecwHeader && this.exclusiveContractWidget) {
+            ecwHeader.onclick = (e) => {
+                if (e.target && e.target.id === 'btnDeliverContractRice') return;
+                try { audio.playClick(); } catch (err) {}
+                this.exclusiveContractWidget.classList.toggle('collapsed');
+                const isCollapsed = this.exclusiveContractWidget.classList.contains('collapsed');
+                if (this.btnToggleContract) {
+                    this.btnToggleContract.textContent = isCollapsed ? '+' : '−';
+                }
+            };
+        }
+
+        if (this.btnDeliverContractRice) {
+            this.btnDeliverContractRice.onclick = () => {
+                try { audio.playClick(); } catch (err) {}
+                const res = network.deliverContractRice(5);
+                if (res && res.success) {
+                    try { audio.playTingComplete(); } catch (err) {}
+                    this.showToastNotification(`🚚 Đã giao thành công +${res.count} nắm cơm vào Hợp Đồng Độc Quyền!`);
+                }
+            };
+        }
+
+        if (this.btnReclaimTerritory) {
+            this.btnReclaimTerritory.onclick = () => {
+                try { audio.playClick(); } catch (err) {}
+                if (this.lastLostTerritoryRuler) {
+                    this.showChallengeDialog(this.lastLostTerritoryRuler);
+                } else {
+                    this.showToastNotification('🔥 Hãy đến ngay ô vạch xanh địa bàn và mở sạp bán cơm để giành lại quyền lực!');
+                }
+            };
+        }
+    }
+
+    /**
+     * Hiển thị thông báo Soán Ngôi Địa Bàn Vàng toàn server
+     * @param {Object} data 
+     */
+    showTerritoryOverthrown(data) {
+        if (!data || typeof document === 'undefined') return;
+
+        if (!this.territoryOverthrownBanner) {
+            this.territoryOverthrownBanner = document.getElementById('territoryOverthrownBanner');
+        }
+        if (!this.territoryOverthrownBanner) return;
+
+        const tobDesc = document.getElementById('tobDesc');
+        if (tobDesc) {
+            tobDesc.innerHTML = `<strong>${data.newRulerName}</strong> đã chính thức chiếm lĩnh <strong>${data.territoryName}</strong> với <strong>${data.newRulerScore || 0}đ</strong> thống trị!`;
+        }
+
+        try {
+            audio.playLevelUp();
+            audio.playTingComplete();
+        } catch (e) {}
+
+        this.territoryOverthrownBanner.classList.remove('hidden');
+
+        if (this._tobTimer) clearTimeout(this._tobTimer);
+        this._tobTimer = setTimeout(() => {
+            if (this.territoryOverthrownBanner) {
+                this.territoryOverthrownBanner.classList.add('hidden');
+            }
+        }, 5500);
+    }
+
+    /**
+     * Cảnh báo riêng khi người chơi bị soán ngôi địa bàn
+     * @param {Object} data 
+     */
+    showTerritoryLost(data) {
+        if (!data || typeof document === 'undefined') return;
+
+        try { audio.playError(); } catch (e) {}
+
+        this.lastLostTerritoryRuler = {
+            name: data.newRulerName,
+            level: 10,
+            reputation: 150
+        };
+
+        if (this.btnReclaimTerritory) {
+            this.btnReclaimTerritory.classList.remove('hidden');
+        }
+
+        this.showToastNotification(`🚨 BÁO ĐỘNG: Bạn vừa bị [${data.newRulerName}] cướp mất địa bàn [${data.territoryName}]! Hãy giành lại ngay!`);
+    }
+
+    /**
+     * Thông báo nhận tiền bản quyền thương hiệu từ Chủ Tịch Khu Vực
+     * @param {Object} data 
+     */
+    showTerritoryRoyalty(data) {
+        if (!data) return;
+        const amount = Number(data.amount) || 5000;
+        state.addMoney(amount);
+        try { audio.playTingComplete(); } catch (e) {}
+        this.showToastNotification(`👑 +${amount.toLocaleString('vi-VN')}đ tiền bản quyền từ [${data.fromSellerName || 'Khách bán'}] tại [${data.territoryName}]!`);
+    }
+
+    /**
+     * Cập nhật thông tin Thẻ Hợp Đồng Cung Ứng Độc Quyền Theo Giờ
+     * @param {Object} data 
+     */
+    updateExclusiveContract(data) {
+        if (!data || typeof document === 'undefined') return;
+
+        const ecwDesc = document.getElementById('ecwDesc');
+        const ecwProgressFill = document.getElementById('ecwProgressFill');
+        const ecwProgressText = document.getElementById('ecwProgressText');
+        const ecwTimer = document.getElementById('ecwTimer');
+
+        if (ecwDesc && data.title) {
+            ecwDesc.textContent = data.title;
+        }
+
+        const target = Number(data.targetCount) || 30;
+        let myCount = 0;
+        if (data.bidders && Array.isArray(data.bidders)) {
+            const selfBidder = data.bidders.find(b => b.playerId === network.selfId || b.name === (state.brandName || state.playerName));
+            if (selfBidder) myCount = selfBidder.progress || 0;
+        } else if (typeof data.myProgress === 'number') {
+            myCount = data.myProgress;
+        }
+
+        if (ecwProgressFill) {
+            const pct = Math.min(100, Math.max(0, (myCount / target) * 100));
+            ecwProgressFill.style.width = `${pct}%`;
+        }
+
+        if (ecwProgressText) {
+            ecwProgressText.textContent = `${myCount} / ${target} nắm`;
+        }
+
+        // Tính thời gian đếm ngược
+        if (ecwTimer && data.startedAt && data.durationSeconds) {
+            const elapsed = Math.floor((Date.now() - data.startedAt) / 1000);
+            const remain = Math.max(0, data.durationSeconds - elapsed);
+            const m = Math.floor(remain / 60);
+            const s = remain % 60;
+            ecwTimer.textContent = `⏳ ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+    }
+
+    /**
+     * Thông báo kết quả trao thưởng người chiến thắng Hợp Đồng Độc Quyền
+     * @param {Object} data 
+     */
+    showContractWinner(data) {
+        if (!data) return;
+        const isMe = data.winnerName === (state.brandName || state.playerName) || data.winnerId === network.selfId;
+
+        if (isMe) {
+            const money = Number(data.rewardMoney) || 300000;
+            const rep = Number(data.rewardRep) || 50;
+            const exp = Number(data.rewardExp) || 500;
+
+            state.addMoney(money);
+            state.addReputation(rep);
+            state.addExp(exp);
+
+            try {
+                audio.playLevelUp();
+                audio.playTingComplete();
+            } catch (e) {}
+
+            this.showToastNotification(`🏆 XUẤT SẮC! Bạn ôm trọn GIẢI ĐỘC QUYỀN: +${money.toLocaleString('vi-VN')}đ • +${rep} Uy Tín • +${exp} EXP!`);
+        } else {
+            this.showToastNotification(`📜 Hợp Đồng Độc Quyền hoàn thành! Người chiến thắng: [${data.winnerName}]!`);
+        }
     }
 }
 

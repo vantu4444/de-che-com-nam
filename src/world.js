@@ -2,6 +2,7 @@
 
 import { state } from './state.js';
 import { city3D } from './city3D.js';
+import { network } from './network.js';
 
 // =============================================================================
 // NGUỒN TỌA ĐỘ DUY NHẤT (SINGLE SOURCE OF TRUTH) CÁC Ô VẠCH XANH HỢP PHÁP
@@ -558,6 +559,14 @@ export class World {
                 ctx.strokeStyle = '#22c55e';
                 ctx.lineWidth = 3;
                 ctx.strokeRect(spot.x, spot.y, spot.w, spot.h);
+            }
+
+            // Dựng Tượng Linh Vật Cơm Nắm 3D Hologram Vàng Óng Ánh & Bảng Tên Chủ Tịch Khu Vực
+            if (city3D && typeof city3D.renderTerritoryGoldenStatue === 'function') {
+                const rulerInfo = (network && typeof network.getTerritoryInfo === 'function')
+                    ? network.getTerritoryInfo(spot.id || spot.regionId)
+                    : null;
+                city3D.renderTerritoryGoldenStatue(ctx, spot, rulerInfo);
             }
         });
 

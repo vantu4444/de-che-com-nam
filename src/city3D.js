@@ -929,6 +929,229 @@ export class City3DManager {
 
         ctx.restore();
     }
+
+    /**
+     * Dựng Tượng Linh Vật Cơm Nắm 3D Hologram Vàng Óng Ánh & Bảng Tên Chủ Tịch Khu Vực
+     * @param {CanvasRenderingContext2D} ctx 
+     * @param {Object} spot - Ô Vạch Xanh trọng điểm
+     * @param {Object} rulerInfo - Thông tin Chủ Tịch Khu Vực hiện tại ({ name, score, rulerId })
+     */
+    renderTerritoryGoldenStatue(ctx, spot, rulerInfo = null) {
+        if (!ctx || !spot) return;
+
+        const now = Date.now();
+        const sx = spot.x - 38;
+        const sy = spot.y + spot.h / 2;
+        const pulse = Math.sin(now / 350) * 0.15 + 0.75;
+        const floatY = Math.sin(now / 400) * 4;
+
+        ctx.save();
+
+        // 1. Cột ánh sáng vàng Hologram quét thẳng lên trời
+        const beamGrad = ctx.createLinearGradient(sx, sy, sx, sy - 85);
+        beamGrad.addColorStop(0, `rgba(255, 215, 0, ${pulse * 0.4})`);
+        beamGrad.addColorStop(0.6, `rgba(245, 158, 11, ${pulse * 0.2})`);
+        beamGrad.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        ctx.fillStyle = beamGrad;
+        ctx.beginPath();
+        ctx.moveTo(sx - 20, sy + 6);
+        ctx.lineTo(sx + 20, sy + 6);
+        ctx.lineTo(sx + 14, sy - 85);
+        ctx.lineTo(sx - 14, sy - 85);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. Bệ đá Hologram Bát Giác Vàng Óng
+        ctx.save();
+        ctx.translate(sx, sy + 6);
+        ctx.fillStyle = 'rgba(20, 20, 25, 0.9)';
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 14;
+
+        ctx.beginPath();
+        const bRad = 22;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI) / 4 + (now / 2000);
+            const bx = Math.cos(angle) * bRad;
+            const by = Math.sin(angle) * (bRad * 0.45);
+            if (i === 0) ctx.moveTo(bx, by);
+            else ctx.lineTo(bx, by);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Vòng năng lượng quay dưới chân bệ đá
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.lineDashOffset = -(now / 50);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 26, 12, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+
+        // 3. Tượng Linh Vật Cơm Nắm 3D Hologram Lơ Lửng (Golden Mascot Statue)
+        ctx.save();
+        ctx.translate(sx, sy - 18 + floatY);
+
+        // Ánh sáng hào quang phát quang quanh tượng
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 18;
+
+        // Thân Cơm Nắm Onigiri Vàng Kim 3D
+        const mascotGrad = ctx.createLinearGradient(-16, -18, 16, 16);
+        mascotGrad.addColorStop(0, '#fef08a');
+        mascotGrad.addColorStop(0.5, '#ffd700');
+        mascotGrad.addColorStop(1, '#d97706');
+
+        ctx.fillStyle = mascotGrad;
+        ctx.strokeStyle = '#fef3c7';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        // Hình tam giác bo tròn đỉnh cao cấp
+        ctx.moveTo(0, -18);
+        ctx.quadraticCurveTo(18, -12, 16, 12);
+        ctx.quadraticCurveTo(14, 16, -14, 16);
+        ctx.quadraticCurveTo(-18, -12, 0, -18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Miếng Rong Biển Nori Vàng Đồng Đậm Đặc
+        ctx.fillStyle = '#78350f';
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(-8, 5, 16, 11, 2);
+        } else {
+            ctx.rect(-8, 5, 16, 11);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Đôi Mắt Linh Vật Cơm Nắm Sáng Long Lanh
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(-5, -2, 2.2, 0, Math.PI * 2);
+        ctx.arc(5, -2, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Điểm sáng trong mắt
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-6, -3, 0.8, 0, Math.PI * 2);
+        ctx.arc(4, -3, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Hai má hồng phát sáng
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.85)';
+        ctx.beginPath();
+        ctx.arc(-9, 2, 2, 0, Math.PI * 2);
+        ctx.arc(9, 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Miệng cười tươi vui
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.arc(0, 1, 3, 0.1 * Math.PI, 0.9 * Math.PI);
+        ctx.stroke();
+
+        // 4. Vương Miện Vàng 👑 Biểu Tượng Chủ Tịch Khu Vực
+        ctx.save();
+        ctx.translate(0, -20);
+        ctx.fillStyle = '#fde047';
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.moveTo(-11, 2);
+        ctx.lineTo(-11, -8);
+        ctx.lineTo(-5, -2);
+        ctx.lineTo(0, -11); // Chóp giữa cao nhất
+        ctx.lineTo(5, -2);
+        ctx.lineTo(11, -8);
+        ctx.lineTo(11, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Viên Hồng Ngọc Ruby trên đỉnh vương miện
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(0, -11, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+
+        // 5. Bảng Tên Hologram 3D Lơ Lửng Trên Đỉnh Tượng
+        const rulerName = (rulerInfo && rulerInfo.name) || (rulerInfo && rulerInfo.rulerName) || 'Đang tranh đoạt';
+        const rulerScore = (rulerInfo && (rulerInfo.score || rulerInfo.rulerScore)) || 0;
+
+        ctx.save();
+        const tagW = 148;
+        const tagH = 46;
+        const tagX = sx - tagW / 2;
+        const tagY = sy - 74 + floatY * 0.6;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 1.8;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(tagX, tagY, tagW, tagH, 8);
+        } else {
+            ctx.rect(tagX, tagY, tagW, tagH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Chóp nhọn trỏ xuống tượng
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(sx - 5, tagY + tagH);
+        ctx.lineTo(sx + 5, tagY + tagH);
+        ctx.lineTo(sx, tagY + tagH + 5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Chữ trên bảng tên
+        ctx.shadowBlur = 0;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        // Dòng 1: Danh hiệu Chủ Tịch Khu Vực
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 9px "Be Vietnam Pro", sans-serif';
+        ctx.fillText(`👑 CHỦ TỊCH KHU VỰC`, sx, tagY + 4);
+
+        // Dòng 2: Tên Thương Hiệu
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 11px "Be Vietnam Pro", sans-serif';
+        const displayRulerName = rulerName.length > 18 ? rulerName.slice(0, 17) + '…' : rulerName;
+        ctx.fillText(displayRulerName, sx, tagY + 16);
+
+        // Dòng 3: Điểm thống trị & Đặc quyền
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 8.5px "Be Vietnam Pro", sans-serif';
+        ctx.fillText(`⭐ ${rulerScore}đ • +15% Vàng • +5k Tip`, sx, tagY + 31);
+
+        ctx.restore();
+
+        ctx.restore();
+    }
 }
 
 export const city3D = new City3DManager();

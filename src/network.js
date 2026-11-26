@@ -78,6 +78,48 @@ export class NetworkManager {
         // Quản lý Đấu Trường 1v1 hiện tại
         this.activeArena = null;
 
+        // [TRANH ĐOẠT ĐỊA BÀN VÀNG & TƯỢNG LINH VẬT 3D HOLOGRAM]
+        this.territories = new Map([
+            ['spot_school_hoamai', { id: 'spot_school_hoamai', name: 'Trường Tiểu Học Hoa Mai', city: 'hcm', rulerId: 'bot_hcm_1', rulerName: 'Cơm Nắm Bến Thành Q.1', rulerScore: 180, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_town', { id: 'spot_university_town', name: 'Công Viên Làng Đại Học', city: 'hcm', rulerId: 'bot_hcm_3', rulerName: 'Onigiri Gen Z Thủ Đức', rulerScore: 220, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_q1', { id: 'spot_office_q1', name: 'Chợ Bến Thành & VP Q1', city: 'hcm', rulerId: 'bot_1', rulerName: 'Tập Đoàn Cơm Nắm Sài Gòn', rulerScore: 350, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_walking_street', { id: 'spot_walking_street', name: 'Phố Đi Bộ Nguyễn Huệ', city: 'hcm', rulerId: 'bot_hcm_2', rulerName: 'Tiệm Bếp Bà Năm Sài Gòn', rulerScore: 200, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            ['spot_school_ntranglong', { id: 'spot_school_ntranglong', name: 'Trường Tiểu Học N\'Trang Lơng', city: 'daklak', rulerId: 'bot_daklak_1', rulerName: 'Cơm Nắm Buôn Ma Thuột', rulerScore: 160, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_taynguyen', { id: 'spot_university_taynguyen', name: 'Công Viên ĐH Tây Nguyên', city: 'daklak', rulerId: 'bot_daklak_2', rulerName: 'Bếp Cơm Nắm Đắk Lắk', rulerScore: 190, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_bmt_ngasau', { id: 'spot_office_bmt_ngasau', name: 'Chợ BMT & Khu VP Ngã Sáu', city: 'daklak', rulerId: 'bot_2', rulerName: 'Bếp Cơm Nắm BMT Cao Nguyên', rulerScore: 280, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_square_10_3', { id: 'spot_square_10_3', name: 'Phố Đi Bộ Quảng Trường 10/3', city: 'daklak', rulerId: 'bot_daklak_3', rulerName: 'Onigiri Cao Nguyên Xanh', rulerScore: 210, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            ['spot_school_lemao', { id: 'spot_school_lemao', name: 'Trường Tiểu Học Lê Mao', city: 'vinh', rulerId: 'bot_vinh_1', rulerName: 'Cơm Nắm Xứ Nghệ - Vinh', rulerScore: 170, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_vinh', { id: 'spot_university_vinh', name: 'Công Viên Đại Học Vinh', city: 'vinh', rulerId: 'bot_vinh_2', rulerName: 'Tiệm Onigiri Cửa Lò', rulerScore: 180, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_lenin', { id: 'spot_office_lenin', name: 'Chợ Vinh & VP Đại Lộ Lê Nin', city: 'vinh', rulerId: 'bot_4', rulerName: 'Cơm Nắm Xứ Nghệ - TP. Vinh', rulerScore: 260, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_square_songlam', { id: 'spot_square_songlam', name: 'Phố Đi Bộ Quảng Trường Sông Lam', city: 'vinh', rulerId: 'bot_10', rulerName: 'Tiệm Cơm Nắm Bé Bông', rulerScore: 190, royaltyFee: 5000, bonusRate: 0.15 }],
+
+            ['spot_school_thanglong', { id: 'spot_school_thanglong', name: 'Trường Tiểu Học Thăng Long', city: 'hanoi', rulerId: 'bot_hanoi_3', rulerName: 'Cơm Nắm Cầu Giấy Sinh Viên', rulerScore: 210, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_university_dhqghn', { id: 'spot_university_dhqghn', name: 'Công Viên ĐHQG Hà Nội', city: 'hanoi', rulerId: 'bot_hanoi_2', rulerName: 'Bếp Nắm Hồ Gươm 36 Phố', rulerScore: 250, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_office_caugiay', { id: 'spot_office_caugiay', name: 'Chợ Đồng Xuân & VP Cầu Giấy', city: 'hanoi', rulerId: 'bot_hanoi_1', rulerName: 'Onigiri Phố Cổ Hà Nội', rulerScore: 380, royaltyFee: 5000, bonusRate: 0.15 }],
+            ['spot_walking_street_hoguom', { id: 'spot_walking_street_hoguom', name: 'Phố Đi Bộ Hồ Gươm', city: 'hanoi', rulerId: 'bot_3', rulerName: 'Onigiri Hoàng Gia Hà Nội', rulerScore: 310, royaltyFee: 5000, bonusRate: 0.15 }]
+        ]);
+
+        // [HỢP ĐỒNG CUNG ỨNG ĐỘC QUYỀN THEO GIỜ]
+        this.exclusiveContract = {
+            id: 'contract_local',
+            title: 'Cung Ứng 30 Nắm Cơm Chuẩn ISO - Trường Quốc Tế',
+            targetCount: 30,
+            durationSeconds: 300,
+            startedAt: Date.now(),
+            rewardMoney: 300000,
+            rewardRep: 50,
+            rewardExp: 500,
+            runnerUpMoney: 50000,
+            runnerUpRep: 10,
+            myProgress: 0,
+            winner: null,
+            status: 'ACTIVE'
+        };
+
+        this.myTerritoryScores = new Map();
+
         // Bộ lắng nghe sự kiện UI
         this.listeners = {
             onPlayersChange: [],
@@ -208,6 +250,15 @@ export class NetworkManager {
             }
             if (data?.leaderboard) {
                 this.leaderboard = data.leaderboard;
+            }
+            if (data?.territories && Array.isArray(data.territories)) {
+                data.territories.forEach(t => this.territories.set(t.id, t));
+            }
+            if (data?.exclusiveContract) {
+                this.exclusiveContract = data.exclusiveContract;
+                if (typeof window !== 'undefined' && window.onlineUI) {
+                    window.onlineUI.updateExclusiveContract(data.exclusiveContract);
+                }
             }
         });
 
@@ -436,6 +487,65 @@ export class NetworkManager {
             this.emitEvent('onOvertakenWarning', data);
             if (typeof window !== 'undefined' && window.onlineUI) {
                 window.onlineUI.showOvertakenWarning(data);
+            }
+        });
+
+        // [TRANH ĐOẠT ĐỊA BÀN VÀNG & TƯỢNG LINH VẬT 3D HOLOGRAM]
+        this.socket.on('territory:state', (list) => {
+            if (Array.isArray(list)) {
+                list.forEach(t => this.territories.set(t.id, t));
+            }
+        });
+
+        this.socket.on('territory:update', (list) => {
+            if (Array.isArray(list)) {
+                list.forEach(t => this.territories.set(t.id, t));
+            }
+        });
+
+        this.socket.on('territory:royalty_received', (data) => {
+            this.emitEvent('onTerritoryRoyalty', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showTerritoryRoyalty(data);
+            }
+        });
+
+        this.socket.on('territory:overthrown', (data) => {
+            if (data && data.territoryId) {
+                const t = this.territories.get(data.territoryId);
+                if (t) {
+                    t.rulerId = data.newRulerId;
+                    t.rulerName = data.newRulerName;
+                    t.rulerScore = data.newRulerScore || t.rulerScore;
+                }
+            }
+            this.emitEvent('onTerritoryOverthrown', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showTerritoryOverthrown(data);
+            }
+        });
+
+        this.socket.on('territory:lost', (data) => {
+            this.emitEvent('onTerritoryLost', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showTerritoryLost(data);
+            }
+        });
+
+        // [ĐẤU THẦU HỢP ĐỒNG CUNG ỨNG ĐỘC QUYỀN]
+        this.socket.on('contract:state', (contract) => {
+            if (contract) {
+                this.exclusiveContract = contract;
+                if (typeof window !== 'undefined' && window.onlineUI) {
+                    window.onlineUI.updateExclusiveContract(contract);
+                }
+            }
+        });
+
+        this.socket.on('contract:winner', (data) => {
+            this.emitEvent('onContractWinner', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showContractWinner(data);
             }
         });
     }
@@ -1141,6 +1251,124 @@ export class NetworkManager {
             window.onlineUI.updateRivalRadar(radarData);
         }
         this.emitEvent('onRivalRadarUpdate', radarData);
+    }
+
+    /**
+     * Lấy thông tin Chủ Tịch Khu Vực của một spot trên bản đồ
+     * @param {string} spotId 
+     */
+    getTerritoryInfo(spotId) {
+        if (!spotId) return null;
+        const normalized = spotId.startsWith('spot_') ? spotId : `spot_${spotId}`;
+        return this.territories.get(normalized) || this.territories.get(spotId) || null;
+    }
+
+    /**
+     * Kiểm tra xem người chơi hiện tại có phải Chủ Tịch Khu Vực của spotId không
+     * @param {string} spotId 
+     */
+    isTerritoryRuler(spotId) {
+        const info = this.getTerritoryInfo(spotId);
+        if (!info) return false;
+        const myName = state.brandName || state.playerName || '';
+        return (info.rulerId === this.selfId) || (myName && info.rulerName === myName);
+    }
+
+    /**
+     * Báo cáo sản lượng bán tại địa bàn để ghi nhận điểm thống trị & bản quyền thương hiệu
+     */
+    reportTerritorySales(spotId, count = 1, totalEarned = 20000, sellerName = '') {
+        const normalized = spotId && spotId.startsWith('spot_') ? spotId : `spot_${spotId}`;
+        const name = sellerName || state.brandName || state.playerName || 'Người chơi';
+
+        if (this.socket && this.isOnline) {
+            this.socket.emit('territory:sales_report', {
+                territoryId: normalized,
+                count,
+                totalEarned,
+                sellerName: name
+            });
+        } else {
+            // Giả lập ngoại tuyến (Offline Simulation)
+            const t = this.territories.get(normalized);
+            if (t) {
+                const addedScore = count * 10;
+                const prevScore = this.myTerritoryScores.get(normalized) || 0;
+                const newScore = prevScore + addedScore;
+                this.myTerritoryScores.set(normalized, newScore);
+
+                if (this.isTerritoryRuler(normalized)) {
+                    t.rulerScore = Math.max(t.rulerScore, newScore);
+                } else {
+                    // Kiểm tra soán ngôi bot khi offline
+                    if (newScore > t.rulerScore) {
+                        const oldName = t.rulerName;
+                        t.rulerId = this.selfId;
+                        t.rulerName = name;
+                        t.rulerScore = newScore;
+
+                        if (typeof window !== 'undefined' && window.onlineUI) {
+                            window.onlineUI.showTerritoryOverthrown({
+                                territoryId: normalized,
+                                territoryName: t.name,
+                                newRulerName: name,
+                                oldRulerName: oldName,
+                                newRulerScore: newScore
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Giao cơm từ thùng xe vào Hợp Đồng Cung Ứng Độc Quyền Theo Giờ
+     */
+    deliverContractRice(count = 1) {
+        const availableInInventory = state.inventory ? state.inventory.length : 0;
+        if (availableInInventory <= 0) {
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showToastNotification('⚠️ Thùng xe không còn nắm cơm nào để giao thầu! Hãy về Xưởng nấu thêm.');
+            }
+            return { success: false, reason: 'EMPTY_INVENTORY' };
+        }
+
+        const deliverCount = Math.min(count, availableInInventory);
+        for (let i = 0; i < deliverCount; i++) {
+            state.removeRiceBallAny();
+        }
+        state.save();
+        state.notify();
+
+        const name = state.brandName || state.playerName || 'Bạn';
+
+        if (this.socket && this.isOnline) {
+            this.socket.emit('contract:deliver', {
+                count: deliverCount,
+                playerName: name
+            });
+        } else {
+            // Offline simulation
+            this.exclusiveContract.myProgress = (this.exclusiveContract.myProgress || 0) + deliverCount;
+            if (this.exclusiveContract.myProgress >= this.exclusiveContract.targetCount && !this.exclusiveContract.winner) {
+                this.exclusiveContract.winner = { id: this.selfId, name: name };
+                this.exclusiveContract.status = 'COMPLETED';
+                if (typeof window !== 'undefined' && window.onlineUI) {
+                    window.onlineUI.showContractWinner({
+                        winnerName: name,
+                        rewardMoney: this.exclusiveContract.rewardMoney,
+                        rewardRep: this.exclusiveContract.rewardRep,
+                        rewardExp: this.exclusiveContract.rewardExp
+                    });
+                }
+            }
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.updateExclusiveContract(this.exclusiveContract);
+            }
+        }
+
+        return { success: true, count: deliverCount };
     }
 
     notifyStatus() {

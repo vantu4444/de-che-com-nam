@@ -4,6 +4,34 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.8-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP TẦM CAO – ĐỢT 2: TRANH ĐOẠT ĐỊA BÀN VÀNG, TƯỢNG LINH VẬT 3D HOLOGRAM & ĐẤU THẦU HỢP ĐỒNG ĐỘC QUYỀN)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add golden territory domination, 3D hologram mascot statues, exclusive supply contract bidding and royalty fee rewards
+- **Trạng thái:** Nghiệm thu **100% PASS (89/89 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Hệ Thống Tranh Đoạt Địa Bàn Vàng & Tượng Linh Vật 3D Hologram (`server/server.js`, `src/city3D.js`, `src/world.js`, `src/selling.js`):**
+     - Tại 4 khu vực trọng điểm (**Trường Học, Công Viên, Chợ Bến Thành, Phố Đi Bộ**) thuộc cả 4 chi nhánh (**TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội**), hệ thống tự động ghi nhận sản lượng bán cơm nắm chuẩn **ISO 22000 & ATVSTP** (mỗi nắm cơm bán ra tích lũy `+10 điểm thống trị`).
+     - Tự động dựng **Tượng Linh Vật Cơm Nắm 3D Hologram Vàng Kim (`linh_vat_1`)** ngay cạnh Ô Vạch Xanh: Bệ đá bát giác Hologram xoay liên tục, thân linh vật Onigiri vàng óng ánh với dải rong biển Nori vàng đồng đậm và **Vương Miện Vàng 👑 3 chóp** gắn ngọc ruby đỏ biểu trưng cho **👑 Chủ Tịch Khu Vực**.
+     - **Bảng tên thương hiệu Hologram 3D lơ lửng:** Hiển thị danh xưng Chủ Tịch, điểm thống trị hiện tại (`⭐ XXXđ • +15% Vàng • +5k Tip`).
+     - **Đặc Quyền Chủ Tịch Khu Vực:**
+       + Hưởng đặc quyền **`+15% Doanh Thu Vàng`** khi bán tại địa bàn mình thống trị (có chữ bay vàng kim ăn mừng).
+       + Nhận **`+5.000đ Tiền Bản Quyền Thương Hiệu`** mỗi khi bất kỳ người chơi nào khác mở sạp bán cơm tại khu vực của mình.
+     - **Cơ Chế Soán Ngôi & Báo Thù:**
+       + Khi một người chơi vượt điểm thống trị của Chủ Tịch hiện tại: Tượng Hologram lập tức đổi tên và vương miện sang tân Chủ Tịch.
+       + Phát loa thông báo toàn server: **`👑 SOÁN NGÔI ĐỊA BÀN! [Tên người mới] đã chiếm lĩnh [Tên khu vực]!`**
+       + Cựu chủ tịch nhận cảnh báo báo động đỏ kèm nút **`🔥 Giành Lại Địa Bàn`** (bấm vào mở ngay thách đấu 1v1 hoặc hướng dẫn đến sạp mở bán giành lại địa bàn).
+  2. **Đấu Thầu Hợp Đồng Cung Ứng Độc Quyền Theo Giờ (`server/server.js`, `src/network.js`, `src/onlineUI.js`, `index.html`, `style.css`):**
+     - Hệ thống tự động phát hợp đồng: *"Cung ứng 30 nắm cơm chuẩn ISO cho Trường Quốc Tế trong 5 phút"*.
+     - Thẻ giao diện `#exclusiveContractWidget` hiển thị thời gian đếm ngược `⏳ 04:59`, tiến trình giao `X / 30 nắm` và nút **`🚚 Giao Cơm Thầu (Giao 5 nắm)`**.
+     - Người chơi đầu tiên giao đủ 30 nắm ôm trọn **Giải Thưởng Độc Quyền (+300.000đ tiền mặt + 50 Uy Tín ⭐ + 500 EXP)**, các vị trí sau nhận thưởng khuyến khích.
+     - Đảm bảo chuẩn Mobile Safe Area (375x812), chế độ thu gọn `−` / `+`, **Zero-Overlap** với Minimap, Joystick hay nút Chat.
+  3. **Nghiệm Thu Toàn Diện 89/89 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Giữ nguyên 100% tính năng Chat, Kết bạn, Thách đấu 1v1, Vườn nguyên liệu, Bếp hàng đợi, Robot tự động, 4 Chi nhánh toàn quốc, Tự động bán sạp, Hướng dẫn tân thủ 5 bước và Cyber Food-Tech.
+     - 0 Console Error, 0 va chạm hình học giao diện trên Desktop (1440x900) và iPhone (375x812).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.7-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP TẦM CAO – ĐỢT 1: PHONG CÁCH CYBER FOOD-TECH TƯƠNG LAI & THANH ĐUA CẤP ĐỘ SÁT SƯỜN THỜI GIAN THỰC)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add cyber food-tech hologram zones, futuristic food pods, live rival radar bar and real-time overtake alerts
