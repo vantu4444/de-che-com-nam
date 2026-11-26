@@ -103,7 +103,9 @@ export class Player {
             bounce: bounce,
             variant: 'player',
             nearKitchen: this.isNearKitchen,
-            vehicle: state.currentVehicle
+            vehicle: state.currentVehicle,
+            evolutionTier: state.getEvolutionTier ? state.getEvolutionTier() : 1,
+            skin: state.equippedSkin || 'skin_default'
         });
     }
 }

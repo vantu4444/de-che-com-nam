@@ -15,12 +15,16 @@ import {
     ACHIEVEMENT_ORDER,
     resolveFillingId,
     DAILY_ATTENDANCE_REWARDS,
-    FILLING_MASTERY_THRESHOLDS
+    FILLING_MASTERY_THRESHOLDS,
+    EVOLUTION_TIERS,
+    SKINS_CONFIG
 } from './state.js';
 import { audio } from './audio.js';
 import { sellingManager } from './selling.js';
 import { deliveryManager } from './deliveryMode.js';
 import { onlineUI } from './onlineUI.js';
+import { characterRenderer } from './characterRenderer.js';
+import { network } from './network.js';
 
 export const QUEST_DEFS = {
     // === GIAI ĐOẠN 1: KHỞI NGHIỆP VỈA HÈ (NV 1–5) ===
@@ -719,6 +723,9 @@ export class QuestManager {
                             <button type="button" class="phone-tab-btn ${this.activeTab === 'online' ? 'active' : ''}" data-tab="online">
                                 🌐 Cộng Đồng
                             </button>
+                            <button type="button" class="phone-tab-btn ${this.activeTab === 'wardrobe' ? 'active' : ''}" data-tab="wardrobe">
+                                🎭 Biến Hóa
+                            </button>
                         </div>
 
                         <!-- Nội dung tab đang chọn -->
@@ -760,6 +767,8 @@ export class QuestManager {
                 return this.renderTycoonTab();
             case 'online':
                 return onlineUI.renderOnlineTab();
+            case 'wardrobe':
+                return this.renderWardrobeTab();
             default:
                 return '';
         }
@@ -1515,6 +1524,173 @@ export class QuestManager {
         `;
     }
 
+    // --- TAB MỚI: BIẾN HÓA NHÂN VẬT & TỦ ĐỒ LINH VẬT ONIGIRI ---
+    renderWardrobeTab() {
+        const curTier = state.getEvolutionTier();
+        const curTierCfg = state.getEvolutionConfig();
+        const curSkinCfg = SKINS_CONFIG[state.equippedSkin] || SKINS_CONFIG.skin_default;
+        const unlockedSkins = state.unlockedSkins || ['skin_default'];
+
+        // Tính tiến trình bậc tiếp theo
+        let nextTierHint = 'Đã đạt bậc cao nhất! 👑';
+        let tierProgressPct = 100;
+        if (curTier < 4) {
+            const nextTierCfg = EVOLUTION_TIERS[curTier + 1];
+            if (nextTierCfg) {
+                const reqLvl = nextTierCfg.requiredLevel || 1;
+                const reqKt = nextTierCfg.requiredKitchenTier || 1;
+                nextTierHint = `Cần đạt Cấp ${reqLvl} & Xưởng Bếp Cấp ${reqKt} để tiến hóa lên ${nextTierCfg.name}`;
+                const curLvl = state.level || 1;
+                tierProgressPct = Math.min(100, Math.floor((curLvl / reqLvl) * 100));
+            }
+        }
+
+        const canBlindBoxMoney = state.money >= 50000;
+        const canBlindBoxRep = state.reputation >= 20;
+
+        return `
+            <div class="tab-content wardrobe-view">
+                <div class="tab-banner-hint">
+                    🎭 <strong>Tiến Hóa & Tủ Đồ Onigiri:</strong> Tiến hóa sự nghiệp qua 4 bậc danh giá theo Cấp độ & Xưởng Bếp, đồng thời sưu tập 6 trang phục linh vật độc quyền mang lại hiệu ứng buff toàn diện!
+                </div>
+
+                <!-- 1. LIVE PREVIEW CARD -->
+                <div class="wardrobe-preview-card">
+                    <div class="wardrobe-preview-left">
+                        <canvas id="wardrobePreviewCanvas" width="160" height="160" class="wardrobe-canvas"></canvas>
+                        <div class="preview-badge-row">
+                            <span class="preview-tier-pill">Bậc ${curTier}/4</span>
+                            <span class="preview-skin-pill">${curSkinCfg.name}</span>
+                        </div>
+                    </div>
+                    <div class="wardrobe-preview-right">
+                        <div class="wardrobe-title-row">
+                            <h4>${curTierCfg.name}</h4>
+                            <span class="wardrobe-title-badge">${curTierCfg.title}</span>
+                        </div>
+                        <p class="wardrobe-desc-text">${curTierCfg.desc}</p>
+                        
+                        <div class="wardrobe-buffs-grid">
+                            <div class="w-buff-item ${curTier >= 4 ? 'active' : ''}">
+                                <span>⚡ Tốc độ di chuyển:</span>
+                                <strong>+${curTier >= 4 ? 25 : 0}%</strong>
+                            </div>
+                            <div class="w-buff-item ${curTier >= 2 ? 'active' : ''}">
+                                <span>🍲 Tốc độ nấu cơm:</span>
+                                <strong>+${curTier >= 2 ? 15 : 0}%</strong>
+                            </div>
+                            <div class="w-buff-item ${curTier >= 3 ? 'active' : ''}">
+                                <span>👑 Tỷ lệ khách VIP:</span>
+                                <strong>+${curTier >= 3 ? 20 : 0}%</strong>
+                            </div>
+                            <div class="w-buff-item ${curTier >= 3 ? 'active' : ''}">
+                                <span>🏢 Doanh thu 4 chi nhánh:</span>
+                                <strong>+${curTier >= 3 ? 10 : 0}%</strong>
+                            </div>
+                        </div>
+
+                        <div class="wardrobe-progress-box">
+                            <div class="wp-label">
+                                <small>${nextTierHint}</small>
+                                <small>${tierProgressPct}%</small>
+                            </div>
+                            <div class="wp-bar-bg">
+                                <div class="wp-bar-fill" style="width: ${tierProgressPct}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MỞ TÚI MÙ ONIGIRI (BLIND BOX) -->
+                <div class="wardrobe-section-card blindbox-card">
+                    <div class="sec-header">
+                        <span class="sec-icon">🎁</span>
+                        <div>
+                            <h4>Túi Mù Linh Vật Onigiri (Blind Box)</h4>
+                            <small>Mở ngẫu nhiên trang phục độc quyền. Nếu trùng tự động đổi thành <strong>+15 Uy Tín & +150 EXP</strong>!</small>
+                        </div>
+                    </div>
+                    <div class="blindbox-action-row">
+                        <button type="button" class="btn-open-blindbox ${canBlindBoxMoney ? '' : 'disabled'}" data-currency="money" ${canBlindBoxMoney ? '' : 'disabled'}>
+                            💰 Mở Bằng Tiền Mặt (50.000đ)
+                        </button>
+                        <button type="button" class="btn-open-blindbox rep-btn ${canBlindBoxRep ? '' : 'disabled'}" data-currency="reputation" ${canBlindBoxRep ? '' : 'disabled'}>
+                            ⭐ Mở Bằng Uy Tín (20 Uy Tín)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. TIẾN TRÌNH 4 BẬC SỰ NGHIỆP -->
+                <div class="wardrobe-section-card">
+                    <div class="sec-header">
+                        <span class="sec-icon">🏆</span>
+                        <div>
+                            <h4>4 Bậc Tiến Hóa Sự Nghiệp</h4>
+                            <small>Mở khóa tự động theo Cấp độ & Cấp Xưởng Bếp</small>
+                        </div>
+                    </div>
+                    <div class="tiers-accordion-list">
+                        ${[1, 2, 3, 4].map(t => {
+                            const cfg = EVOLUTION_TIERS[t];
+                            const isReached = curTier >= t;
+                            const isCurrent = curTier === t;
+                            return `
+                                <div class="tier-row-card ${isReached ? 'unlocked' : 'locked'} ${isCurrent ? 'current' : ''}">
+                                    <div class="trc-badge">${isCurrent ? '👑 ĐANG MẶC' : (isReached ? '✓ ĐÃ ĐẠT' : `BẬC ${t}`)}</div>
+                                    <div class="trc-info">
+                                        <strong>Bậc ${t}: ${cfg.name}</strong>
+                                        <p>${cfg.desc}</p>
+                                        <small class="trc-req">Yêu cầu: Cấp độ ${cfg.requiredLevel}+ & Xưởng Cấp ${cfg.requiredKitchenTier}+</small>
+                                    </div>
+                                    <div class="trc-buff"><span class="buff-chip">${cfg.buffDesc}</span></div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- 4. BỘ SƯU TẬP 6 TRANG PHỤC (SKINS) -->
+                <div class="wardrobe-section-card">
+                    <div class="sec-header">
+                        <span class="sec-icon">👘</span>
+                        <div>
+                            <h4>Tủ Đồ Biến Hóa Linh Vật (${unlockedSkins.length}/6 Trang Phục)</h4>
+                            <small>Biến hóa diện mạo linh vật cơm nắm trên bản đồ 3D và đa người chơi</small>
+                        </div>
+                    </div>
+                    <div class="skins-grid">
+                        ${Object.values(SKINS_CONFIG).map(sk => {
+                            const isUnlocked = unlockedSkins.includes(sk.id);
+                            const isEquipped = state.equippedSkin === sk.id;
+                            return `
+                                <div class="skin-card ${isUnlocked ? 'unlocked' : 'locked'} ${isEquipped ? 'equipped' : ''}">
+                                    <div class="skin-card-header">
+                                        <span class="skin-card-icon">${sk.icon}</span>
+                                        <span class="skin-rarity-tag rarity-${sk.id}">${sk.rarity}</span>
+                                    </div>
+                                    <div class="skin-card-body">
+                                        <h5>${sk.name}</h5>
+                                        <p class="skin-card-desc">${sk.desc}</p>
+                                        <div class="skin-card-buff">⚡ ${sk.buffText}</div>
+                                    </div>
+                                    <div class="skin-card-footer">
+                                        ${isEquipped ? `
+                                            <button type="button" class="btn-skin-action equipped" disabled>✓ Đang Mặc</button>
+                                        ` : (isUnlocked ? `
+                                            <button type="button" class="btn-skin-action btn-equip-skin" data-skin-id="${sk.id}">Trang Bị</button>
+                                        ` : `
+                                            <button type="button" class="btn-skin-action locked" disabled>🔒 Trong Túi Mù</button>
+                                        `)}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     bindEvents() {
         const btnClose = document.getElementById('btnClosePhone');
         if (btnClose) btnClose.onclick = () => this.close();
@@ -1816,6 +1992,62 @@ export class QuestManager {
         // Gắn sự kiện Sub-tab Cộng Đồng Online
         if (this.activeTab === 'online') {
             onlineUI.bindTabEvents(this.container);
+        }
+
+        // Gắn sự kiện Tab Biến Hóa & Tủ Đồ
+        if (this.activeTab === 'wardrobe') {
+            const previewCanvas = document.getElementById('wardrobePreviewCanvas');
+            if (previewCanvas) {
+                characterRenderer.renderPreview(previewCanvas, state.getEvolutionTier(), state.equippedSkin);
+            }
+
+            const equipBtns = this.container.querySelectorAll('.btn-equip-skin');
+            equipBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const sid = btn.dataset.skinId;
+                    if (state.equipSkin(sid)) {
+                        audio.playClick();
+                        if (network && typeof network.updatePlayerState === 'function') {
+                            network.updatePlayerState({
+                                evolutionTier: state.getEvolutionTier(),
+                                equippedSkin: state.equippedSkin
+                            });
+                        }
+                        this.render();
+                    }
+                };
+            });
+
+            const blindBoxBtns = this.container.querySelectorAll('.btn-open-blindbox');
+            blindBoxBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const currency = btn.dataset.currency;
+                    const res = state.openBlindBox(currency);
+                    if (res.success) {
+                        audio.playLevelUp();
+                        audio.playTingComplete();
+                        if (network && typeof network.updatePlayerState === 'function') {
+                            network.updatePlayerState({
+                                evolutionTier: state.getEvolutionTier(),
+                                equippedSkin: state.equippedSkin
+                            });
+                        }
+                        if (res.isDuplicate) {
+                            sellingManager.showToast(`🎁 Trùng trang phục [${res.skin.name}]! Đã quy đổi thành +15 Uy Tín & +150 EXP!`);
+                        } else {
+                            sellingManager.showToast(`🎉 CHÚC MỪNG! Mở khóa thành công trang phục [${res.skin.name}]!`);
+                        }
+                        this.render();
+                    } else {
+                        audio.playError();
+                        if (res.reason === 'already_all_unlocked') {
+                            sellingManager.showToast('✨ Bạn đã sưu tập trọn bộ 6 trang phục Onigiri!');
+                        } else {
+                            sellingManager.showToast('⚠️ Không đủ tiền mặt hoặc Uy Tín để mở Túi Mù!');
+                        }
+                    }
+                };
+            });
         }
 
         // Tiện ích Điểm Danh 7 Ngày & Sổ Tay Tinh Thông 15 Vị

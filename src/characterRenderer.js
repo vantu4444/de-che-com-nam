@@ -145,7 +145,9 @@ export class CharacterRenderer {
             customScale = 1.0,
             vehicle = 'walk',
             colorVariation = 0,
-            isHoldingOnigiri = false
+            isHoldingOnigiri = false,
+            evolutionTier = 1,
+            skin = 'skin_default'
         } = options;
 
         const variantScale = (this.variantScales[variant] || 1.0) * customScale;
@@ -188,11 +190,11 @@ export class CharacterRenderer {
             ctx.drawImage(this.baseSprite, drawX, drawY, this.baseWidth, this.baseHeight);
 
             // Vẽ thêm phụ kiện vector chuyên biệt khớp 100% lên thân/đầu
-            this.drawAccessories(ctx, variant, nearKitchen, colorVariation);
+            this.drawAccessories(ctx, variant, nearKitchen, colorVariation, evolutionTier, skin);
         } else {
             // Trường hợp 3: Fallback an toàn khi chưa nạp xong ảnh
             this.drawFallback(ctx);
-            this.drawAccessories(ctx, variant, nearKitchen, colorVariation);
+            this.drawAccessories(ctx, variant, nearKitchen, colorVariation, evolutionTier, skin);
         }
 
         // 7. VẼ NẮM CƠM CẦM TAY NẾU ĐÃ MUA THÀNH CÔNG
@@ -264,11 +266,13 @@ export class CharacterRenderer {
     }
 
     // Phân phối vẽ phụ kiện vector cho từng biến thể nhân vật
-    drawAccessories(ctx, variant, nearKitchen, colorVariation = 0) {
+    drawAccessories(ctx, variant, nearKitchen, colorVariation = 0, evolutionTier = 1, skin = 'skin_default') {
         switch (variant) {
             case 'player':
-                if (nearKitchen) {
-                    this.drawChefHat(ctx);
+                if (skin && skin !== 'skin_default') {
+                    this.drawSkinAccessories(ctx, skin);
+                } else {
+                    this.drawEvolutionTierAccessories(ctx, evolutionTier, nearKitchen);
                 }
                 break;
             case 'student':
@@ -287,6 +291,434 @@ export class CharacterRenderer {
                 this.drawStaffAccessories(ctx);
                 break;
         }
+    }
+
+    // =========================================================================
+    // HỆ THỐNG TIẾN HÓA SỰ NGHIỆP 4 BẬC (linh_vat_1)
+    // =========================================================================
+    drawEvolutionTierAccessories(ctx, tier = 1, nearKitchen = false) {
+        ctx.save();
+
+        if (tier === 1) {
+            // --- BẬC 1: TÂN BINH KHỞI NGHIỆP ---
+            // 1. Băng rôn trắng quấn trán chữ đỏ "QUYẾT THẮNG"
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            this.roundRect(ctx, -14, -18, 28, 5, 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Chấm tròn đỏ mặt trời ở giữa băng rôn
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(0, -15.5, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Dây đai túi vải thô đeo chéo
+            ctx.strokeStyle = '#92400e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-12, -4);
+            ctx.lineTo(12, 14);
+            ctx.stroke();
+
+            // Túi vải nhỏ bên hông
+            ctx.fillStyle = '#b45309';
+            ctx.beginPath();
+            this.roundRect(ctx, 8, 10, 8, 7, 2);
+            ctx.fill();
+
+        } else if (tier === 2) {
+            // --- BẬC 2: BẾP TRƯỞNG CHUẨN ISO & ATVSTP ---
+            // 1. Mũ đầu bếp cao xếp nếp viền vàng
+            this.drawChefHat(ctx);
+
+            // 2. Áo bếp trắng hai hàng khuy viền vàng
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            this.roundRect(ctx, -12, 2, 24, 16, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2 hàng cúc áo bếp
+            ctx.fillStyle = '#d97706';
+            ctx.beginPath();
+            ctx.arc(-4, 6, 1.2, 0, Math.PI * 2);
+            ctx.arc(-4, 11, 1.2, 0, Math.PI * 2);
+            ctx.arc(4, 6, 1.2, 0, Math.PI * 2);
+            ctx.arc(4, 11, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 3. Huy hiệu Khiên ISO & ATVSTP phát sáng trước ngực
+            ctx.fillStyle = '#10b981';
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(8, 5);
+            ctx.lineTo(13, 7);
+            ctx.lineTo(10.5, 13);
+            ctx.lineTo(8, 11);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Hiệu ứng khói ấm bốc lên từ đỉnh đầu
+            const smokeShift = Math.sin(Date.now() / 300) * 3;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.beginPath();
+            ctx.arc(-4 + smokeShift, -30, 3, 0, Math.PI * 2);
+            ctx.arc(2 - smokeShift, -34, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (tier === 3) {
+            // --- BẬC 3: TỔNG GIÁM ĐỐC CHUỖI TOÀN QUỐC ---
+            // 1. Áo vest blazer xanh navy sang trọng
+            ctx.fillStyle = '#1e3a8a';
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            this.roundRect(ctx, -13, 0, 26, 18, 4);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cổ áo sơ mi trắng & Cà vạt đỏ
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(-5, 0);
+            ctx.lineTo(0, 5);
+            ctx.lineTo(5, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cà vạt đỏ son
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(-2, 4);
+            ctx.lineTo(2, 4);
+            ctx.lineTo(3, 12);
+            ctx.lineTo(0, 15);
+            ctx.lineTo(-3, 12);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2. Kính râm đen thời trang phong độ
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            this.roundRect(ctx, -12, -7, 10, 6, 2);
+            this.roundRect(ctx, 2, -7, 10, 6, 2);
+            ctx.fill();
+            ctx.stroke();
+            // Cầu nối kính
+            ctx.beginPath();
+            ctx.moveTo(-2, -5);
+            ctx.lineTo(2, -5);
+            ctx.stroke();
+
+            // 3. Máy tính bảng điều hành chuỗi chi nhánh trên tay
+            ctx.fillStyle = '#0284c7';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            this.roundRect(ctx, 9, 4, 9, 13, 2);
+            ctx.fill();
+            ctx.stroke();
+            // Màn hình sáng
+            ctx.fillStyle = '#e0f2fe';
+            ctx.fillRect(10.5, 5.5, 6, 10);
+
+        } else if (tier >= 4) {
+            // --- BẬC 4: VUA CƠM NẮM CYBER FOOD-TECH ---
+            const now = Date.now();
+            const pulse = Math.sin(now / 200) * 0.2 + 0.8;
+
+            // 1. Hào quang vàng kim xoay quanh thân
+            ctx.strokeStyle = `rgba(250, 204, 21, ${pulse * 0.7})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.ellipse(0, 4, 22, 20, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 2. Giáp ngực công nghệ Cyber Trắng - Xanh Ngọc
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            this.roundRect(ctx, -13, 0, 26, 18, 4);
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Đèn LED lõi năng lượng ngực (Reactor Core)
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.arc(0, 8, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 3. Kính quét Laser Cyber Visor
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.95)';
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            this.roundRect(ctx, -13, -8, 26, 6, 3);
+            ctx.fill();
+            ctx.stroke();
+
+            // 4. Ba lô phản lực Jetpack sau lưng phun lửa Plasma
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(-17, 4, 4, 12);
+            ctx.fillRect(13, 4, 4, 12);
+
+            // Tia lửa phản lực Cyan
+            ctx.fillStyle = (now % 200 < 100) ? '#00f0ff' : '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(-17, 16);
+            ctx.lineTo(-13, 16);
+            ctx.lineTo(-15, 22 + Math.random() * 4);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(13, 16);
+            ctx.lineTo(17, 16);
+            ctx.lineTo(15, 22 + Math.random() * 4);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+
+    // =========================================================================
+    // BỘ SƯU TẬP TRANG PHỤC BIẾN HÓA (SKINS)
+    // =========================================================================
+    drawSkinAccessories(ctx, skinId) {
+        ctx.save();
+
+        if (skinId === 'skin_samurai') {
+            // 1. Mũ giáp Samurai Kabuto đỏ sẫm sừng trăng khuyết vàng
+            ctx.fillStyle = '#7f1d1d';
+            ctx.strokeStyle = '#b91c1c';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            this.roundRect(ctx, -14, -22, 28, 8, 3);
+            ctx.fill();
+            ctx.stroke();
+
+            // Sừng trăng khuyết vàng kim (Crescent Horn)
+            ctx.fillStyle = '#ffd700';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(0, -22, 10, Math.PI * 1.1, Math.PI * 1.9);
+            ctx.lineTo(0, -20);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. Giáp vảy cá đỏ son
+            ctx.fillStyle = '#991b1b';
+            ctx.beginPath();
+            this.roundRect(ctx, -12, 1, 24, 16, 3);
+            ctx.fill();
+
+            // 3. Thanh kiếm Katana bên hông
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(-16, 4);
+            ctx.lineTo(-8, 18);
+            ctx.stroke();
+            // Chuôi kiếm
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(-17, 2);
+            ctx.lineTo(-15, 5);
+            ctx.stroke();
+
+        } else if (skinId === 'skin_god_of_wealth') {
+            // 1. Mũ cánh chuồn Thần Tài màu đỏ viền vàng
+            ctx.fillStyle = '#dc2626';
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            this.roundRect(ctx, -10, -24, 20, 10, 3);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2 Cánh chuồn vươn sang hai bên
+            ctx.fillStyle = '#b91c1c';
+            ctx.beginPath();
+            this.roundRect(ctx, -24, -20, 14, 4, 2);
+            this.roundRect(ctx, 10, -20, 14, 4, 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 2. Áo gấm đỏ thêu hoa văn
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            this.roundRect(ctx, -12, 1, 24, 16, 4);
+            ctx.fill();
+
+            // 3. Thỏi vàng kim Nguyên Bảo trên tay
+            ctx.fillStyle = '#ffd700';
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(10, 8, 5, 0, Math.PI);
+            ctx.lineTo(14, 5);
+            ctx.lineTo(6, 5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Hạt xu vàng lấp lánh dưới chân
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(-8, 19, 2.5, 0, Math.PI * 2);
+            ctx.arc(8, 19, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (skinId === 'skin_astronaut') {
+            // 1. Mũ phi hành gia vòm kính tròn phản quang
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(0, -8, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Ánh sao phản chiếu trên kính
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-6, -14, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Bình dưỡng khí kép sau lưng
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(-17, 2, 4, 14);
+            ctx.fillRect(13, 2, 4, 14);
+
+            // 3. Bộ giáp phi hành trắng tinh
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            this.roundRect(ctx, -12, 2, 24, 16, 4);
+            ctx.fill();
+            ctx.stroke();
+
+        } else if (skinId === 'skin_mecha') {
+            // 1. Giáp kim loại Titan xám bạc
+            ctx.fillStyle = '#64748b';
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            this.roundRect(ctx, -13, 0, 26, 18, 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Khớp nối cơ khí
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-9, 5, 18, 2);
+
+            // 2. Kính Visor laser đỏ
+            ctx.fillStyle = '#ef4444';
+            ctx.shadowColor = '#ef4444';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(-11, -8, 22, 4);
+            ctx.shadowBlur = 0;
+
+            // 3. Ăng-ten radar mini nhô trên đỉnh đầu
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -18);
+            ctx.lineTo(0, -25);
+            ctx.stroke();
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(0, -25, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (skinId === 'skin_dj_neon') {
+            const now = Date.now();
+            const djColor = (now % 900 < 300) ? '#ec4899' : (now % 900 < 600 ? '#00f0ff' : '#a855f7');
+
+            // 1. Tai nghe chụp tai DJ khổng lồ nhấp nháy 7 màu
+            ctx.strokeStyle = djColor;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, -12, 16, Math.PI * 0.9, Math.PI * 2.1);
+            ctx.stroke();
+
+            // 2 ốp tai nghe
+            ctx.fillStyle = djColor;
+            ctx.shadowColor = djColor;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(-15, -8, 5, 0, Math.PI * 2);
+            ctx.arc(15, -8, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // 2. Kính LED Equalizer sóng âm
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(-12, -7, 24, 6);
+            ctx.fillStyle = '#22c55e';
+            // Các vạch led nhảy theo nhạc
+            const h1 = (now % 300) / 100 * 2 + 1;
+            const h2 = (now % 400) / 100 * 2 + 1;
+            ctx.fillRect(-8, -4, 2, h1);
+            ctx.fillRect(-4, -5, 2, h2);
+            ctx.fillRect(0, -6, 2, h1 + 1);
+            ctx.fillRect(4, -5, 2, h2);
+            ctx.fillRect(8, -4, 2, h1);
+
+            // 3. Áo khoác dạ quang Neon
+            ctx.fillStyle = '#1e1b4b';
+            ctx.strokeStyle = djColor;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            this.roundRect(ctx, -12, 1, 24, 16, 4);
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Vẽ xem trước nhân vật phóng to trên Canvas (Live Preview)
+     */
+    renderPreview(canvas, evolutionTier = 1, skinId = 'skin_default') {
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const cw = canvas.width;
+        const ch = canvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+
+        this.render(ctx, {
+            x: cw / 2,
+            y: ch / 2 + 10,
+            facing: 1,
+            bounce: 0,
+            variant: 'player',
+            customScale: 2.2, // Phóng to 2.2 lần cho Live Preview sắc nét
+            evolutionTier: evolutionTier,
+            skin: skinId
+        });
     }
 
     // Vẽ nắm cơm nhỏ Onigiri chuẩn ISO cầm trên tay khi khách mua xong
@@ -1011,7 +1443,9 @@ export class CharacterRenderer {
             facing: facing,
             bounce: isStallOpen ? 0 : Math.sin(Date.now() / 200) * 2,
             variant: 'player',
-            vehicle: vehicleId
+            vehicle: vehicleId,
+            evolutionTier: player.evolutionTier || 1,
+            skin: player.equippedSkin || 'skin_default'
         });
 
         // Bảng tên thương hiệu + Cấp độ phía trên đầu

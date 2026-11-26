@@ -190,6 +190,8 @@ export class NetworkManager {
                         isStallOpen: false,
                         totalRevenue: state.stats?.totalRevenue || 0,
                         reputation: state.reputation || 100,
+                        evolutionTier: state.getEvolutionTier ? state.getEvolutionTier() : 1,
+                        equippedSkin: state.equippedSkin || 'skin_default',
                         netWorth: typeof state.getNetWorth === 'function' ? state.getNetWorth() : (state.money || 50000)
                     });
                 });
@@ -289,6 +291,8 @@ export class NetworkManager {
             if (typeof data.isStallOpen === 'boolean') p.isStallOpen = data.isStallOpen;
             if (data.vehicleId) p.vehicleId = data.vehicleId;
             if (data.facing) p.facing = data.facing;
+            if (data.evolutionTier) p.evolutionTier = data.evolutionTier;
+            if (data.equippedSkin) p.equippedSkin = data.equippedSkin;
             this.notifyPlayers();
         });
 
@@ -619,7 +623,9 @@ export class NetworkManager {
                 level: state.level,
                 brandName: state.brandName,
                 totalRevenue: state.stats?.totalRevenue || 0,
-                reputation: state.reputation || 100
+                reputation: state.reputation || 100,
+                evolutionTier: state.getEvolutionTier ? state.getEvolutionTier() : 1,
+                equippedSkin: state.equippedSkin || 'skin_default'
             });
         }
     }

@@ -9465,6 +9465,482 @@ body, html {
     }
 }
 
+/* ==========================================================================
+   HỆ THỐNG TIẾN HÓA 4 BẬC & TỦ ĐỒ BIẾN HÓA LINH VẬT ONIGIRI (WARDROBE)
+   ========================================================================== */
+
+.wardrobe-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 24px;
+}
+
+/* 1. Live Preview Card */
+.wardrobe-preview-card {
+    display: flex;
+    flex-direction: row;
+    gap: 14px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.wardrobe-preview-card::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.wardrobe-preview-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.wardrobe-canvas {
+    width: 130px;
+    height: 130px;
+    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+    border: 2px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 0 16px rgba(56, 189, 248, 0.15);
+}
+
+.preview-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+}
+
+.preview-tier-pill {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid #7dd3fc;
+}
+
+.preview-skin-pill {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    border: 1px solid #fde68a;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wardrobe-preview-right {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.wardrobe-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.wardrobe-title-row h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.2px;
+}
+
+.wardrobe-title-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #6ee7b7;
+}
+
+.wardrobe-desc-text {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.wardrobe-buffs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.w-buff-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #64748b;
+}
+
+.w-buff-item.active {
+    color: #e2e8f0;
+}
+
+.w-buff-item strong {
+    font-weight: 800;
+    color: #64748b;
+}
+
+.w-buff-item.active strong {
+    color: #38bdf8;
+}
+
+.wardrobe-progress-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wp-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.wp-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #1e293b;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #10b981);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+/* 2. Section Cards & Blind Box */
+.wardrobe-section-card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.blindbox-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(76, 29, 149, 0.35));
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+.blindbox-action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btn-open-blindbox {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.btn-open-blindbox:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+.btn-open-blindbox.rep-btn {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    border-color: #c4b5fd;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-open-blindbox.disabled,
+.btn-open-blindbox:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+/* 3. Tiers Accordion List */
+.tiers-accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tier-row-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    transition: border-color 0.2s ease;
+}
+
+.tier-row-card.unlocked {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.tier-row-card.current {
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.trc-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #334155;
+    color: #94a3b8;
+}
+
+.tier-row-card.unlocked .trc-badge {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.tier-row-card.current .trc-badge {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+}
+
+.trc-info strong {
+    font-size: 13px;
+    color: #f8fafc;
+}
+
+.trc-info p {
+    margin: 3px 0 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.trc-req {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    color: #fbbf24;
+}
+
+.trc-buff {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+.buff-chip {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #7dd3fc;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 4. Skins Grid */
+.skins-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+}
+
+.skin-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
+    position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.skin-card.unlocked {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.skin-card.equipped {
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.skin-card.locked {
+    opacity: 0.65;
+}
+
+.skin-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.skin-card-icon {
+    font-size: 24px;
+}
+
+.skin-rarity-tag {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #334155;
+    color: #cbd5e1;
+}
+
+.skin-rarity-tag.rarity-skin_samurai {
+    background: rgba(59, 130, 246, 0.25);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.skin-rarity-tag.rarity-skin_god_of_wealth {
+    background: rgba(234, 179, 8, 0.25);
+    color: #facc15;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.skin-rarity-tag.rarity-skin_astronaut,
+.skin-rarity-tag.rarity-skin_mecha {
+    background: rgba(236, 72, 153, 0.25);
+    color: #f472b6;
+    border: 1px solid rgba(236, 72, 153, 0.4);
+}
+
+.skin-rarity-tag.rarity-skin_dj_neon {
+    background: rgba(168, 85, 247, 0.25);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.skin-card-body h5 {
+    margin: 4px 0 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.skin-card-desc {
+    margin: 0;
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+.skin-card-buff {
+    margin-top: 4px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #38bdf8;
+}
+
+.skin-card-footer {
+    margin-top: 6px;
+}
+
+.btn-skin-action {
+    width: 100%;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-skin-action.btn-equip-skin {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+}
+
+.btn-skin-action.btn-equip-skin:active {
+    transform: scale(0.96);
+}
+
+.btn-skin-action.equipped {
+    background: #10b981;
+    color: #ffffff;
+    cursor: default;
+}
+
+.btn-skin-action.locked {
+    background: #334155;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .wardrobe-preview-card {
+        flex-direction: column;
+        align-items: center;
+    }
+    .wardrobe-canvas {
+        width: 140px;
+        height: 140px;
+    }
+    .wardrobe-preview-right {
+        width: 100%;
+    }
+    .skins-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 
 
 

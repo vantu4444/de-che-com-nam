@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 14:45:24, 26/11/2026  
+**Thời điểm thực thi:** 15:11:19, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,8 +10,8 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **156** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **155** | 100% | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **157** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **156** | 100% | ✅ Đạt |
 | **Số bài FAIL (Thất bại)** | **1** | **0** | ❌ Cần khắc phục |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
 | **Tỷ lệ vượt qua (Pass Rate)** | **99.4%** | **100.0%** | ❌ Không đạt |
@@ -211,6 +211,7 @@
 - **[PASS]** `Mô phỏng Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang: Chạy mượt mà 5 bước (Vườn -> Bếp ISO -> Vạch Xanh -> Bán Sạp -> +100k Vốn), nút Bỏ Qua và nút 📖 Hướng Dẫn HUD hoạt động chuẩn xác 100%`
 - **[PASS]** `Mô phỏng Cyber Food-Tech & Radar Đua Cấp Sát Sườn: Hologram 3D mượt mà, Radar cập nhật đối thủ trên/dưới thời gian thực, nút Thách Đấu và Overtake Alert thưởng nóng +25k/10 Sao chuẩn xác 100%`
 - **[PASS]** `Mô phỏng Tranh Đoạt Địa Bàn Vàng & Hợp Đồng Độc Quyền: Tượng Hologram 3D sắc nét, Bản quyền +5k, Soán ngôi toàn server kèm nút Giành Lại, Giao cơm thầu trừ kho chính xác và Trao thưởng độc quyền +300k/50 Sao đạt chuẩn 100%`
+- **[PASS]** `Mô phỏng Tiến Hóa Nhân Vật 4 Bậc, Tủ Đồ & Túi Mù Onigiri: Tính toán 4 bậc chuẩn xác, Buff chỉ số thực tế (+25% Speed, -15% Nấu, +20% VIP), Mở Túi Mù 50k/20 Sao, Chống trùng quy đổi +15 Sao/+150 EXP, Live Preview Canvas sắc nét và Render 3D/2D mượt mà 100%`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

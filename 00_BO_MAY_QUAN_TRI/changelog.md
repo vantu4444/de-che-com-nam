@@ -4,6 +4,39 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.9-PROD (CHÍNH THỨC XUẤT XƯỞNG: TIẾN HÓA NHÂN VẬT 4 BẬC SỰ NGHIỆP, TỦ ĐỒ BIẾN HÓA LINH VẬT ONIGIRI & MỞ TÚI MÙ BLIND BOX)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 4-tier character evolution, skin wardrobe and Onigiri blind box
+- **Trạng thái:** Nghiệm thu **100% PASS (90/90 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Hệ Thống Tiến Hóa Sự Nghiệp 4 Bậc Kèm Buff Chỉ Số Thực Tế (`src/state.js`, `src/characterRenderer.js`, `src/player.js`):**
+     - Dựng trực tiếp các chi tiết ngoại hình 2D/3D lên linh vật Onigiri gốc `linh_vat_1`, mở khóa tự động theo Cấp độ và Cấp Xưởng Bếp:
+       + **Bậc 1 – Tân Binh Khởi Nghiệp (Cấp 1):** Băng rôn trắng quấn đầu, tạp dề mộc, túi đeo chéo bán hàng *(Chỉ số cơ bản khởi nghiệp)*.
+       + **Bậc 2 – Bếp Trưởng Chuẩn ISO & ATVSTP (Cấp 3+ & Xưởng Bếp 2+):** Mũ đầu bếp cao phồng trắng, áo bếp viền vàng, huy hiệu khiên bảo chứng **ISO & ATVSTP 🛡️** phát sáng trên ngực kèm hiệu ứng làn khói ấm nóng hổi *(**-15%** thời gian nấu & giữ độ tươi 100% lâu hơn)*.
+       + **Bậc 3 – Tổng Giám Đốc Chuỗi Toàn Quốc (Cấp 6+ & Xưởng Bếp 3+):** Áo vest blazer doanh nhân sang trọng, kính râm thời trang, máy tính bảng điều hành *(**+20%** tỷ lệ gặp khách VIP tại sạp & **+10%** doanh thu thụ động chuỗi 4 chi nhánh)*.
+       + **Bậc 4 – Vua Cơm Nắm Cyber Food-Tech (Cấp 10+ & Xưởng Bếp 4+):** Giáp công nghệ tương lai trắng-xanh ngọc neon, kính quét laser, ba lô phản lực jetpack lướt bay nhẹ kèm dải hào quang vàng danh giá *(**+25%** tốc độ di chuyển & tự động hút khách vào sạp nhanh hơn 20%)*.
+  2. **Giao Diện Điện Thoại iGiri: Tab `🎭 Biến Hóa Nhân Vật` & Mở Túi Mù Linh Vật Onigiri (`src/quests.js`, `style.css`):**
+     - Tích hợp mục **`🎭 Biến Hóa`** trong thanh Tab Bar của điện thoại `iGiri`, công thái học Mobile 100dvh, tự động ẩn phím ảo khi mở và phục hồi an toàn khi đóng.
+     - **Thẻ Live Preview 2.2x trên Canvas:** Phóng to nhân vật linh vật `linh_vat_1` hiển thị đầy đủ phụ kiện theo Bậc tiến hóa và trang phục đang mặc, nhãn Bậc hiện tại, Skin đang mặc, thanh tiến trình thăng bậc sự nghiệp và 4 ô buff chỉ số thời gian thực.
+     - **Bộ Sưu Tập 6 Trang Phục Linh Vật Độc Quyền:**
+       1. *Bản Gốc Tiến Hóa* (Phổ Thông)
+       2. *Chiến Binh Samurai Onigiri* (Hiếm - Khăn quấn trán đỏ, kiếm trúc katana sau lưng)
+       3. *Thần Tài Cơm Nắm* (Sử Thi - Mũ quan cánh chuồn đỏ thêu chỉ vàng, nén vàng thỏi trên tay)
+       4. *Phi Hành Gia Vũ Trụ* (Huyền Thoại - Mũ bảo hiểm kính vàng phản quang, ba lô dưỡng khí)
+       5. *Robot Mecha Bạc* (Huyền Thoại - Khung giáp kim loại titan sáng bóng, mắt LED xanh dương)
+       6. *DJ Neon Cyberpunk* (Thần Thoại - Tai nghe headphone phát quang, kính led cyberpunk đa sắc)
+     - **🎁 Mở Túi Mù Linh Vật Onigiri (Blind Box):** Người chơi có thể dùng `50.000đ` tiền mặt hoặc `20 Uy Tín ⭐` để mở túi mù. Cơ chế chống trùng lặp thông minh: nếu trúng trang phục đã sở hữu, tự động quy đổi thành **`+15 Uy Tín ⭐ & +150 EXP`**.
+  3. **Đồng Bộ Ngoại Hình Đa Người Chơi & Tượng Hologram (`server/server.js`, `src/network.js`, `src/characterRenderer.js`):**
+     - Gói tin Socket.io (`joinGame`, `playerMove`, `playersUpdate`) tự động truyền nhận `evolutionTier` và `equippedSkin`.
+     - Toàn bộ người chơi khác trong thế giới online nhìn thấy chuẩn xác phụ kiện tiến hóa và bộ trang phục độc quyền của nhau.
+     - Giữ vững chuẩn thương hiệu: **100% Cơm Nắm**, chứng chỉ ISO & ATVSTP, không bánh mì, không lộ giá vốn/công thức.
+  4. **Nghiệm Thu Toàn Diện 90/90 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Giữ nguyên 100% tính năng Chat, Kết bạn, Thách đấu 1v1, Vườn nguyên liệu, Bếp hàng đợi, Robot tự động, 4 Chi nhánh toàn quốc, Tự động bán sạp, Hướng dẫn tân thủ 5 bước, Cyber Food-Tech và Tranh đoạt địa bàn vàng.
+     - 0 Console Error, 0 va chạm hình học giao diện trên Desktop (1440x900) và iPhone (375x812).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.8-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP TẦM CAO – ĐỢT 2: TRANH ĐOẠT ĐỊA BÀN VÀNG, TƯỢNG LINH VẬT 3D HOLOGRAM & ĐẤU THẦU HỢP ĐỒNG ĐỘC QUYỀN)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add golden territory domination, 3D hologram mascot statues, exclusive supply contract bidding and royalty fee rewards

@@ -305,6 +305,101 @@ export function resolveFillingId(id) {
     return FILLINGS[cleanId] ? cleanId : 'crab_egg_mayo';
 }
 
+// =============================================================================
+// HỆ THỐNG TIẾN HÓA SỰ NGHIỆP 4 BẬC & TỦ ĐỒ BIẾN HÓA LINH VẬT (linh_vat_1)
+// =============================================================================
+export const EVOLUTION_TIERS = {
+    1: {
+        id: 1,
+        tierNumber: 1,
+        name: 'Tân Binh Khởi Nghiệp',
+        title: 'Tân Binh Cơm Nắm',
+        icon: '🍙',
+        desc: 'Băng rôn trắng + tạp dề mộc + túi đeo chéo',
+        requiredLevel: 1,
+        requiredKitchenTier: 1,
+        buffDesc: 'Chỉ số cơ bản khởi nghiệp'
+    },
+    2: {
+        id: 2,
+        tierNumber: 2,
+        name: 'Bếp Trưởng Chuẩn ISO & ATVSTP',
+        title: 'Bếp Trưởng ISO 22000',
+        icon: '👨‍🍳',
+        desc: 'Mũ đầu bếp cao, áo bếp viền vàng, khiên ISO phát sáng',
+        requiredLevel: 3,
+        requiredKitchenTier: 2,
+        buffDesc: '+15% Tốc độ nấu bếp & giữ độ tươi nóng hổi lâu hơn'
+    },
+    3: {
+        id: 3,
+        tierNumber: 3,
+        name: 'Tổng Giám Đốc Chuỗi Toàn Quốc',
+        title: 'CEO Chuỗi Toàn Quốc',
+        icon: '👔',
+        desc: 'Áo vest doanh nhân sang trọng, kính râm, máy tính bảng điều hành',
+        requiredLevel: 6,
+        requiredKitchenTier: 3,
+        buffDesc: '+20% Khách VIP & +10% Doanh thu 4 Chi nhánh'
+    },
+    4: {
+        id: 4,
+        tierNumber: 4,
+        name: 'Vua Cơm Nắm Cyber Food-Tech',
+        title: 'Vua Cơm Nắm Tương Lai',
+        icon: '👑',
+        desc: 'Giáp công nghệ trắng-xanh ngọc, kính laser, ba lô phản lực jetpack',
+        requiredLevel: 10,
+        requiredKitchenTier: 4,
+        buffDesc: '+25% Tốc độ di chuyển, tự hút khách & hào quang vàng'
+    }
+};
+
+export const SKINS_CONFIG = {
+    skin_default: {
+        id: 'skin_default',
+        name: 'Bản Gốc Tiến Hóa',
+        icon: '🍙',
+        rarity: 'common',
+        desc: 'Hiển thị diện mạo theo Bậc Tiến Hóa Sự Nghiệp'
+    },
+    skin_samurai: {
+        id: 'skin_samurai',
+        name: 'Chiến Binh Samurai Onigiri',
+        icon: '⚔️',
+        rarity: 'rare',
+        desc: 'Mũ giáp Kabuto sừng trăng khuyết, áo giáp đỏ son, kiếm katana'
+    },
+    skin_god_of_wealth: {
+        id: 'skin_god_of_wealth',
+        name: 'Thần Tài Cơm Nắm',
+        icon: '💰',
+        rarity: 'epic',
+        desc: 'Mũ cánh chuồn triều đình, thỏi vàng kim, rải xu vàng may mắn'
+    },
+    skin_astronaut: {
+        id: 'skin_astronaut',
+        name: 'Phi Hành Gia Vũ Trụ',
+        icon: '🚀',
+        rarity: 'epic',
+        desc: 'Mũ phi hành gia phản chiếu ánh sao, bình dưỡng khí đôi, giáp vũ trụ'
+    },
+    skin_mecha: {
+        id: 'skin_mecha',
+        name: 'Robot Mecha Bạc',
+        icon: '🤖',
+        rarity: 'rare',
+        desc: 'Giáp titan màu bạc sáng bóng, kính visor laser đỏ, radar mini'
+    },
+    skin_dj_neon: {
+        id: 'skin_dj_neon',
+        name: 'DJ Neon Phát Sáng',
+        icon: '🎧',
+        rarity: 'legendary',
+        desc: 'Tai nghe DJ 7 màu phát nhạc, kính led equalizer, áo khoác dạ quang'
+    }
+};
+
 export const VEHICLES = {
     walk: {
         id: 'walk',
@@ -1085,6 +1180,10 @@ class GameState {
         // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC]
         this.tutorialCompleted = false;
         this.tutorialStep = 1; // 1: Vườn, 2: Bếp, 3: Vạch Xanh, 4: Bán Sạp, 5: Đế Chế
+
+        // [TIẾN HÓA SỰ NGHIỆP 4 BẬC & TỦ ĐỒ BIẾN HÓA LINH VẬT]
+        this.unlockedSkins = ['skin_default'];
+        this.equippedSkin = 'skin_default';
     }
 
     onUpdate(fn) {
@@ -1349,6 +1448,9 @@ class GameState {
         let durationSec = baseSec;
         if (this.kitchenPressUpgrade) {
             durationSec = Math.round(baseSec * 0.6); // Giảm 40% thời gian nấu
+        }
+        if (this.getEvolutionTier() >= 2) {
+            durationSec = Math.round(durationSec * 0.85); // Giảm thêm 15% thời gian nấu của Bếp Trưởng ISO
         }
 
         slot.status = 'cooking';
@@ -1642,9 +1744,13 @@ class GameState {
         return 1 + (this.level - 1) * 0.10;
     }
 
-    // Tỷ lệ tăng tốc độ di chuyển theo Level (+5% mỗi cấp trên cấp 1)
+    // Tỷ lệ tăng tốc độ di chuyển theo Level (+5% mỗi cấp trên cấp 1 & +25% Vua Cyber Bậc 4)
     getSpeedMultiplier() {
-        return 1 + (this.level - 1) * 0.05;
+        let base = 1 + (this.level - 1) * 0.05;
+        if (this.getEvolutionTier && this.getEvolutionTier() >= 4) {
+            base *= 1.25;
+        }
+        return base;
     }
 
     // Hệ số tốc độ từ phương tiện đang sử dụng
@@ -2683,7 +2789,10 @@ class GameState {
             return { totalIncome: 0, reason: 'halted_debt' };
         }
         let total = this.getBranchTotalIncomePer10s();
-        const branchBonus = this.permanentBuffs?.branchIncomeBonus || 0;
+        let branchBonus = this.permanentBuffs?.branchIncomeBonus || 0;
+        if (this.getEvolutionTier() >= 3) {
+            branchBonus += 0.10; // +10% doanh thu chuỗi 4 chi nhánh cho Tổng Giám Đốc
+        }
         if (branchBonus > 0) {
             total = Math.round(total * (1 + branchBonus));
         }
@@ -3044,7 +3153,9 @@ class GameState {
                 lastHelpedFriends: this.lastHelpedFriends,
                 speedBoostExpiry: this.speedBoostExpiry || 0,
                 tutorialCompleted: Boolean(this.tutorialCompleted),
-                tutorialStep: typeof this.tutorialStep === 'number' ? this.tutorialStep : 1
+                tutorialStep: typeof this.tutorialStep === 'number' ? this.tutorialStep : 1,
+                unlockedSkins: Array.isArray(this.unlockedSkins) ? this.unlockedSkins : ['skin_default'],
+                equippedSkin: this.equippedSkin || 'skin_default'
             };
             localStorage.setItem(this.saveKey, JSON.stringify(data));
         } catch (e) {
@@ -3209,6 +3320,12 @@ class GameState {
             }
             if (typeof data.tutorialStep === 'number') {
                 this.tutorialStep = Math.max(1, Math.min(5, data.tutorialStep));
+            }
+            if (Array.isArray(data.unlockedSkins)) {
+                this.unlockedSkins = data.unlockedSkins;
+            }
+            if (data.equippedSkin) {
+                this.equippedSkin = data.equippedSkin;
             }
             if (data.lastActiveTimestamp) {
                 this.lastActiveTimestamp = data.lastActiveTimestamp;
@@ -3606,6 +3723,72 @@ class GameState {
         this.tutorialStep = 1;
         this.save();
         this.notify({ tutorialUpdated: true, reset: true });
+    }
+
+    // --- TIẾN HÓA SỰ NGHIỆP 4 BẬC & TỦ ĐỒ BIẾN HÓA LINH VẬT ---
+    getEvolutionTier() {
+        const curLevel = typeof this.level === 'number' ? this.level : 1;
+        const curKitchen = this.kitchenManualTier || this.kitchenTier || 1;
+
+        if (curLevel >= 10 || curKitchen >= 4) return 4;
+        if (curLevel >= 6 || curKitchen >= 3) return 3;
+        if (curLevel >= 3 || curKitchen >= 2) return 2;
+        return 1;
+    }
+
+    getEvolutionConfig() {
+        const tier = this.getEvolutionTier();
+        return EVOLUTION_TIERS[tier] || EVOLUTION_TIERS[1];
+    }
+
+    equipSkin(skinId) {
+        if (!SKINS_CONFIG[skinId]) return { success: false, reason: 'invalid_skin' };
+        if (!this.unlockedSkins.includes(skinId)) {
+            return { success: false, reason: 'not_unlocked' };
+        }
+        this.equippedSkin = skinId;
+        this.save();
+        this.notify({ skinEquipped: skinId });
+        return { success: true, skinId };
+    }
+
+    openBlindBox(currency = 'money') {
+        const costMoney = 50000;
+        const costRep = 20;
+
+        if (currency === 'money') {
+            if (this.money < costMoney) {
+                return { success: false, reason: 'not_enough_money', cost: costMoney };
+            }
+            this.deductMoney(costMoney);
+        } else if (currency === 'reputation') {
+            if ((this.reputation || 0) < costRep) {
+                return { success: false, reason: 'not_enough_reputation', cost: costRep };
+            }
+            this.reputation = Math.max(0, (this.reputation || 0) - costRep);
+        } else {
+            return { success: false, reason: 'invalid_currency' };
+        }
+
+        const pool = ['skin_samurai', 'skin_god_of_wealth', 'skin_astronaut', 'skin_mecha', 'skin_dj_neon'];
+        const chosenId = pool[Math.floor(Math.random() * pool.length)];
+        const skin = SKINS_CONFIG[chosenId];
+
+        if (!this.unlockedSkins.includes(chosenId)) {
+            this.unlockedSkins.push(chosenId);
+            this.save();
+            this.notify({ blindBoxOpened: true, skin, isNew: true, isDuplicate: false });
+            return { success: true, skin, isNew: true, isDuplicate: false };
+        } else {
+            // Đã sở hữu -> tự động quy đổi thành Uy Tín & EXP
+            const convertedRep = 15;
+            const convertedExp = 150;
+            this.addReputation(convertedRep);
+            this.addExp(convertedExp);
+            this.save();
+            this.notify({ blindBoxOpened: true, skin, isNew: false, isDuplicate: true, convertedRep, convertedExp });
+            return { success: true, skin, isNew: false, isDuplicate: true, convertedRep, convertedExp };
+        }
     }
 }
 

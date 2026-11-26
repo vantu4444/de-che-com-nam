@@ -345,7 +345,9 @@ export class OnigiriServer {
                     isStallOpen: !!data?.isStallOpen,
                     city: validCity,
                     totalRevenue: Number(data?.totalRevenue) || 0,
-                    reputation: Number(data?.reputation) || 100
+                    reputation: Number(data?.reputation) || 100,
+                    evolutionTier: Number(data?.evolutionTier) || 1,
+                    equippedSkin: data?.equippedSkin || 'skin_default'
                 };
 
                 this.players.set(socket.id, player);
@@ -413,6 +415,8 @@ export class OnigiriServer {
                 if (typeof data.isStallOpen === 'boolean') player.isStallOpen = data.isStallOpen;
                 if (data.vehicleId) player.vehicleId = data.vehicleId;
                 if (data.facing) player.facing = data.facing;
+                if (data.evolutionTier) player.evolutionTier = data.evolutionTier;
+                if (data.equippedSkin) player.equippedSkin = data.equippedSkin;
 
                 socket.to(`city_${player.city}`).emit('playerMove', {
                     id: socket.id,
@@ -420,7 +424,9 @@ export class OnigiriServer {
                     y: player.y,
                     isStallOpen: player.isStallOpen,
                     vehicleId: player.vehicleId,
-                    facing: player.facing
+                    facing: player.facing,
+                    evolutionTier: player.evolutionTier,
+                    equippedSkin: player.equippedSkin
                 });
             });
 

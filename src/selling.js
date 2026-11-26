@@ -437,6 +437,8 @@ export class SellingManager {
         if (!this.isOpen) return;
 
         // Cập nhật nhịp khách theo giờ cao điểm khi sạp đang mở (duy trì sinh khách đều đặn ~1 - 1.2s)
+        const evoTier = (state && typeof state.getEvolutionTier === 'function') ? state.getEvolutionTier() : 1;
+
         if (isSchoolSpot) {
             this.maxCustomers = timeInfo.isSchoolRush ? 5 : 4;
             this.spawnInterval = timeInfo.isSchoolRush ? 45 : 65;
@@ -449,6 +451,12 @@ export class SellingManager {
         } else {
             this.maxCustomers = 4;
             this.spawnInterval = 65;
+        }
+
+        // Bậc 4: Vua Cơm Nắm Cyber Food-Tech - Tự động hút khách từ xa (giảm thời gian chờ khách 20%)
+        if (evoTier >= 4) {
+            this.spawnInterval = Math.max(30, Math.floor(this.spawnInterval * 0.8));
+            this.maxCustomers = Math.min(6, this.maxCustomers + 1);
         }
 
         // Kiểm tra nếu nhân vật bỏ chạy ra xa khu vực bán hàng (> 150px), tự động đóng sạp an toàn và reset mức chú ý
@@ -575,10 +583,19 @@ export class SellingManager {
         const isSchoolSpot = spotType === 'school' || spotId.includes('school') || spotId.includes('university') || spotType === 'park';
         const isOfficeSpot = spotType === 'office' || spotId.includes('office') || spotType === 'market' || spotId.includes('ben_thanh');
         const isWalkingSpot = spotType === 'walking_street' || spotId.includes('walking');
+        const evoTier = (state && typeof state.getEvolutionTier === 'function') ? state.getEvolutionTier() : 1;
 
-        let isVip = Math.random() < 0.15; // 15% khách VIP
+        let baseVipChance = 0.15; // 15% khách VIP
+        // Bậc 3: Tổng Giám Đốc Chuỗi Toàn Quốc - Tăng 20% tỷ lệ gặp khách VIP
+        if (evoTier >= 3) {
+            baseVipChance += 0.20;
+        }
+
+        let isVip = Math.random() < baseVipChance;
         if (isWalkingSpot) {
-            isVip = timeInfo.isWalkingStreetRush ? (Math.random() < 0.70) : (Math.random() < 0.35);
+            let walkVipRate = timeInfo.isWalkingStreetRush ? 0.70 : 0.35;
+            if (evoTier >= 3) walkVipRate += 0.20;
+            isVip = Math.random() < Math.min(0.95, walkVipRate);
         }
 
         let variant = 'student';
