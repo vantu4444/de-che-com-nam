@@ -928,6 +928,8 @@ class GameApp {
             this.lastFrameTime = now;
 
             state.advanceTime(dt);
+            state.updateFarm(now);
+            state.updateKitchenSlots(now);
             this.updateClockHUD();
 
             if (!this.isKitchenOpen && !this.isMarketOpen) {

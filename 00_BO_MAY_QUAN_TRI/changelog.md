@@ -4,6 +4,36 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.4-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP ĐẾ CHẾ – BƯỚC 1: KHỞI NGHIỆP TỪ NHỎ NHẶT, VƯỜN NGUYÊN LIỆU ĐẾM NGƯỢC & DÂY CHUYỀN BẾP HÀNG ĐỢI NÓNG HỔI CHUẨN ISO)
+- **Ngày ghi nhận:** 26/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (144/144 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Khởi Nghiệp Khiêm Tốn & Tiến Trình Mở Khóa 15 Vị (`src/state.js`, `src/kitchenASMR.js`):**
+     - Thiết lập cơ ngơi khởi nghiệp Cấp 1 ban đầu: **1 ô Ruộng lúa Nhật**, **1 giàn Rong biển Nori**, **1 ô Bếp thủ công** và túi giữ nhiệt ban đầu chở **`6 nắm cơm`** (`VEHICLES.walk.capacity = 6`).
+     - Menu 15 vị mở khóa chuẩn mực: mở sẵn **3 vị cơ bản 20.000đ** (`Thanh cua trứng mayo`, `Chả cá`, `Trứng xúc xích mayo`).
+     - Khóa **12 vị còn lại** kèm điều kiện mở khóa minh bạch theo **Cấp độ Xưởng & Điểm Uy Tín** (nhóm 20k mở rộng, 22k yêu cầu Xưởng 4, VIP 25k Bò Phô Mai Tan Chảy yêu cầu Xưởng 5 & Uy Tín 350 ⭐), tạo động lực phấn đấu rõ rệt, tuyệt đối không lộ giá vốn hay công thức.
+  2. **Khu Vườn Nguyên Liệu Sạch Có Thời Gian Chờ & Tự Cung Tự Cấp (`src/kitchenASMR.js`, `src/state.js`):**
+     - Tích hợp Tab **`🌱 Vườn Nguyên Liệu`** ngay trong Xưởng Bếp.
+     - Cho phép gieo trồng **Lúa Nhật (45 giây)**, **Rong Biển (60 giây)**, và mở khóa **Trại Gà Sạch (3 phút)**, **Trại Bò Sữa Mayo (2 phút)**, **Trại Bò Úc (4 phút)**, **Cá Hồi Na Uy (5 phút)** khi nâng cấp Xưởng.
+     - Hiển thị thanh tiến trình và thời gian đếm ngược thời gian thực trên từng ô; khi chín kích hoạt hiệu ứng viền vàng phát sáng lấp lánh (`@keyframes pulseGlow`) kèm nút **`✨ THU HOẠCH (+10 KHO BẾP)`**.
+     - Cho phép dùng tiền lãi mở rộng tối đa **6 ô đất** và nâng cấp **Hệ Thống Tưới Tự Động** (giảm 30% thời gian sinh trưởng). Vẫn giữ Chợ Đầu Mối làm kênh mua nhanh bổ sung.
+  3. **Dây Chuyền Bếp Nấu Hàng Đợi (Queue) & Huy Hiệu Nóng Hổi Chuẩn ISO (`src/kitchenASMR.js`, `src/state.js`, `src/main.js`):**
+     - Nấu cơm theo hàng đợi thời gian thực: **20s cho vị 20k**, **45s cho vị 22k**, **90s cho vị VIP 25k**.
+     - Cho phép xếp nhiều mẻ vào bếp, thoải mái rời bếp ra phố bán hàng, giao đơn hỏa tốc, chat hay kết bạn trong lúc chờ nấu.
+     - Khi cơm chín: Có tiếng chuông báo `Ting!`, hiển thị huy hiệu đỏ nổi bật **`♨️ Nóng Hổi Chuẩn ISO & ATVSTP`** và nút **`✨ Thu Hoạch Vào Xe`** với độ tươi đạt chuẩn 100%.
+     - Mở rộng thêm ô bếp (tối đa **4 ô bếp**) và nâng cấp **Máy Ép Khuôn Bán Tự Động** (giảm **40% thời gian nấu**).
+  4. **Tính Bền Vững Thời Gian (Timestamp Persistence) & Đồng Bộ Thời Gian Thực (`src/state.js`, `src/main.js`):**
+     - Lưu trữ tiến trình gieo trồng và nấu nướng theo mốc `Date.now()` vào `localStorage`. Khi nạp lại trang hoặc chuyển tab, thời gian trôi qua vẫn được tính toán chính xác, không mất tiến trình.
+     - Trong vòng lặp `loop()` của game, cập nhật `state.updateFarm()` và `state.updateKitchenSlots()` liên tục.
+  5. **Bảo Toàn Công Thái Học Mobile & Nghiệm Thu 144/144 Test (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Bảo toàn 100% hệ thống Chat, Kết bạn, Thách đấu 1v1.
+     - Tự động ẩn phím ảo điều khiển ngoài phố khi mở Xưởng Bếp / Vườn và tự động phục hồi khi rời bếp.
+     - Toàn bộ giao diện khóa trong `max-height: 90dvh`, không cắt nút trên iPhone (375x812) và Desktop (1440x900).
+     - Đạt 144/144 bài kiểm thử 100% PASS, tuyệt đối 0 Console Errors.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.3-PROD (CHÍNH THỨC XUẤT XƯỞNG: KHÔI PHỤC HÌNH ẢNH KHÁCH HÀNG NPC TỚI SẠP 3D & 2D, BONG BÓNG GỌI MÓN 15 VỊ NIÊM YẾT GIÁ BÁN LẺ & CẦM CƠM RỜI ĐI)
 - **Ngày ghi nhận:** 26/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (139/139 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.

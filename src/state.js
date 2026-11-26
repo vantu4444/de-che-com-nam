@@ -10,7 +10,9 @@ export const FILLINGS = {
         desc: 'Thanh cua tươi ngọt quyện xốt mayo và trứng béo ngậy.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        isUnlockedDefault: true
     },
     baked_cheese_shrimp: {
         id: 'baked_cheese_shrimp',
@@ -20,7 +22,9 @@ export const FILLINGS = {
         desc: 'Tôm ngọt thịt phủ ngập phô mai đút lò thơm lừng nức mũi.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 1, reputation: 100, desc: 'Cần Xưởng Cấp 1 & Uy Tín 100 ⭐' }
     },
     fish_cake: {
         id: 'fish_cake',
@@ -30,7 +34,9 @@ export const FILLINGS = {
         desc: 'Chả cá dai ngon đậm đà truyền thống kèm tiêu sọ thơm nồng.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        isUnlockedDefault: true
     },
     tuna_mayo: {
         id: 'tuna_mayo',
@@ -40,7 +46,9 @@ export const FILLINGS = {
         desc: 'Cá ngừ đại dương hảo hạng ngập trong xốt mayonnaise thơm dịu.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 1, reputation: 100, desc: 'Cần Xưởng Cấp 1 & Uy Tín 100 ⭐' }
     },
     egg_sausage_mayo: {
         id: 'egg_sausage_mayo',
@@ -50,7 +58,9 @@ export const FILLINGS = {
         desc: 'Xúc xích xắt hạt lựu, trứng rán thơm xốp quyện xốt mayo béo thơm.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        isUnlockedDefault: true
     },
     cowboy_sausage: {
         id: 'cowboy_sausage',
@@ -60,7 +70,9 @@ export const FILLINGS = {
         desc: 'Xúc xích heo cao bồi đậm đà chuẩn vị bùng nổ hương vị.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 2, reputation: 120, desc: 'Cần Xưởng Cấp 2 & Uy Tín 120 ⭐' }
     },
     chicken_teriyaki: {
         id: 'chicken_teriyaki',
@@ -70,7 +82,9 @@ export const FILLINGS = {
         desc: 'Thịt gà áp chảo sốt Teriyaki Nhật Bản mặn ngọt đậm đà.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 2, reputation: 140, desc: 'Cần Xưởng Cấp 2 & Uy Tín 140 ⭐' }
     },
     chicken_tomyum: {
         id: 'chicken_tomyum',
@@ -80,7 +94,9 @@ export const FILLINGS = {
         desc: 'Gà xé vị Tomyum Thái Lan chua cay the the kích thích vị giác.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 2, reputation: 160, desc: 'Cần Xưởng Cấp 2 & Uy Tín 160 ⭐' }
     },
     super_cheese_sausage: {
         id: 'super_cheese_sausage',
@@ -90,7 +106,9 @@ export const FILLINGS = {
         desc: 'Xúc xích giòn rụm bọc nhân phô mai kéo sợi thơm ngậy.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 3, reputation: 180, desc: 'Cần Xưởng Cấp 3 & Uy Tín 180 ⭐' }
     },
     pate_cheese: {
         id: 'pate_cheese',
@@ -100,7 +118,9 @@ export const FILLINGS = {
         desc: 'Pate gan béo bùi kết hợp lát phô mai tan chảy mịn màng.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 3, reputation: 200, desc: 'Cần Xưởng Cấp 3 & Uy Tín 200 ⭐' }
     },
     grilled_pork_kimchi: {
         id: 'grilled_pork_kimchi',
@@ -110,7 +130,9 @@ export const FILLINGS = {
         desc: 'Thịt heo nướng thơm lừng kết hợp vị chua cay giòn giòn của kim chi.',
         price: 20000,
         priceGroup: '20k',
-        baseExp: 15
+        baseExp: 15,
+        cookTimeSec: 20,
+        unlockReq: { kitchenTier: 3, reputation: 220, desc: 'Cần Xưởng Cấp 3 & Uy Tín 220 ⭐' }
     },
 
     // === NHÓM 22.000đ (3 VỊ) ===
@@ -122,7 +144,9 @@ export const FILLINGS = {
         desc: 'Cá hồi tươi xé nhuyễn quyện xốt mayo béo thanh sang trọng.',
         price: 22000,
         priceGroup: '22k',
-        baseExp: 20
+        baseExp: 20,
+        cookTimeSec: 45,
+        unlockReq: { kitchenTier: 4, reputation: 250, desc: 'Cần Xưởng Cấp 4 & Uy Tín 250 ⭐' }
     },
     beef_bbq: {
         id: 'beef_bbq',
@@ -132,7 +156,9 @@ export const FILLINGS = {
         desc: 'Thịt bò xào sốt thịt nướng BBQ khói thơm lừng chuẩn vị.',
         price: 22000,
         priceGroup: '22k',
-        baseExp: 20
+        baseExp: 20,
+        cookTimeSec: 45,
+        unlockReq: { kitchenTier: 4, reputation: 280, desc: 'Cần Xưởng Cấp 4 & Uy Tín 280 ⭐' }
     },
     cheese_chicken_roll: {
         id: 'cheese_chicken_roll',
@@ -142,7 +168,9 @@ export const FILLINGS = {
         desc: 'Lườn gà mềm cuốn chặt phô mai béo ngậy thơm lừng.',
         price: 22000,
         priceGroup: '22k',
-        baseExp: 20
+        baseExp: 20,
+        cookTimeSec: 45,
+        unlockReq: { kitchenTier: 4, reputation: 300, desc: 'Cần Xưởng Cấp 4 & Uy Tín 300 ⭐' }
     },
 
     // === NHÓM 25.000đ (1 VỊ) ===
@@ -154,7 +182,91 @@ export const FILLINGS = {
         desc: 'Bò tiêu đen thượng hạng phủ đẫm phô mai Mozzarella tan chảy kéo sợi.',
         price: 25000,
         priceGroup: '25k',
-        baseExp: 25
+        baseExp: 25,
+        cookTimeSec: 90,
+        unlockReq: { kitchenTier: 5, reputation: 350, desc: 'Cần Xưởng Cấp 5 & Uy Tín 350 ⭐' }
+    }
+};
+
+// Cấu hình Nông Trại Nguyên Liệu Sạch (Farm Crops)
+export const FARM_CROPS = {
+    rice: {
+        id: 'rice',
+        name: 'Ruộng Lúa Nhật Japonica',
+        icon: '🌾',
+        type: 'field',
+        durationSec: 45,
+        yieldType: 'rice_seaweed',
+        yieldCount: 10,
+        reqTier: 1,
+        reqRep: 0,
+        cost: 0,
+        desc: 'Giống lúa hạt tròn dẻo ngọt thượng hạng, sinh trưởng 45s (+10 Gạo).'
+    },
+    seaweed: {
+        id: 'seaweed',
+        name: 'Giàn Rong Biển Nori',
+        icon: '🌊',
+        type: 'aquatic',
+        durationSec: 60,
+        yieldType: 'rice_seaweed',
+        yieldCount: 10,
+        reqTier: 1,
+        reqRep: 0,
+        cost: 0,
+        desc: 'Lá rong biển giòn tan giàu khoáng chất, sinh trưởng 60s (+10 Rong Biển).'
+    },
+    poultry: {
+        id: 'poultry',
+        name: 'Trại Gà Sạch Đạt Chuẩn',
+        icon: '🐔',
+        type: 'livestock',
+        durationSec: 180, // 3 phút
+        yieldType: 'meat_seafood',
+        yieldCount: 10,
+        reqTier: 2,
+        reqRep: 120,
+        cost: 2000,
+        desc: 'Gà nuôi thả tự nhiên tiêu chuẩn VietGAP, 180s (+10 Thịt/Nhân tươi).'
+    },
+    dairy: {
+        id: 'dairy',
+        name: 'Trại Bò Sữa & Trứng Mayo',
+        icon: '🧀',
+        type: 'livestock',
+        durationSec: 120, // 2 phút
+        yieldType: 'cheese_sauce',
+        yieldCount: 10,
+        reqTier: 2,
+        reqRep: 140,
+        cost: 3000,
+        desc: 'Sốt mayonnaise và phô mai hảo hạng, 120s (+10 Sốt/Phô mai).'
+    },
+    cattle: {
+        id: 'cattle',
+        name: 'Trại Bò Úc Thượng Hạng',
+        icon: '🥩',
+        type: 'livestock',
+        durationSec: 240, // 4 phút
+        yieldType: 'meat_seafood',
+        yieldCount: 10,
+        reqTier: 3,
+        reqRep: 200,
+        cost: 5000,
+        desc: 'Bò tươi mềm ngọt chuẩn nhập khẩu, 240s (+10 Bò tươi).'
+    },
+    salmon: {
+        id: 'salmon',
+        name: 'Trang Trại Cá Hồi Na Uy',
+        icon: '🐟',
+        type: 'aquatic',
+        durationSec: 300, // 5 phút
+        yieldType: 'meat_seafood',
+        yieldCount: 10,
+        reqTier: 4,
+        reqRep: 280,
+        cost: 8000,
+        desc: 'Cá hồi tươi đại dương giàu Omega-3, 300s (+10 Cá Hồi sạch).'
     }
 };
 
@@ -202,8 +314,8 @@ export const VEHICLES = {
         price: 0,
         speedBonus: 0,
         speedMultiplier: 1.0,
-        capacity: 10,
-        desc: 'Đôi chân thoăn thoắt khám phá từng góc phố Sài Gòn (Chở tối đa 10 nắm).'
+        capacity: 6,
+        desc: 'Đôi chân thoăn thoắt, túi giữ nhiệt cơ bản mang bên hông (Chở tối đa 6 nắm).'
     },
     bike: {
         id: 'bike',
@@ -900,6 +1012,21 @@ class GameState {
         this.kitchenStock = [];     // Kho chứa cơm sản xuất tự động (tối đa 300 nắm)
         this.staffCount = 0;
 
+        // [NÂNG CẤP ĐẾ CHẾ - BƯỚC 1] Khởi nghiệp từ cơ ngơi nhỏ: 1 ruộng lúa Nhật, 1 giàn rong biển, 1 ô bếp thủ công
+        this.farm = {
+            autoWaterLevel: 0, // 0: chưa nâng, 1: giảm 30% thời gian sinh trưởng
+            plots: [
+                { id: 'plot_1', cropKey: 'rice', plantedTime: Date.now() - 50000, durationMs: 45000, status: 'ready' },
+                { id: 'plot_2', cropKey: 'seaweed', plantedTime: Date.now() - 70000, durationMs: 60000, status: 'ready' }
+            ]
+        };
+
+        // Dây Chuyền Bếp Nấu Hàng Đợi (Queue) & Ô Bếp Nấu
+        this.kitchenSlots = [
+            { id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 }
+        ];
+        this.kitchenPressUpgrade = false; // Máy ép khuôn bán tự động (giảm 40% thời gian nấu)
+
         // Quản lý 4 Chi Nhánh Liên Tỉnh Toàn Quốc
         this.currentCity = 'branch_hcm';
         this.branches = {
@@ -940,14 +1067,322 @@ class GameState {
         });
     }
 
-    // Sức chứa tối đa của thùng xe theo phương tiện đang dùng
+    // Sức chứa tối đa của thùng xe theo phương tiện đang dùng (Khởi đầu Đi bộ: 6 nắm)
     getMaxCapacity() {
         const v = VEHICLES[this.currentVehicle];
-        return v && typeof v.capacity === 'number' ? v.capacity : 10;
+        return v && typeof v.capacity === 'number' ? v.capacity : 6;
     }
 
     get maxCapacity() {
         return this.getMaxCapacity();
+    }
+
+    // Kiểm tra vị cơm đã được mở khóa chưa theo Cấp độ Xưởng & Điểm Uy Tín
+    isFillingUnlocked(fillingId) {
+        const resolved = resolveFillingId(fillingId);
+        const f = FILLINGS[resolved];
+        if (!f) return { unlocked: true, reason: '', req: null };
+        if (f.isUnlockedDefault) return { unlocked: true, reason: '', req: null };
+        const req = f.unlockReq;
+        if (!req) return { unlocked: true, reason: '', req: null };
+        const curTier = this.kitchenManualTier || this.kitchenTier || 1;
+        const curRep = typeof this.reputation === 'number' ? this.reputation : 100;
+        if (curTier < req.kitchenTier || curRep < req.reputation) {
+            return { unlocked: false, reason: req.desc, req };
+        }
+        return { unlocked: true, reason: '', req };
+    }
+
+    // --- QUẢN LÝ KHU VƯỜN NGUYÊN LIỆU SẠCH (FARM) ---
+    getFarmPlotExpandCost() {
+        const count = Array.isArray(this.farm?.plots) ? this.farm.plots.length : 2;
+        const costs = {
+            2: 50000,  // Ô 3
+            3: 150000, // Ô 4
+            4: 350000, // Ô 5
+            5: 800000  // Ô 6
+        };
+        return costs[count] || null;
+    }
+
+    expandFarmPlot() {
+        if (!this.farm || !Array.isArray(this.farm.plots)) {
+            this.farm = { autoWaterLevel: 0, plots: [] };
+        }
+        if (this.farm.plots.length >= 6) {
+            return { success: false, reason: 'max_plots_reached' };
+        }
+        const cost = this.getFarmPlotExpandCost();
+        if (!cost) return { success: false, reason: 'cannot_expand' };
+
+        if (this.deductMoney(cost)) {
+            const newPlotId = 'plot_' + (this.farm.plots.length + 1);
+            this.farm.plots.push({
+                id: newPlotId,
+                cropKey: null,
+                plantedTime: null,
+                durationMs: 0,
+                status: 'empty'
+            });
+            this.save();
+            this.notify({ farmPlotExpanded: true, plotId: newPlotId });
+            return { success: true, plotId: newPlotId, cost };
+        }
+        return { success: false, reason: 'not_enough_money', cost };
+    }
+
+    upgradeAutoWater() {
+        if (!this.farm) this.farm = { autoWaterLevel: 0, plots: [] };
+        if (this.farm.autoWaterLevel >= 1) {
+            return { success: false, reason: 'already_max_level' };
+        }
+        const cost = 120000;
+        if (this.deductMoney(cost)) {
+            this.farm.autoWaterLevel = 1;
+            this.save();
+            this.notify({ autoWaterUpgraded: true });
+            return { success: true, cost };
+        }
+        return { success: false, reason: 'not_enough_money', cost };
+    }
+
+    plantCrop(plotId, cropKey) {
+        if (!this.farm || !Array.isArray(this.farm.plots)) return { success: false, reason: 'invalid_farm' };
+        const plot = this.farm.plots.find(p => p.id === plotId);
+        if (!plot) return { success: false, reason: 'plot_not_found' };
+        if (plot.status === 'growing') return { success: false, reason: 'already_growing' };
+
+        const crop = FARM_CROPS[cropKey];
+        if (!crop) return { success: false, reason: 'crop_not_found' };
+
+        const curTier = this.kitchenManualTier || this.kitchenTier || 1;
+        const curRep = typeof this.reputation === 'number' ? this.reputation : 100;
+        if (curTier < crop.reqTier || curRep < crop.reqRep) {
+            return { success: false, reason: 'requirements_not_met', reqTier: crop.reqTier, reqRep: crop.reqRep };
+        }
+
+        if (crop.cost > 0) {
+            if (!this.deductMoney(crop.cost)) {
+                return { success: false, reason: 'not_enough_money' };
+            }
+        }
+
+        let durMs = crop.durationSec * 1000;
+        if (this.farm.autoWaterLevel > 0) {
+            durMs = Math.round(durMs * 0.7); // Giảm 30% thời gian sinh trưởng
+        }
+
+        plot.cropKey = cropKey;
+        plot.plantedTime = Date.now();
+        plot.durationMs = durMs;
+        plot.status = 'growing';
+
+        this.save();
+        this.notify({ cropPlanted: true, plotId, cropKey });
+        return { success: true, plot };
+    }
+
+    harvestPlot(plotId) {
+        if (!this.farm || !Array.isArray(this.farm.plots)) return { success: false, reason: 'invalid_farm' };
+        const plot = this.farm.plots.find(p => p.id === plotId);
+        if (!plot) return { success: false, reason: 'plot_not_found' };
+
+        this.updateFarm();
+        if (plot.status !== 'ready') {
+            return { success: false, reason: 'not_ready' };
+        }
+
+        const crop = FARM_CROPS[plot.cropKey];
+        if (!crop) {
+            plot.status = 'empty';
+            plot.cropKey = null;
+            return { success: false, reason: 'crop_missing' };
+        }
+
+        if (!this.ingredients) this.ingredients = { rice_seaweed: 0, meat_seafood: 0, cheese_sauce: 0 };
+        this.ingredients[crop.yieldType] = (this.ingredients[crop.yieldType] || 0) + crop.yieldCount;
+
+        const harvestedCrop = { ...crop };
+        plot.status = 'empty';
+        plot.cropKey = null;
+        plot.plantedTime = null;
+        plot.durationMs = 0;
+
+        this.addExp(25);
+        this.save();
+        this.notify({ cropHarvested: true, plotId, crop: harvestedCrop });
+        return { success: true, crop: harvestedCrop, yieldType: crop.yieldType, yieldCount: crop.yieldCount };
+    }
+
+    updateFarm(now = Date.now()) {
+        if (!this.farm || !Array.isArray(this.farm.plots)) return;
+        let changed = false;
+        for (const plot of this.farm.plots) {
+            if (plot.status === 'growing' && plot.plantedTime && plot.durationMs) {
+                if (now - plot.plantedTime >= plot.durationMs) {
+                    plot.status = 'ready';
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            this.notify({ farmStatusUpdated: true });
+        }
+    }
+
+    // --- QUẢN LÝ DÂY CHUYỀN BẾP NẤU HÀNG ĐỢI (KITCHEN QUEUE & SLOTS) ---
+    getKitchenSlotExpandCost() {
+        const count = Array.isArray(this.kitchenSlots) ? this.kitchenSlots.length : 1;
+        const costs = {
+            1: 80000,  // Ô 2
+            2: 250000, // Ô 3
+            3: 600000  // Ô 4
+        };
+        return costs[count] || null;
+    }
+
+    expandKitchenSlot() {
+        if (!Array.isArray(this.kitchenSlots)) {
+            this.kitchenSlots = [];
+        }
+        if (this.kitchenSlots.length >= 4) {
+            return { success: false, reason: 'max_slots_reached' };
+        }
+        const cost = this.getKitchenSlotExpandCost();
+        if (!cost) return { success: false, reason: 'cannot_expand' };
+
+        if (this.deductMoney(cost)) {
+            const newSlotId = 'kslot_' + (this.kitchenSlots.length + 1);
+            this.kitchenSlots.push({
+                id: newSlotId,
+                status: 'idle',
+                fillingId: null,
+                startTime: null,
+                durationMs: 0,
+                batchSize: 1
+            });
+            this.save();
+            this.notify({ kitchenSlotExpanded: true, slotId: newSlotId });
+            return { success: true, slotId: newSlotId, cost };
+        }
+        return { success: false, reason: 'not_enough_money', cost };
+    }
+
+    upgradeKitchenPress() {
+        if (this.kitchenPressUpgrade) {
+            return { success: false, reason: 'already_upgraded' };
+        }
+        const cost = 200000;
+        if (this.deductMoney(cost)) {
+            this.kitchenPressUpgrade = true;
+            this.save();
+            this.notify({ kitchenPressUpgraded: true });
+            return { success: true, cost };
+        }
+        return { success: false, reason: 'not_enough_money', cost };
+    }
+
+    startCookingSlot(slotId, fillingId) {
+        if (!Array.isArray(this.kitchenSlots)) {
+            this.kitchenSlots = [{ id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 }];
+        }
+        const slot = this.kitchenSlots.find(s => s.id === slotId);
+        if (!slot) return { success: false, reason: 'slot_not_found' };
+        if (slot.status === 'cooking') return { success: false, reason: 'slot_busy' };
+
+        const resolvedFilling = resolveFillingId(fillingId);
+        const filling = FILLINGS[resolvedFilling];
+        if (!filling) return { success: false, reason: 'invalid_filling' };
+
+        const unlockCheck = this.isFillingUnlocked(resolvedFilling);
+        if (!unlockCheck.unlocked) {
+            return { success: false, reason: 'filling_locked', details: unlockCheck.reason };
+        }
+
+        const batchSize = this.getKitchenBatchSize();
+        if (!this.hasIngredients(batchSize)) {
+            return { success: false, reason: 'not_enough_ingredients', batchSize };
+        }
+
+        // Tiêu hao nguyên liệu
+        this.consumeIngredients(batchSize);
+
+        // Tính thời gian nấu
+        const baseSec = filling.cookTimeSec || (filling.priceGroup === '25k' ? 90 : filling.priceGroup === '22k' ? 45 : 20);
+        let durationSec = baseSec;
+        if (this.kitchenPressUpgrade) {
+            durationSec = Math.round(baseSec * 0.6); // Giảm 40% thời gian nấu
+        }
+
+        slot.status = 'cooking';
+        slot.fillingId = resolvedFilling;
+        slot.startTime = Date.now();
+        slot.durationMs = durationSec * 1000;
+        slot.batchSize = batchSize;
+
+        this.save();
+        this.notify({ cookingStarted: true, slotId, fillingId: resolvedFilling, durationMs: slot.durationMs });
+        return { success: true, slot, durationSec };
+    }
+
+    harvestCookingSlot(slotId) {
+        if (!Array.isArray(this.kitchenSlots)) return { success: false, reason: 'invalid_slots' };
+        const slot = this.kitchenSlots.find(s => s.id === slotId);
+        if (!slot) return { success: false, reason: 'slot_not_found' };
+
+        this.updateKitchenSlots();
+        if (slot.status !== 'ready') {
+            return { success: false, reason: 'not_ready' };
+        }
+
+        const maxCap = this.getMaxCapacity();
+        const curCount = this.getTotalRiceCount();
+        if (curCount >= maxCap) {
+            return { success: false, reason: 'bag_full', current: curCount, max: maxCap };
+        }
+
+        const filling = FILLINGS[slot.fillingId] || FILLINGS.crab_egg_mayo;
+        const spaceLeft = maxCap - curCount;
+        const countToAdd = Math.min(spaceLeft, slot.batchSize || 1);
+
+        for (let i = 0; i < countToAdd; i++) {
+            this.addRiceBall(slot.fillingId, 5);
+        }
+
+        this.recordCooked(countToAdd);
+        this.addExp(50 * countToAdd);
+
+        const harvestedInfo = {
+            count: countToAdd,
+            fillingName: filling.name,
+            icon: filling.icon
+        };
+
+        slot.status = 'idle';
+        slot.fillingId = null;
+        slot.startTime = null;
+        slot.durationMs = 0;
+        slot.batchSize = 1;
+
+        this.save();
+        this.notify({ cookingHarvested: true, slotId, harvestedInfo });
+        return { success: true, ...harvestedInfo };
+    }
+
+    updateKitchenSlots(now = Date.now()) {
+        if (!Array.isArray(this.kitchenSlots)) return;
+        let changed = false;
+        for (const slot of this.kitchenSlots) {
+            if (slot.status === 'cooking' && slot.startTime && slot.durationMs) {
+                if (now - slot.startTime >= slot.durationMs) {
+                    slot.status = 'ready';
+                    changed = true;
+                }
+            }
+        }
+        if (changed) {
+            this.notify({ kitchenSlotsUpdated: true });
+        }
     }
 
     // Tỷ lệ tăng giá bán theo Level (+10% mỗi cấp trên cấp 1)
@@ -2303,6 +2738,9 @@ class GameState {
                 kitchenManualTier: this.kitchenManualTier || this.kitchenTier || 1,
                 kitchenAutoLevel: this.kitchenAutoLevel || 0,
                 kitchenStock: Array.isArray(this.kitchenStock) ? this.kitchenStock : [],
+                farm: this.farm || { autoWaterLevel: 0, plots: [] },
+                kitchenSlots: Array.isArray(this.kitchenSlots) ? this.kitchenSlots : [],
+                kitchenPressUpgrade: Boolean(this.kitchenPressUpgrade),
                 currentCity: this.currentCity || 'branch_hcm',
                 branches: this.branches,
                 staffCount: this.staffCount,
@@ -2433,6 +2871,18 @@ class GameState {
             if (Array.isArray(data.kitchenStock)) {
                 this.kitchenStock = data.kitchenStock;
             }
+            if (data.farm && typeof data.farm === 'object' && Array.isArray(data.farm.plots)) {
+                this.farm = {
+                    autoWaterLevel: Number(data.farm.autoWaterLevel) || 0,
+                    plots: data.farm.plots
+                };
+            }
+            if (Array.isArray(data.kitchenSlots)) {
+                this.kitchenSlots = data.kitchenSlots;
+            }
+            if (data.kitchenPressUpgrade !== undefined) {
+                this.kitchenPressUpgrade = Boolean(data.kitchenPressUpgrade);
+            }
             if (data.branches && typeof data.branches === 'object') {
                 this.branches = data.branches;
             } else if (data.branches === null) {
@@ -2553,6 +3003,17 @@ class GameState {
         this.kitchenAutoLevel = 0;
         this.kitchenStock = [];
         this.staffCount = 0;
+        this.farm = {
+            autoWaterLevel: 0,
+            plots: [
+                { id: 'plot_1', cropKey: 'rice', plantedTime: Date.now() - 50000, durationMs: 45000, status: 'ready' },
+                { id: 'plot_2', cropKey: 'seaweed', plantedTime: Date.now() - 70000, durationMs: 60000, status: 'ready' }
+            ]
+        };
+        this.kitchenSlots = [
+            { id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 }
+        ];
+        this.kitchenPressUpgrade = false;
         this.currentCity = 'branch_hcm';
         this.branches = {
             branch_hcm: { unlocked: true, level: 1 },
@@ -2759,6 +3220,33 @@ class GameState {
         if (typeof this.staffCount !== 'number' || this.staffCount < 0) {
             this.staffCount = 0;
         }
+
+        if (!this.farm || typeof this.farm !== 'object' || !Array.isArray(this.farm.plots)) {
+            this.farm = {
+                autoWaterLevel: 0,
+                plots: [
+                    { id: 'plot_1', cropKey: 'rice', plantedTime: Date.now() - 50000, durationMs: 45000, status: 'ready' },
+                    { id: 'plot_2', cropKey: 'seaweed', plantedTime: Date.now() - 70000, durationMs: 60000, status: 'ready' }
+                ]
+            };
+        } else {
+            this.farm.autoWaterLevel = Number(this.farm.autoWaterLevel) || 0;
+            if (this.farm.plots.length === 0) {
+                this.farm.plots = [
+                    { id: 'plot_1', cropKey: 'rice', plantedTime: Date.now() - 50000, durationMs: 45000, status: 'ready' },
+                    { id: 'plot_2', cropKey: 'seaweed', plantedTime: Date.now() - 70000, durationMs: 60000, status: 'ready' }
+                ];
+            }
+        }
+        this.updateFarm();
+
+        if (!Array.isArray(this.kitchenSlots) || this.kitchenSlots.length === 0) {
+            this.kitchenSlots = [
+                { id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 }
+            ];
+        }
+        this.updateKitchenSlots();
+        this.kitchenPressUpgrade = Boolean(this.kitchenPressUpgrade);
     }
 }
 

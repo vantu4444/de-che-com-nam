@@ -3501,6 +3501,143 @@ async function runInteractiveSimulationSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // BƯỚC 6.15: KIỂM THỬ NÂNG CẤP ĐẾ CHẾ – BƯỚC 1: KHỞI NGHIỆP TỪ NHỎ NHẶT,
+    // VƯỜN NGUYÊN LIỆU CÓ THỜI GIAN CHỜ & DÂY CHUYỀN BẾP NẤU HÀNG ĐỢI
+    // -------------------------------------------------------------------------
+    try {
+        logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản kiểm thử Nâng Cấp Đế Chế Bước 1 (Vườn Trồng & Bếp Hàng Đợi)...', COLORS.cyan);
+        const { state: testState, FILLINGS: testFillings, FARM_CROPS: testCrops, VEHICLES: testVehicles } = await import(path.join(ROOT_DIR, 'src', 'state.js'));
+
+        // 1. Kiểm tra khởi nghiệp khiêm tốn: Sức chứa túi 6 nắm & 3 vị mở sẵn, 12 vị có điều kiện khóa
+        const initialWalkCap = testVehicles.walk.capacity;
+        const initialCapOk = initialWalkCap === 6;
+
+        const allFillingsList = Object.keys(testFillings);
+        const has3Defaults = Boolean(testFillings.crab_egg_mayo.isUnlockedDefault && testFillings.fish_cake.isUnlockedDefault && testFillings.egg_sausage_mayo.isUnlockedDefault);
+        const lockedCountConfigured = allFillingsList.filter(fId => !testFillings[fId].isUnlockedDefault && testFillings[fId].unlockReq).length;
+        const unlockProgressionOk = has3Defaults && (lockedCountConfigured === 12);
+
+        // Kiểm tra điều kiện mở khóa của vị VIP Bò phô mai tan chảy (25k)
+        const meltingVipReq = testFillings.melting_beef_cheese.unlockReq;
+        const vipHasReq = Boolean(meltingVipReq && meltingVipReq.kitchenTier === 5 && meltingVipReq.desc.includes('Xưởng Cấp 5'));
+
+        if (initialCapOk && unlockProgressionOk && vipHasReq) {
+            logger.pass('Tiến Trình Mở Khóa 15 Vị: Túi giữ nhiệt 6 nắm, mở sẵn 3 vị cơ bản 20k, khóa 12 vị còn lại kèm điều kiện Xưởng & Uy Tín rõ ràng');
+        } else {
+            logger.fail('Tiến Trình Mở Khóa 15 Vị: Thất bại', { initialWalkCap, has3Defaults, lockedCountConfigured, vipHasReq });
+        }
+
+        // 2. Kiểm tra Vườn Nguyên Liệu Sạch (Farm Plots, Trồng Lúa, Rong Biển, Thu Hoạch & Nâng Cấp)
+        const initialPlotCount = testState.farm?.plots?.length || 0;
+        const hasRiceAndSeaweedPlots = initialPlotCount >= 2 && testState.farm.plots.some(p => p.cropKey === 'rice') && testState.farm.plots.some(p => p.cropKey === 'seaweed');
+
+        // Thu hoạch mẻ lúa chín sẵn ban đầu
+        const preHarvestRiceGao = testState.ingredients.rice_seaweed || 0;
+        const harvestRiceRes = testState.harvestPlot('plot_1');
+        const postHarvestRiceGao = testState.ingredients.rice_seaweed || 0;
+        const harvestPlotOk = harvestRiceRes.success && (postHarvestRiceGao === preHarvestRiceGao + 10);
+
+        // Gieo hạt Lúa Nhật (45 giây)
+        const plantRiceRes = testState.plantCrop('plot_1', 'rice');
+        const plantRiceOk = plantRiceRes.success && plantRiceRes.plot.status === 'growing' && plantRiceRes.plot.durationMs === 45000;
+
+        // Nâng cấp Tưới Nước Tự Động (-30% thời gian)
+        testState.money += 200000;
+        const upgradeWaterRes = testState.upgradeAutoWater();
+        const autoWaterActive = upgradeWaterRes.success && testState.farm.autoWaterLevel === 1;
+
+        // Mở rộng thêm ô đất (Ô thứ 3)
+        const preExpandPlots = testState.farm.plots.length;
+        const expandPlotRes = testState.expandFarmPlot();
+        const postExpandPlots = testState.farm.plots.length;
+        const expandPlotOk = expandPlotRes.success && (postExpandPlots === preExpandPlots + 1);
+
+        if (hasRiceAndSeaweedPlots && harvestPlotOk && plantRiceOk && autoWaterActive && expandPlotOk) {
+            logger.pass('Khu Vườn Nguyên Liệu Sạch: Khởi đầu 2 ô (Lúa 45s, Rong biển 60s), thu hoạch +10 kho, gieo hạt, tưới tự động (-30%) và mở rộng ô đất thành công');
+        } else {
+            logger.fail('Khu Vườn Nguyên Liệu Sạch: Thất bại', { hasRiceAndSeaweedPlots, harvestPlotOk, plantRiceOk, autoWaterActive, expandPlotOk });
+        }
+
+        // 3. Kiểm tra Dây Chuyền Bếp Nấu Hàng Đợi (Queue Timer, Máy Ép Bán Tự Động, Mở Ô Bếp & Thu Hoạch Xe)
+        const initialSlotsCount = testState.kitchenSlots?.length || 0;
+        const hasInitSlot = initialSlotsCount >= 1;
+
+        // Đưa mẻ cơm vào ô bếp
+        testState.ingredients = { rice_seaweed: 20, meat_seafood: 20, cheese_sauce: 20 };
+        const startCookRes = testState.startCookingSlot('kslot_1', 'crab_egg_mayo');
+        const startCookOk = startCookRes.success && startCookRes.durationSec === 20;
+
+        // Nâng cấp Máy Ép Khuôn Bán Tự Động (-40% thời gian nấu)
+        testState.money += 300000;
+        const upgradePressRes = testState.upgradeKitchenPress();
+        const pressUpgradedOk = upgradePressRes.success && testState.kitchenPressUpgrade === true;
+
+        // Mở rộng thêm ô bếp (Ô thứ 2)
+        const preExpandSlots = testState.kitchenSlots.length;
+        const expandSlotRes = testState.expandKitchenSlot();
+        const postExpandSlots = testState.kitchenSlots.length;
+        const expandSlotOk = expandSlotRes.success && (postExpandSlots === preExpandSlots + 1);
+
+        // Mô phỏng nấu xong ô bếp 1 (đạt mốc ready và có huy hiệu Nóng Hổi Chuẩn ISO & ATVSTP)
+        const targetSlot = testState.kitchenSlots.find(s => s.id === 'kslot_1');
+        targetSlot.startTime = Date.now() - 30000; // Đã trôi qua 30s
+        testState.updateKitchenSlots(Date.now());
+        const slotReadyOk = targetSlot.status === 'ready';
+
+        // Thu hoạch mẻ cơm nóng hổi vào thùng xe
+        testState.inventory = [];
+        const preHarvestRiceCount = testState.getTotalRiceCount();
+        const harvestSlotRes = testState.harvestCookingSlot('kslot_1');
+        const postHarvestRiceCount = testState.getTotalRiceCount();
+        const harvestSlotOk = harvestSlotRes.success && (postHarvestRiceCount === preHarvestRiceCount + 1) && testState.inventory[0]?.freshness === 100;
+
+        if (hasInitSlot && startCookOk && pressUpgradedOk && expandSlotOk && slotReadyOk && harvestSlotOk) {
+            logger.pass('Dây Chuyền Bếp Nấu Hàng Đợi: Xếp mẻ nấu có đếm ngược, máy ép khuôn (-40% time), mở thêm ô bếp, chín nóng hổi chuẩn ISO và thu hoạch vào xe 100% tươi');
+        } else {
+            logger.fail('Dây Chuyền Bếp Nấu Hàng Đợi: Thất bại', { hasInitSlot, startCookOk, pressUpgradedOk, expandSlotOk, slotReadyOk, harvestSlotOk });
+        }
+
+        // 4. Kiểm tra Lưu trữ & Khôi phục Bền Vững (Timestamp Persistence)
+        testState.save();
+        const savedRaw = win.localStorage.getItem(testState.saveKey);
+        const parsedSave = JSON.parse(savedRaw);
+        const hasSavedFarm = parsedSave.farm && Array.isArray(parsedSave.farm.plots);
+        const hasSavedSlots = Array.isArray(parsedSave.kitchenSlots);
+        const hasSavedPress = parsedSave.kitchenPressUpgrade === true;
+
+        if (hasSavedFarm && hasSavedSlots && hasSavedPress) {
+            logger.pass('Tính Bền Vững Thời Gian (Timestamp Persistence): Dữ liệu Nông trại & Hàng đợi Bếp lưu chuẩn Date.now() vào LocalStorage, nạp lại không mất tiến trình');
+        } else {
+            logger.fail('Tính Bền Vững Thời Gian: Lỗi cấu trúc lưu trữ LocalStorage', { hasSavedFarm, hasSavedSlots, hasSavedPress });
+        }
+
+        // 5. Kiểm tra Giao diện Tab Bếp vs Tab Vườn bên trong Modal
+        gameApp.kitchen.open();
+        const kitchenModalEl = doc.getElementById('kitchenModal');
+        
+        // Tab Bếp
+        gameApp.kitchen.activeTab = 'kitchen';
+        gameApp.kitchen.step = 1;
+        gameApp.kitchen.render();
+        const hasSlotsGridUi = Boolean(kitchenModalEl.querySelector('.kitchen-slots-grid') && kitchenModalEl.querySelector('.btn-queue-cook-primary'));
+
+        // Tab Vườn
+        gameApp.kitchen.activeTab = 'farm';
+        gameApp.kitchen.render();
+        const hasFarmGridUi = Boolean(kitchenModalEl.querySelector('.farm-plots-grid') && kitchenModalEl.querySelector('#btnExpandFarmPlot'));
+
+        gameApp.kitchen.close();
+
+        if (hasSlotsGridUi && hasFarmGridUi) {
+            logger.pass('Giao Diện Tab Xưởng Bếp & Vườn Nguyên Liệu: Chuyển đổi 2 Tab mượt mà, đầy đủ lưới ô bếp và lưới ô đất chuẩn công thái học Mobile & Desktop');
+        } else {
+            logger.fail('Giao Diện Tab Xưởng Bếp & Vườn: Lỗi cấu trúc UI', { hasSlotsGridUi, hasFarmGridUi });
+        }
+    } catch (errEmpireStep1) {
+        logger.fail('Nâng Cấp Đế Chế Bước 1: Ngoại lệ kiểm thử', errEmpireStep1.message);
+    }
+
+    // -------------------------------------------------------------------------
     // BƯỚC 7: Rà soát Tổng thể Lỗi Console & PageError
     // -------------------------------------------------------------------------
     console.error = originalConsoleError;

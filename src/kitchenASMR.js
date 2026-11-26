@@ -1,5 +1,6 @@
-// src/kitchenASMR.js - Kho Bếp Cơm Nắm Chuẩn Studio: Bố Cục 4 Tầng Gọn Đẹp, Nấu Nhanh & Nấu Đầy Thùng, 100% Không Cắt Nút
-import { state, FILLINGS, KITCHEN_MANUAL_TIERS } from './state.js';
+// src/kitchenASMR.js - Kho Bếp Cơm Nắm & Vườn Nguyên Liệu Sạch Chuẩn Studio
+// Tích hợp: 1) Dây Chuyền Bếp Hàng Đợi (Queue Timer 20s/45s/90s), 2) Khu Vườn Nguyên Liệu Sạch (45s/60s/180s), 3) Mở Khóa 15 Vị Chuẩn ISO
+import { state, FILLINGS, FARM_CROPS, KITCHEN_MANUAL_TIERS, resolveFillingId } from './state.js';
 import { audio } from './audio.js';
 
 export class KitchenASMR {
@@ -7,28 +8,37 @@ export class KitchenASMR {
         this.container = modalContainer;
         this.onClose = onCloseCallback;
 
+        // Trạng thái tab chính: 'kitchen' (Dây chuyền bếp nấu) | 'farm' (Khu vườn nguyên liệu sạch)
+        this.activeTab = 'kitchen';
+
         // Trạng thái Bếp
         this.selectedFilling = 'crab_egg_mayo';
         this.priceFilter = 'all'; // 'all' | '20k' | '22k' | '25k'
-        this.step = 1; // 1: Múc cơm & thanh lực, 2: Ép 3 lần, 3: Vuốt bọc rong biển, 4: Thành phẩm
+        this.step = 1; // 1: Chuẩn bị/chọn vị/hàng đợi, 2: Ép 3 lần mini-game, 3: Vuốt bọc rong biển, 4: Thành phẩm
 
-        // Bước 1: Giữ múc cơm & thanh lực
+        // Mini-game thủ công Bước 1: Giữ múc cơm & thanh lực
         this.isHoldingPower = false;
         this.power = 0;
         this.powerDirection = 1;
         this.powerInterval = null;
-        this.step1Score = 5; // 3 đến 5 sao
+        this.step1Score = 5;
 
-        // Bước 2: Nhấn 3 lần ép khuôn
+        // Mini-game thủ công Bước 2: Nhấn 3 lần ép khuôn
         this.pressCount = 0;
         this.pressCooldown = false;
 
-        // Bước 3: Vuốt bọc rong biển
+        // Mini-game thủ công Bước 3: Vuốt bọc rong biển
         this.swipeStartX = 0;
         this.isSwiping = false;
         this.wrapped = false;
+
+        // Quản lý thông báo toast & đồng hồ đếm ngược nội bộ
         this.toastMessage = '';
         this.toastTimer = null;
+        this.pollTimer = null;
+
+        // Dialog gieo hạt cây trồng
+        this.selectedPlotForPlant = null;
     }
 
     open() {
@@ -49,6 +59,12 @@ export class KitchenASMR {
 
         this.container.classList.remove('hidden');
         this.render();
+
+        // Khởi động vòng lặp cập nhật đồng hồ đếm ngược mỗi 500ms khi modal mở
+        if (this.pollTimer) clearInterval(this.pollTimer);
+        this.pollTimer = setInterval(() => {
+            this.updateRealtimeTimers();
+        }, 500);
     }
 
     close() {
@@ -59,6 +75,10 @@ export class KitchenASMR {
         if (this.toastTimer) {
             clearTimeout(this.toastTimer);
             this.toastTimer = null;
+        }
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
         }
         window.onmousemove = null;
         window.onmouseup = null;
@@ -93,7 +113,60 @@ export class KitchenASMR {
         }, 3200);
     }
 
-    // ⚡ NẤU NHANH (+1 NẮM): Trừ đúng 1 Gạo + 1 Nhân + 1 Sốt, không cần chơi mini-game
+    // Cập nhật giao diện đếm ngược theo thời gian thực (không re-render toàn bộ DOM)
+    updateRealtimeTimers() {
+        const now = Date.now();
+        state.updateFarm(now);
+        state.updateKitchenSlots(now);
+
+        // 1. Cập nhật các ô bếp nấu đang chạy
+        if (Array.isArray(state.kitchenSlots)) {
+            state.kitchenSlots.forEach(slot => {
+                const el = this.container.querySelector(`[data-slot-timer-id="${slot.id}"]`);
+                const progEl = this.container.querySelector(`[data-slot-prog-id="${slot.id}"]`);
+                if (el && slot.status === 'cooking' && slot.startTime && slot.durationMs) {
+                    const elapsed = now - slot.startTime;
+                    const remainingSec = Math.max(0, Math.ceil((slot.durationMs - elapsed) / 1000));
+                    el.textContent = `⏳ Đang nấu: ${remainingSec}s`;
+                    if (progEl) {
+                        const pct = Math.min(100, Math.floor((elapsed / slot.durationMs) * 100));
+                        progEl.style.width = pct + '%';
+                    }
+                    if (remainingSec <= 0) {
+                        slot.status = 'ready';
+                        audio.playTingComplete();
+                        this.render();
+                    }
+                }
+            });
+        }
+
+        // 2. Cập nhật các ô đất nông trại đang sinh trưởng
+        if (state.farm && Array.isArray(state.farm.plots)) {
+            state.farm.plots.forEach(plot => {
+                const el = this.container.querySelector(`[data-plot-timer-id="${plot.id}"]`);
+                const progEl = this.container.querySelector(`[data-plot-prog-id="${plot.id}"]`);
+                if (el && plot.status === 'growing' && plot.plantedTime && plot.durationMs) {
+                    const elapsed = now - plot.plantedTime;
+                    const remainingSec = Math.max(0, Math.ceil((plot.durationMs - elapsed) / 1000));
+                    const mins = Math.floor(remainingSec / 60);
+                    const secs = remainingSec % 60;
+                    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                    el.textContent = `⏳ ${timeStr}`;
+                    if (progEl) {
+                        const pct = Math.min(100, Math.floor((elapsed / plot.durationMs) * 100));
+                        progEl.style.width = pct + '%';
+                    }
+                    if (remainingSec <= 0) {
+                        plot.status = 'ready';
+                        this.render();
+                    }
+                }
+            });
+        }
+    }
+
+    // ⚡ NẤU NHANH (+1 NẮM): Trừ 1 Gạo + 1 Nhân + 1 Sốt, nấu ngay vị đã mở khóa
     quickCookOne() {
         audio.resume();
         const currentRice = state.getTotalRiceCount();
@@ -103,8 +176,14 @@ export class KitchenASMR {
             return false;
         }
 
+        const unlockCheck = state.isFillingUnlocked(this.selectedFilling);
+        if (!unlockCheck.unlocked) {
+            this.showToast(`🔒 Vị này đang bị khóa! ${unlockCheck.reason}`);
+            return false;
+        }
+
         if ((state.ingredients.rice_seaweed || 0) < 1 || (state.ingredients.meat_seafood || 0) < 1 || (state.ingredients.cheese_sauce || 0) < 1) {
-            this.showToast('⚠️ Hết nguyên liệu! Hãy ghé Chợ Đầu Mối để nhập thêm (cần 1 Gạo, 1 Nhân, 1 Sốt).');
+            this.showToast('⚠️ Hết nguyên liệu! Hãy thu hoạch ở Vườn hoặc ghé Chợ Đầu Mối.');
             return false;
         }
 
@@ -143,6 +222,12 @@ export class KitchenASMR {
             return false;
         }
 
+        const unlockCheck = state.isFillingUnlocked(this.selectedFilling);
+        if (!unlockCheck.unlocked) {
+            this.showToast(`🔒 Vị này đang bị khóa! ${unlockCheck.reason}`);
+            return false;
+        }
+
         const maxByIngredients = Math.min(
             state.ingredients.rice_seaweed || 0,
             state.ingredients.meat_seafood || 0,
@@ -150,7 +235,7 @@ export class KitchenASMR {
         );
 
         if (maxByIngredients <= 0) {
-            this.showToast('⚠️ Hết nguyên liệu! Hãy ghé Chợ Đầu Mối để nhập thêm.');
+            this.showToast('⚠️ Hết nguyên liệu! Hãy thu hoạch ở Vườn hoặc ghé Chợ Đầu Mối.');
             return false;
         }
 
@@ -177,7 +262,7 @@ export class KitchenASMR {
         } catch (e) {}
 
         const filling = FILLINGS[this.selectedFilling] || FILLINGS.crab_egg_mayo;
-        this.showToast(`📦 Đã nấu đầy +${countToCook} Cơm Nắm ${filling.name} chuẩn ISO vào thùng xe!`);
+        this.showToast(`📦 Đã nấu đầy +${countToCook} Cơm Nắm ${filling.name} vào thùng xe!`);
         this.render();
         return true;
     }
@@ -186,85 +271,66 @@ export class KitchenASMR {
         const filling = FILLINGS[this.selectedFilling] || FILLINGS.crab_egg_mayo;
         const currentRice = state.getTotalRiceCount();
         const maxCap = state.getMaxCapacity();
-        const isFull = currentRice >= maxCap;
         const batchSize = state.getKitchenBatchSize();
-        const hasIngredients = state.hasIngredients(batchSize);
 
-        let content = '';
-        if (this.step === 1) {
-            content = this.renderStep1(filling, isFull, hasIngredients, currentRice, maxCap, batchSize);
-        } else if (this.step === 2) {
-            content = this.renderStep2(filling);
-        } else if (this.step === 3) {
-            content = this.renderStep3(filling);
-        } else if (this.step === 4) {
-            content = this.renderResult(filling, currentRice, maxCap);
-        }
-
-        // Danh sách 15 vị chuẩn
-        const allFillings = Object.values(FILLINGS);
-        const displayedFillings = this.priceFilter === 'all'
-            ? allFillings
-            : allFillings.filter(f => f.priceGroup === this.priceFilter);
+        // Đếm số mẻ/cây trồng đã sẵn sàng thu hoạch
+        const readyKitchenSlots = (state.kitchenSlots || []).filter(s => s.status === 'ready').length;
+        const readyFarmPlots = (state.farm?.plots || []).filter(p => p.status === 'ready').length;
 
         this.container.innerHTML = `
             <div class="kitchen-fullscreen-backdrop">
                 <div class="kitchen-modal-panel">
-                    <!-- TẦNG 1: Thanh Tiêu Đề & Kho Nguyên Liệu (Cao ~48px, 1 dòng gọn) -->
+                    <!-- TẦNG 1: Thanh Tiêu Đề & Kho Nguyên Liệu Gọn Đẹp -->
                     <div class="kitchen-topbar">
                         <div class="kitchen-topbar-left">
-                            <span class="kitchen-badge-iso">🍙 KHO BẾP ISO</span>
-                            <span class="stat-badge stat-bag">🎒 Thùng: <strong>${currentRice}/${maxCap}</strong></span>
+                            <span class="kitchen-badge-iso">🍙 XƯỞNG BẾP & NÔNG TRẠI ISO</span>
+                            <span class="stat-badge stat-bag">🎒 Túi Giữ Nhiệt: <strong>${currentRice}/${maxCap}</strong></span>
                         </div>
                         <div class="kitchen-topbar-center">
-                            <span class="stat-pill">🌾 Gạo: <strong>${state.ingredients.rice_seaweed || 0}</strong></span>
-                            <span class="stat-pill">🥩 Nhân: <strong>${state.ingredients.meat_seafood || 0}</strong></span>
-                            <span class="stat-pill">🥫 Sốt: <strong>${state.ingredients.cheese_sauce || 0}</strong></span>
+                            <span class="stat-pill">🌾 Gạo/Rong: <strong>${state.ingredients.rice_seaweed || 0}</strong></span>
+                            <span class="stat-pill">🥩 Thịt/Nhân: <strong>${state.ingredients.meat_seafood || 0}</strong></span>
+                            <span class="stat-pill">🥫 Sốt/Mayo: <strong>${state.ingredients.cheese_sauce || 0}</strong></span>
                         </div>
                         <div class="kitchen-topbar-right">
                             <button type="button" class="btn-exit-kitchen" id="btnExitKitchen">✕ Rời Bếp</button>
                         </div>
                     </div>
 
-                    <!-- TẦNG 2: Bộ Lọc & Thanh Chọn 15 Vị Cuộn Ngang (Cao ~95px) -->
-                    <div class="kitchen-selector-tier">
-                        <div class="selector-filter-row">
-                            <span class="selector-label">Menu 15 Vị Chuẩn ISO:</span>
-                            <div class="price-filter-chips">
-                                <button type="button" class="btn-filter-tab ${this.priceFilter === 'all' ? 'active' : ''}" data-filter="all">Tất cả (15)</button>
-                                <button type="button" class="btn-filter-tab ${this.priceFilter === '20k' ? 'active' : ''}" data-filter="20k">20.000đ (11)</button>
-                                <button type="button" class="btn-filter-tab ${this.priceFilter === '22k' ? 'active' : ''}" data-filter="22k">22.000đ (3)</button>
-                                <button type="button" class="btn-filter-tab ${this.priceFilter === '25k' ? 'active' : ''}" data-filter="25k">25.000đ (1)</button>
-                            </div>
-                        </div>
-                        <div class="fillings-options fillings-scroll-track">
-                            ${displayedFillings.map(f => `
-                                <button type="button" class="btn-filling-tab btn-filling-card ${f.id === this.selectedFilling ? 'active' : ''}" data-fid="${f.id}" title="${f.name}">
-                                    <span class="fc-icon f-icon">${f.icon}</span>
-                                    <span class="fc-name f-name">${f.name}</span>
-                                    <span class="fc-price f-price-tag">${f.price.toLocaleString('vi-VN')}đ</span>
-                                </button>
-                            `).join('')}
-                        </div>
+                    <!-- THANH CHUYỂN TAB CHÍNH: BẾP NẤU HÀNG ĐỢI VS VƯỜN NGUYÊN LIỆU -->
+                    <div class="kitchen-main-tabs-bar">
+                        <button type="button" class="btn-main-tab ${this.activeTab === 'kitchen' ? 'active' : ''}" id="tabBtnKitchen">
+                            🍙 Bếp Chế Biến & Hàng Đợi ${readyKitchenSlots > 0 ? `<span class="tab-badge-glow">♨️ ${readyKitchenSlots} Mẻ Chín</span>` : ''}
+                        </button>
+                        <button type="button" class="btn-main-tab ${this.activeTab === 'farm' ? 'active' : ''}" id="tabBtnFarm">
+                            🌱 Vườn Nguyên Liệu Sạch ${readyFarmPlots > 0 ? `<span class="tab-badge-glow">✨ ${readyFarmPlots} Chín</span>` : ''}
+                        </button>
                     </div>
 
-                    <!-- Thông báo trạng thái nổi (Toast banner) -->
+                    <!-- THÔNG BÁO TRẠNG THÁI NỔI (TOAST BANNER) -->
                     <div class="kitchen-toast-banner ${this.toastMessage ? '' : 'hidden'}" id="kitchenToastBanner">
                         ${this.toastMessage}
                     </div>
 
-                    <!-- TẦNG 3: Bàn Chế Biến Trung Tâm (Chiếm phần lớn không gian ở giữa) -->
+                    <!-- NỘI DUNG CHÍNH THEO TAB -->
                     <div class="kitchen-arena">
-                        ${content}
+                        ${this.step === 4
+                            ? this.renderResult(filling, currentRice, maxCap)
+                            : (this.step === 2
+                                ? this.renderStep2(filling)
+                                : (this.step === 3
+                                    ? this.renderStep3(filling)
+                                    : (this.activeTab === 'farm'
+                                        ? this.renderFarmTab()
+                                        : this.renderKitchenTab(filling, currentRice, maxCap, batchSize))))}
                     </div>
 
-                    <!-- TẦNG 4: Thanh Hành Động Đáy Cố Định (Luôn nằm trọn trong vùng an toàn) -->
+                    <!-- TẦNG 4: Thanh Hành Động Đáy Cố Định -->
                     <div class="kitchen-bottom-action-bar">
-                        <button type="button" class="btn-kitchen-action btn-quick-cook" id="btnQuickCook" title="Nấu nhanh 1 nắm cơm chuẩn ISO không cần chơi mini-game">
+                        <button type="button" class="btn-kitchen-action btn-quick-cook" id="btnQuickCook" title="Nấu nhanh 1 nắm cơm không cần chờ">
                             <span class="bka-icon">⚡</span>
                             <span class="bka-text">Nấu Nhanh (+1)</span>
                         </button>
-                        <button type="button" class="btn-kitchen-action btn-fill-bag" id="btnFillBag" title="Tự động nấu đầy thùng xe theo nguyên liệu hiện có">
+                        <button type="button" class="btn-kitchen-action btn-fill-bag" id="btnFillBag" title="Tự động nấu đầy thùng xe theo nguyên liệu">
                             <span class="bka-icon">📦</span>
                             <span class="bka-text">Nấu Đầy Thùng</span>
                         </button>
@@ -280,7 +346,313 @@ export class KitchenASMR {
         this.bindEvents();
     }
 
-    // --- BƯỚC 1: CHẠM & GIỮ ĐỂ MÚC CƠM ---
+    // --- TAB 1: DÂY CHUYỀN BẾP NẤU & HÀNG ĐỢI ---
+    renderKitchenTab(filling, currentRice, maxCap, batchSize) {
+        const slots = Array.isArray(state.kitchenSlots) ? state.kitchenSlots : [];
+        const maxSlots = 4;
+        const expandCost = state.getKitchenSlotExpandCost();
+        const hasPressUpgrade = Boolean(state.kitchenPressUpgrade);
+
+        // Danh sách 15 vị chuẩn
+        const allFillings = Object.values(FILLINGS);
+        const displayedFillings = this.priceFilter === 'all'
+            ? allFillings
+            : allFillings.filter(f => f.priceGroup === this.priceFilter);
+
+        const currentFillingUnlocked = state.isFillingUnlocked(this.selectedFilling);
+
+        return `
+            <div class="kitchen-tab-wrapper animate-fade">
+                <!-- KHU VỰC 1: DÂY CHUYỀN CÁC Ô BẾP NẤU (HÀNG ĐỢI) -->
+                <div class="kitchen-slots-section">
+                    <div class="slots-header-row">
+                        <div class="slots-title">
+                            <h4>🔥 DÂY CHUYỀN Ô BẾP NẤU CƠM HÀNG ĐỢI (${slots.length}/${maxSlots} Ô)</h4>
+                            <span class="slots-sub">Thời gian nấu: 20s (vị 20k) • 45s (vị 22k) • 90s (VIP 25k)</span>
+                        </div>
+                        <div class="slots-upgrades-row">
+                            ${slots.length < maxSlots ? `
+                                <button type="button" class="btn-slot-upgrade btn-expand-slot" id="btnExpandSlot">
+                                    ➕ Mở Thêm Ô Bếp (${expandCost ? expandCost.toLocaleString('vi-VN') + 'đ' : ''})
+                                </button>
+                            ` : '<span class="upgrade-max-tag">✓ Đã Mở Tối Đa 4 Ô Bếp</span>'}
+                            ${!hasPressUpgrade ? `
+                                <button type="button" class="btn-slot-upgrade btn-press-upgrade" id="btnUpgradePress" title="Máy ép khuôn bán tự động giảm 40% thời gian chờ nấu">
+                                    ⚙️ Máy Ép Khuôn (-40% Thời Gian - 200.000đ)
+                                </button>
+                            ` : '<span class="upgrade-active-tag">⚡ Máy Ép Trợ Lực (-40% Thời Gian)</span>'}
+                        </div>
+                    </div>
+
+                    <!-- LƯỚI CÁC Ô BẾP NẤU -->
+                    <div class="kitchen-slots-grid">
+                        ${slots.map((slot, idx) => {
+                            const slotFilling = slot.fillingId ? FILLINGS[slot.fillingId] : null;
+                            const isIdle = slot.status === 'idle';
+                            const isCooking = slot.status === 'cooking';
+                            const isReady = slot.status === 'ready';
+
+                            let cardClass = 'slot-card-idle';
+                            if (isCooking) cardClass = 'slot-card-cooking';
+                            if (isReady) cardClass = 'slot-card-ready animate-pulse-glow';
+
+                            const now = Date.now();
+                            const elapsed = slot.startTime ? (now - slot.startTime) : 0;
+                            const remainingSec = slot.durationMs ? Math.max(0, Math.ceil((slot.durationMs - elapsed) / 1000)) : 0;
+                            const pct = (slot.durationMs && slot.durationMs > 0) ? Math.min(100, Math.floor((elapsed / slot.durationMs) * 100)) : 0;
+
+                            return `
+                                <div class="kitchen-slot-card ${cardClass}">
+                                    <div class="ksc-header">
+                                        <span class="ksc-num">Ô Bếp #${idx + 1}</span>
+                                        ${isReady ? '<span class="badge-iso-hot">♨️ Nóng Hổi Chuẩn ISO & ATVSTP</span>' : ''}
+                                    </div>
+                                    <div class="ksc-body">
+                                        ${isIdle ? `
+                                            <div class="ksc-idle-view">
+                                                <div class="ksc-icon-idle">🍳</div>
+                                                <div class="ksc-idle-text">Bếp Đang Sẵn Sàng</div>
+                                                <button type="button" class="btn-start-cook-slot" data-slot-id="${slot.id}">
+                                                    🔥 Nấu Mẻ Này (${filling.name})
+                                                </button>
+                                            </div>
+                                        ` : ''}
+
+                                        ${isCooking ? `
+                                            <div class="ksc-cooking-view">
+                                                <div class="ksc-cooking-icon animate-bounce">${slotFilling?.icon || '🍙'}</div>
+                                                <div class="ksc-cooking-name">${slotFilling?.name || 'Cơm Nắm'}</div>
+                                                <div class="ksc-timer-text" data-slot-timer-id="${slot.id}">⏳ Đang nấu: ${remainingSec}s</div>
+                                                <div class="ksc-progress-bar">
+                                                    <div class="ksc-progress-fill" data-slot-prog-id="${slot.id}" style="width: ${pct}%;"></div>
+                                                </div>
+                                            </div>
+                                        ` : ''}
+
+                                        ${isReady ? `
+                                            <div class="ksc-ready-view">
+                                                <div class="ksc-ready-icon animate-bounce">🍙</div>
+                                                <div class="ksc-ready-name">${slotFilling?.name || 'Cơm Nắm'}</div>
+                                                <div class="ksc-ready-subtitle">Đã Chín Nóng Hổi 100% Tươi!</div>
+                                                <button type="button" class="btn-harvest-slot" data-slot-id="${slot.id}">
+                                                    ✨ Thu Hoạch Vào Xe (+${slot.batchSize || 1})
+                                                </button>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- KHU VỰC 2: THANH CHỌN 15 VỊ & BỘ LỌC GIÁ BÁN LẺ -->
+                <div class="kitchen-selector-tier">
+                    <div class="selector-filter-row">
+                        <span class="selector-label">Chọn Vị Cho Mẻ Nấu (Menu 15 Vị):</span>
+                        <div class="price-filter-chips">
+                            <button type="button" class="btn-filter-tab ${this.priceFilter === 'all' ? 'active' : ''}" data-filter="all">Tất cả (15)</button>
+                            <button type="button" class="btn-filter-tab ${this.priceFilter === '20k' ? 'active' : ''}" data-filter="20k">20.000đ (11)</button>
+                            <button type="button" class="btn-filter-tab ${this.priceFilter === '22k' ? 'active' : ''}" data-filter="22k">22.000đ (3)</button>
+                            <button type="button" class="btn-filter-tab ${this.priceFilter === '25k' ? 'active' : ''}" data-filter="25k">25.000đ (1)</button>
+                        </div>
+                    </div>
+                    <div class="fillings-options fillings-scroll-track">
+                        ${displayedFillings.map(f => {
+                            const isLockedInfo = state.isFillingUnlocked(f.id);
+                            const isLocked = !isLockedInfo.unlocked;
+                            const isSelected = f.id === this.selectedFilling;
+                            return `
+                                <button type="button" class="btn-filling-tab btn-filling-card ${isSelected ? 'active' : ''} ${isLocked ? 'is-locked' : ''}" data-fid="${f.id}" title="${f.name}">
+                                    <span class="fc-icon f-icon">${f.icon}</span>
+                                    <span class="fc-name f-name">${f.name}</span>
+                                    <span class="fc-price f-price-tag">${f.price.toLocaleString('vi-VN')}đ</span>
+                                    ${isLocked ? `<span class="lock-indicator">🔒 Khóa</span>` : `<span class="open-indicator">✓ Sẵn sàng</span>`}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- KHU VỰC 3: CHI TIẾT VỊ ĐANG CHỌN HOẶC TRẢI NGHIỆM MINI-GAME THỦ CÔNG -->
+                <div class="kitchen-craft-panel">
+                    ${!currentFillingUnlocked.unlocked ? `
+                        <div class="locked-filling-alert animate-pop">
+                            <div class="lfa-icon">🔒</div>
+                            <div class="lfa-title">Vị Này Đang Bị Khóa: <strong>${filling.name}</strong></div>
+                            <div class="lfa-desc">${currentFillingUnlocked.reason}</div>
+                            <div class="lfa-tip">💡 Hãy bán cơm nâng cao Uy Tín và mở rộng Chi Nhánh để mở khóa trọn bộ 15 vị!</div>
+                        </div>
+                    ` : `
+                        <div class="craft-action-box animate-fade">
+                            <div class="cab-left">
+                                <div class="cab-filling-icon">${filling.icon}</div>
+                                <div class="cab-info">
+                                    <div class="cab-badge-iso">🛡️ ISO & ATVSTP 100%</div>
+                                    <div class="cab-title">Đang chọn: <strong>${filling.name}</strong> (${filling.price.toLocaleString('vi-VN')}đ)</div>
+                                    <div class="cab-desc">${filling.desc}</div>
+                                    <div class="cab-cook-time">⏱️ Thời gian nấu: <strong>${filling.cookTimeSec || 20}s</strong> ${hasPressUpgrade ? '<span class="text-green">(-40% máy ép: ' + Math.round((filling.cookTimeSec || 20) * 0.6) + 's)</span>' : ''}</div>
+                                </div>
+                            </div>
+                            <div class="cab-right">
+                                <button type="button" class="btn-queue-cook-primary" id="btnQueueCookActive">
+                                    🔥 Bắt Đầu Nấu Mẻ Này Vào Bếp Trống
+                                </button>
+                                <button type="button" class="btn-play-asmr-manual" id="btnPlayAsmrManual">
+                                    🥣 Nặn Thủ Công (CHẠM & GIỮ Múc Cơm 5 Sao ⭐)
+                                </button>
+                                <div class="asmr-hint-tag">💡 Hướng dẫn: CHẠM & GIỮ múc cơm, ép 3 lần và bọc rong biển chuẩn ISO 100%</div>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- TAB 2: KHU VƯỜN NGUYÊN LIỆU SẠCH (TỰ CUNG TỰ CẤP) ---
+    renderFarmTab() {
+        const farm = state.farm || { autoWaterLevel: 0, plots: [] };
+        const plots = Array.isArray(farm.plots) ? farm.plots : [];
+        const maxPlots = 6;
+        const expandCost = state.getFarmPlotExpandCost();
+        const hasAutoWater = farm.autoWaterLevel >= 1;
+
+        return `
+            <div class="farm-tab-wrapper animate-fade">
+                <!-- TIÊU ĐỀ NÔNG TRẠI & NÚT NÂNG CẤP -->
+                <div class="farm-top-banner">
+                    <div class="ftb-info">
+                        <h3>🌱 NÔNG TRẠI NGUYÊN LIỆU SẠCH (TỰ CUNG TỰ CẤP CHUẨN ISO)</h3>
+                        <p>Trồng Lúa Nhật (45s), Rong Biển (60s), Trại Gà/Bò/Cá Hồi sạch để chủ động nguồn nguyên liệu 0đ!</p>
+                    </div>
+                    <div class="ftb-actions">
+                        ${plots.length < maxPlots ? `
+                            <button type="button" class="btn-farm-upgrade btn-expand-plot" id="btnExpandFarmPlot">
+                                ➕ Mở Thêm Ô Đất (${expandCost ? expandCost.toLocaleString('vi-VN') + 'đ' : ''})
+                            </button>
+                        ` : '<span class="upgrade-max-tag">✓ Đã Mở Tối Đa 6 Ô Đất</span>'}
+                        ${!hasAutoWater ? `
+                            <button type="button" class="btn-farm-upgrade btn-upgrade-water" id="btnUpgradeAutoWater" title="Tưới tự động giảm 30% thời gian sinh trưởng">
+                                💧 Tưới Tự Động (-30% Thời Gian - 120.000đ)
+                            </button>
+                        ` : '<span class="upgrade-active-tag">💧 Đã Lắp Tưới Tự Động (-30% Time)</span>'}
+                    </div>
+                </div>
+
+                <!-- LƯỚI CÁC Ô ĐẤT NUÔI TRỒNG (TỐI ĐA 6 Ô) -->
+                <div class="farm-plots-grid">
+                    ${plots.map((plot, idx) => {
+                        const crop = plot.cropKey ? FARM_CROPS[plot.cropKey] : null;
+                        const isEmpty = plot.status === 'empty' || !crop;
+                        const isGrowing = plot.status === 'growing' && crop;
+                        const isReady = plot.status === 'ready' && crop;
+
+                        let plotCardClass = 'plot-empty';
+                        if (isGrowing) plotCardClass = 'plot-growing';
+                        if (isReady) plotCardClass = 'plot-ready animate-pulse-glow';
+
+                        const now = Date.now();
+                        const elapsed = plot.plantedTime ? (now - plot.plantedTime) : 0;
+                        const remainingSec = plot.durationMs ? Math.max(0, Math.ceil((plot.durationMs - elapsed) / 1000)) : 0;
+                        const mins = Math.floor(remainingSec / 60);
+                        const secs = remainingSec % 60;
+                        const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                        const pct = (plot.durationMs && plot.durationMs > 0) ? Math.min(100, Math.floor((elapsed / plot.durationMs) * 100)) : 0;
+
+                        return `
+                            <div class="farm-plot-card ${plotCardClass}">
+                                <div class="fpc-header">
+                                    <span class="fpc-num">Ô Đất #${idx + 1}</span>
+                                    <span class="fpc-type">${crop ? crop.name : 'Đang Trống'}</span>
+                                </div>
+                                <div class="fpc-body">
+                                    ${isEmpty ? `
+                                        <div class="fpc-empty-view">
+                                            <div class="fpc-empty-icon">🌱</div>
+                                            <div class="fpc-empty-title">Đất Trống Sẵn Sàng</div>
+                                            <button type="button" class="btn-plant-action" data-plot-id="${plot.id}">
+                                                🌾 Gieo Trồng Cây Mới
+                                            </button>
+                                        </div>
+                                    ` : ''}
+
+                                    ${isGrowing ? `
+                                        <div class="fpc-growing-view">
+                                            <div class="fpc-crop-icon animate-sway">${crop.icon}</div>
+                                            <div class="fpc-crop-name">${crop.name}</div>
+                                            <div class="fpc-timer-text" data-plot-timer-id="${plot.id}">⏳ ${timeStr}</div>
+                                            <div class="fpc-progress-bar">
+                                                <div class="fpc-progress-fill" data-plot-prog-id="${plot.id}" style="width: ${pct}%;"></div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+
+                                    ${isReady ? `
+                                        <div class="fpc-ready-view">
+                                            <div class="fpc-ready-icon animate-bounce">${crop.icon}</div>
+                                            <div class="fpc-ready-name">${crop.name} Chín Rộ!</div>
+                                            <div class="fpc-yield-tag">+${crop.yieldCount} ${crop.yieldType === 'rice_seaweed' ? 'Gạo/Rong' : crop.yieldType === 'meat_seafood' ? 'Thịt/Nhân' : 'Sốt/Mayo'}</div>
+                                            <button type="button" class="btn-harvest-crop" data-plot-id="${plot.id}">
+                                                ✨ Thu Hoạch Vào Kho Bếp
+                                            </button>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- POPUP CHỌN GIỐNG CÂY TRỒNG (NẾU ĐANG CHỌN Ô ĐẤT) -->
+                ${this.selectedPlotForPlant ? this.renderPlantModal(this.selectedPlotForPlant) : ''}
+            </div>
+        `;
+    }
+
+    renderPlantModal(plotId) {
+        const crops = Object.values(FARM_CROPS);
+        const curTier = state.kitchenManualTier || state.kitchenTier || 1;
+        const curRep = state.reputation || 100;
+
+        return `
+            <div class="plant-modal-overlay animate-fade">
+                <div class="plant-modal-card">
+                    <div class="pmc-header">
+                        <h4>🌱 CHỌN GIỐNG NGUYÊN LIỆU CHO Ô ĐẤT</h4>
+                        <button type="button" class="btn-close-plant-modal" id="btnClosePlantModal">✕</button>
+                    </div>
+                    <div class="pmc-list">
+                        ${crops.map(crop => {
+                            const isLocked = curTier < crop.reqTier || curRep < crop.reqRep;
+                            const durText = crop.durationSec >= 60 ? `${Math.round(crop.durationSec / 60)} phút` : `${crop.durationSec} giây`;
+                            return `
+                                <div class="crop-select-item ${isLocked ? 'is-crop-locked' : ''}">
+                                    <div class="csi-icon">${crop.icon}</div>
+                                    <div class="csi-info">
+                                        <div class="csi-name">${crop.name} <span class="csi-dur">⏱️ ${durText}</span></div>
+                                        <div class="csi-desc">${crop.desc}</div>
+                                        ${isLocked ? `<div class="csi-locked-text">🔒 Yêu cầu: Xưởng Cấp ${crop.reqTier} & Uy Tín ${crop.reqRep} ⭐</div>` : ''}
+                                    </div>
+                                    <div class="csi-action">
+                                        ${!isLocked ? `
+                                            <button type="button" class="btn-confirm-plant" data-plot-id="${plotId}" data-crop-key="${crop.id}">
+                                                Gieo Hạt ${crop.cost > 0 ? `(${crop.cost.toLocaleString('vi-VN')}đ)` : '(0đ Miễn phí)'}
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn-confirm-plant btn-disabled" disabled>Chưa Mở</button>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // --- BƯỚC 1 MINI-GAME THỦ CÔNG ---
     renderStep1(filling, isFull, hasIngredients, currentRice, maxCap, batchSize) {
         let warningHtml = '';
         let disabledAttr = '';
@@ -297,7 +669,7 @@ export class KitchenASMR {
         } else if (!hasIngredients) {
             warningHtml = `
                 <div class="kitchen-alert-box alert-warning">
-                    ⚠️ <strong>HẾT NGUYÊN LIỆU!</strong> Ghé <strong>Chợ Đầu Mối</strong> để nhập thêm Gạo, Nhân, Sốt.
+                    ⚠️ <strong>HẾT NGUYÊN LIỆU!</strong> Hãy thu hoạch ở Vườn hoặc ghé <strong>Chợ Đầu Mối</strong>.
                 </div>
             `;
             disabledAttr = 'disabled';
@@ -310,7 +682,7 @@ export class KitchenASMR {
 
                 <div class="step-instruction">
                     <div class="iso-mini-badge">🛡️ CHUẨN ISO & ATVSTP 100%</div>
-                    <h3>Chế Biến: Cơm Nắm ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
+                    <h3>Chế Biến Thủ Công: Cơm Nắm ${filling.name} (${filling.price.toLocaleString('vi-VN')}đ)</h3>
                     <p>Chạm & giữ ngón tay vào nút bên dưới để thanh lực tăng. <strong>Thả đúng vùng XANH LÁ</strong> để cơm dẻo ngon nhất!</p>
                 </div>
 
@@ -337,11 +709,13 @@ export class KitchenASMR {
                 <button type="button" class="btn-hold-scoop ${disabledAttr ? 'btn-disabled' : ''}" id="btnHoldScoop" ${disabledAttr}>
                     ${btnText}
                 </button>
+                <div style="margin-top: 10px; text-align: center;">
+                    <button type="button" class="btn-back-to-queue" id="btnBackToQueue">← Quay Lại Bếp Hàng Đợi</button>
+                </div>
             </div>
         `;
     }
 
-    // --- BƯỚC 2: CHẠM 3 LẦN ĐỂ ÉP KHUÔN ---
     renderStep2(filling) {
         return `
             <div class="step-content animate-fade">
@@ -368,7 +742,6 @@ export class KitchenASMR {
         `;
     }
 
-    // --- BƯỚC 3: VUỐT NHẸ ĐỂ BỌC RONG BIỂN ---
     renderStep3(filling) {
         return `
             <div class="step-content animate-fade">
@@ -396,7 +769,6 @@ export class KitchenASMR {
         `;
     }
 
-    // --- BƯỚC 4: THÀNH PHẨM & CỘNG EXP ---
     renderResult(filling, currentRice, maxCap) {
         const starsText = '⭐'.repeat(this.step1Score);
         const batchSize = this.lastCookCount || state.getKitchenBatchSize();
@@ -425,7 +797,7 @@ export class KitchenASMR {
                     </div>
 
                     <div class="result-actions-row">
-                        <button type="button" class="btn-cook-more" id="btnCookMore">🍙 Làm Thêm Mẻ Nữa</button>
+                        <button type="button" class="btn-cook-more" id="btnCookMore">🍙 Tiếp Tục Nấu Bếp</button>
                     </div>
                 </div>
             </div>
@@ -439,6 +811,26 @@ export class KitchenASMR {
             audio.playClick();
             this.close();
         };
+
+        // Chuyển Tab chính: Bếp nấu vs Vườn nguyên liệu
+        const tabKitchen = document.getElementById('tabBtnKitchen');
+        if (tabKitchen) {
+            tabKitchen.onclick = () => {
+                audio.playClick();
+                this.activeTab = 'kitchen';
+                this.step = 1;
+                this.render();
+            };
+        }
+
+        const tabFarm = document.getElementById('tabBtnFarm');
+        if (tabFarm) {
+            tabFarm.onclick = () => {
+                audio.playClick();
+                this.activeTab = 'farm';
+                this.render();
+            };
+        }
 
         // Chuyển tab lọc giá bán lẻ trên Tầng 2
         const filterBtns = this.container.querySelectorAll('.btn-filter-tab');
@@ -496,18 +888,228 @@ export class KitchenASMR {
             };
         }
 
-        // Nút Bước 4: Làm Thêm Mẻ Nữa
-        const btnCookMore = document.getElementById('btnCookMore');
-        if (btnCookMore) {
-            btnCookMore.onclick = () => {
+        // Nút: Bắt đầu nấu mẻ này vào ô bếp trống
+        const btnQueueCook = document.getElementById('btnQueueCookActive');
+        if (btnQueueCook) {
+            btnQueueCook.onclick = () => {
                 audio.playClick();
-                this.open();
+                // Tìm ô bếp đầu tiên đang idle
+                const slots = state.kitchenSlots || [];
+                const idleSlot = slots.find(s => s.status === 'idle');
+                if (!idleSlot) {
+                    this.showToast('⚠️ Tất cả ô bếp đều đang nấu! Hãy chờ hoặc bấm "➕ Mở Thêm Ô Bếp".');
+                    return;
+                }
+                const res = state.startCookingSlot(idleSlot.id, this.selectedFilling);
+                if (res.success) {
+                    audio.playSizzleHotKitchen();
+                    const fillingCfg = FILLINGS[this.selectedFilling];
+                    this.showToast(`🔥 Đã đưa mẻ ${fillingCfg.name} vào Ô Bếp #${slots.indexOf(idleSlot) + 1} (chờ ${res.durationSec}s)!`);
+                    this.render();
+                } else if (res.reason === 'not_enough_ingredients') {
+                    this.showToast('⚠️ Hết nguyên liệu! Hãy thu hoạch ở Vườn hoặc ghé Chợ Đầu Mối.');
+                } else if (res.reason === 'filling_locked') {
+                    this.showToast(`🔒 Vị này đang bị khóa! ${res.details}`);
+                }
             };
         }
 
-        // --- Xử lý Bước 1: Nhấn giữ để múc cơm ---
+        // Nút: Bắt đầu nặn thủ công Mini-game ASMR
+        const btnPlayAsmr = document.getElementById('btnPlayAsmrManual');
+        if (btnPlayAsmr) {
+            btnPlayAsmr.onclick = () => {
+                audio.playClick();
+                const fillingCfg = FILLINGS[this.selectedFilling];
+                const currentRice = state.getTotalRiceCount();
+                const maxCap = state.getMaxCapacity();
+                const batchSize = state.getKitchenBatchSize();
+                const hasIngredients = state.hasIngredients(batchSize);
+
+                const arena = this.container.querySelector('.kitchen-arena');
+                if (arena) {
+                    arena.innerHTML = this.renderStep1(fillingCfg, currentRice >= maxCap, hasIngredients, currentRice, maxCap, batchSize);
+                    this.bindStep1Events();
+                }
+            };
+        }
+
+        // Nút: Quay lại hàng đợi bếp từ mini-game thủ công
+        const btnBackQueue = document.getElementById('btnBackToQueue');
+        if (btnBackQueue) {
+            btnBackQueue.onclick = () => {
+                audio.playClick();
+                this.step = 1;
+                this.render();
+            };
+        }
+
+        // Sự kiện trên từng ô bếp nấu (Bắt đầu nấu trên ô đó hoặc Thu hoạch)
+        const startSlotBtns = this.container.querySelectorAll('.btn-start-cook-slot');
+        startSlotBtns.forEach(btn => {
+            btn.onclick = () => {
+                audio.playClick();
+                const slotId = btn.dataset.slotId;
+                const res = state.startCookingSlot(slotId, this.selectedFilling);
+                if (res.success) {
+                    audio.playSizzleHotKitchen();
+                    const fillingCfg = FILLINGS[this.selectedFilling];
+                    this.showToast(`🔥 Đã bắt đầu nấu mẻ ${fillingCfg.name} (chờ ${res.durationSec}s)!`);
+                    this.render();
+                } else if (res.reason === 'not_enough_ingredients') {
+                    this.showToast('⚠️ Hết nguyên liệu! Hãy thu hoạch ở Vườn hoặc ghé Chợ Đầu Mối.');
+                } else if (res.reason === 'filling_locked') {
+                    this.showToast(`🔒 Vị này đang bị khóa! ${res.details}`);
+                }
+            };
+        });
+
+        const harvestSlotBtns = this.container.querySelectorAll('.btn-harvest-slot');
+        harvestSlotBtns.forEach(btn => {
+            btn.onclick = () => {
+                const slotId = btn.dataset.slotId;
+                const res = state.harvestCookingSlot(slotId);
+                if (res.success) {
+                    audio.playTingComplete();
+                    audio.playSizzleHotKitchen();
+                    try {
+                        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                            navigator.vibrate(50);
+                        }
+                    } catch (e) {}
+                    this.showToast(`♨️ Đã thu hoạch +${res.count} Cơm Nắm ${res.fillingName} nóng hổi vào thùng xe!`);
+                    this.render();
+                } else if (res.reason === 'bag_full') {
+                    this.showToast(`🚨 Thùng xe đã đầy (${res.current}/${res.max})! Hãy ra phố bán bớt rồi thu hoạch.`);
+                }
+            };
+        });
+
+        // Nâng cấp Ô Bếp & Máy Ép
+        const btnExpandSlot = document.getElementById('btnExpandSlot');
+        if (btnExpandSlot) {
+            btnExpandSlot.onclick = () => {
+                audio.playClick();
+                const res = state.expandKitchenSlot();
+                if (res.success) {
+                    audio.playTingComplete();
+                    this.showToast(`🎉 Mở rộng thành công Ô Bếp mới! Tổng: ${state.kitchenSlots.length} ô bếp.`);
+                    this.render();
+                } else if (res.reason === 'not_enough_money') {
+                    this.showToast(`⚠️ Không đủ tiền mở ô bếp (cần ${res.cost.toLocaleString('vi-VN')}đ)!`);
+                }
+            };
+        }
+
+        const btnUpgradePress = document.getElementById('btnUpgradePress');
+        if (btnUpgradePress) {
+            btnUpgradePress.onclick = () => {
+                audio.playClick();
+                const res = state.upgradeKitchenPress();
+                if (res.success) {
+                    audio.playTingComplete();
+                    this.showToast('⚡ Nâng cấp thành công Máy Ép Khuôn Bán Tự Động (-40% thời gian nấu)!');
+                    this.render();
+                } else if (res.reason === 'not_enough_money') {
+                    this.showToast(`⚠️ Không đủ tiền nâng cấp (cần ${res.cost.toLocaleString('vi-VN')}đ)!`);
+                }
+            };
+        }
+
+        // --- CÁC SỰ KIỆN TAB NÔNG TRẠI (FARM) ---
+        const btnExpandPlot = document.getElementById('btnExpandFarmPlot');
+        if (btnExpandPlot) {
+            btnExpandPlot.onclick = () => {
+                audio.playClick();
+                const res = state.expandFarmPlot();
+                if (res.success) {
+                    audio.playTingComplete();
+                    this.showToast(`🎉 Mở rộng thành công Ô Đất mới! Tổng: ${state.farm.plots.length} ô đất.`);
+                    this.render();
+                } else if (res.reason === 'not_enough_money') {
+                    this.showToast(`⚠️ Không đủ tiền mở ô đất (cần ${res.cost.toLocaleString('vi-VN')}đ)!`);
+                }
+            };
+        }
+
+        const btnUpgradeWater = document.getElementById('btnUpgradeAutoWater');
+        if (btnUpgradeWater) {
+            btnUpgradeWater.onclick = () => {
+                audio.playClick();
+                const res = state.upgradeAutoWater();
+                if (res.success) {
+                    audio.playTingComplete();
+                    this.showToast('💧 Đã lắp đặt thành công Hệ Thống Tưới Tự Động (-30% thời gian sinh trưởng)!');
+                    this.render();
+                } else if (res.reason === 'not_enough_money') {
+                    this.showToast(`⚠️ Không đủ tiền lắp tưới nước (cần ${res.cost.toLocaleString('vi-VN')}đ)!`);
+                }
+            };
+        }
+
+        // Mở popup gieo trồng trên ô đất trống
+        const plantActionBtns = this.container.querySelectorAll('.btn-plant-action');
+        plantActionBtns.forEach(btn => {
+            btn.onclick = () => {
+                audio.playClick();
+                const plotId = btn.dataset.plotId;
+                this.selectedPlotForPlant = plotId;
+                this.render();
+            };
+        });
+
+        // Đóng popup gieo trồng
+        const btnClosePlant = document.getElementById('btnClosePlantModal');
+        if (btnClosePlant) {
+            btnClosePlant.onclick = () => {
+                audio.playClick();
+                this.selectedPlotForPlant = null;
+                this.render();
+            };
+        }
+
+        // Xác nhận gieo giống cây
+        const confirmPlantBtns = this.container.querySelectorAll('.btn-confirm-plant');
+        confirmPlantBtns.forEach(btn => {
+            btn.onclick = () => {
+                const plotId = btn.dataset.plotId;
+                const cropKey = btn.dataset.cropKey;
+                const res = state.plantCrop(plotId, cropKey);
+                if (res.success) {
+                    audio.playClick();
+                    const crop = FARM_CROPS[cropKey];
+                    this.showToast(`🌱 Đã gieo trồng thành công ${crop.name}!`);
+                    this.selectedPlotForPlant = null;
+                    this.render();
+                } else if (res.reason === 'not_enough_money') {
+                    this.showToast('⚠️ Không đủ tiền mua giống cây!');
+                }
+            };
+        });
+
+        // Thu hoạch cây trồng
+        const harvestCropBtns = this.container.querySelectorAll('.btn-harvest-crop');
+        harvestCropBtns.forEach(btn => {
+            btn.onclick = () => {
+                const plotId = btn.dataset.plotId;
+                const res = state.harvestPlot(plotId);
+                if (res.success) {
+                    audio.playTingComplete();
+                    try {
+                        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+                            navigator.vibrate(40);
+                        }
+                    } catch (e) {}
+                    const yName = res.yieldType === 'rice_seaweed' ? 'Gạo & Rong Biển' : res.yieldType === 'meat_seafood' ? 'Thịt & Nhân Tươi' : 'Sốt & Mayonnaise';
+                    this.showToast(`🌾 Đã thu hoạch thành công +${res.yieldCount} ${yName} vào kho bếp!`);
+                    this.render();
+                }
+            };
+        });
+    }
+
+    bindStep1Events() {
         const btnHold = document.getElementById('btnHoldScoop');
-        if (btnHold && this.step === 1 && !btnHold.disabled) {
+        if (btnHold && !btnHold.disabled) {
             const startHold = (e) => {
                 if (e) e.preventDefault();
                 audio.resume();
@@ -553,8 +1155,12 @@ export class KitchenASMR {
                 }
 
                 setTimeout(() => {
-                    this.step = 2;
-                    this.render();
+                    const fillingCfg = FILLINGS[this.selectedFilling];
+                    const arena = this.container.querySelector('.kitchen-arena');
+                    if (arena) {
+                        arena.innerHTML = this.renderStep2(fillingCfg);
+                        this.bindStep2Events();
+                    }
                 }, 350);
             };
 
@@ -565,9 +1171,19 @@ export class KitchenASMR {
             window.addEventListener('touchcancel', stopHold);
         }
 
-        // --- Xử lý Bước 2: Nhấn ép 3 lần ---
+        const btnBackQueue = document.getElementById('btnBackToQueue');
+        if (btnBackQueue) {
+            btnBackQueue.onclick = () => {
+                audio.playClick();
+                this.step = 1;
+                this.render();
+            };
+        }
+    }
+
+    bindStep2Events() {
         const btnPress = document.getElementById('btnPressMold');
-        if (btnPress && this.step === 2) {
+        if (btnPress) {
             const handlePress = (e) => {
                 if (e && e.cancelable && e.type === 'touchend') e.preventDefault();
                 if (this.pressCooldown) return;
@@ -585,8 +1201,12 @@ export class KitchenASMR {
 
                     if (this.pressCount >= 3) {
                         setTimeout(() => {
-                            this.step = 3;
-                            this.render();
+                            const fillingCfg = FILLINGS[this.selectedFilling];
+                            const arena = this.container.querySelector('.kitchen-arena');
+                            if (arena) {
+                                arena.innerHTML = this.renderStep3(fillingCfg);
+                                this.bindStep3Events();
+                            }
                         }, 250);
                     } else {
                         btnPress.innerText = `💥 CHẠM 3 LẦN ĐỂ ÉP KHUÔN (${this.pressCount}/3)`;
@@ -597,10 +1217,11 @@ export class KitchenASMR {
             btnPress.onclick = handlePress;
             btnPress.ontouchend = handlePress;
         }
+    }
 
-        // --- Xử lý Bước 3: Vuốt bọc rong biển ---
+    bindStep3Events() {
         const wrapBench = document.getElementById('wrapBench');
-        if (wrapBench && this.step === 3) {
+        if (wrapBench) {
             const onSwipeStart = (clientX) => {
                 audio.resume();
                 this.swipeStartX = clientX;
@@ -642,8 +1263,18 @@ export class KitchenASMR {
                             }
                         } catch (eVib) {}
 
-                        this.step = 4;
-                        this.render();
+                        const fillingCfg = FILLINGS[this.selectedFilling];
+                        const arena = this.container.querySelector('.kitchen-arena');
+                        if (arena) {
+                            arena.innerHTML = this.renderResult(fillingCfg, state.getTotalRiceCount(), state.getMaxCapacity());
+                            const btnCookMore = document.getElementById('btnCookMore');
+                            if (btnCookMore) {
+                                btnCookMore.onclick = () => {
+                                    audio.playClick();
+                                    this.render();
+                                };
+                            }
+                        }
                     }, 600);
                 }
             };

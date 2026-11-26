@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 11:08:59, 26/11/2026  
+**Thời điểm thực thi:** 12:54:47, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,11 +10,11 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **140** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **139** | 100% | ✅ Đạt |
-| **Số bài FAIL (Thất bại)** | **1** | **0** | ❌ Cần khắc phục |
+| **Tổng số bài kiểm thử** | **145** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **143** | 100% | ✅ Đạt |
+| **Số bài FAIL (Thất bại)** | **2** | **0** | ❌ Cần khắc phục |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
-| **Tỷ lệ vượt qua (Pass Rate)** | **99.3%** | **100.0%** | ❌ Không đạt |
+| **Tỷ lệ vượt qua (Pass Rate)** | **98.6%** | **100.0%** | ❌ Không đạt |
 
 ---
 
@@ -157,7 +157,7 @@
 - **[PASS]** `Mô phỏng Đối Thủ Ngoài Phố: Sinh thành công 1–2 xe hàng đối thủ AI đỗ tại các điểm nóng cạnh tranh thị phần`
 - **[PASS]** `Mô phỏng Responsive: Thích ứng hoàn hảo kích thước Điện thoại (375x812) và iPad (768x1024)`
 - **[PASS]** `Mô phỏng Đa Điểm Chạm: Ngón trái lái xe, ngón phải bấm nút độc lập; nhấc tay nhân vật dừng ngay không trôi`
-- **[PASS]** `Mô phỏng Bếp ASMR & Bóc Rong Biển 1-2-3: Thao tác chạm múc cơm, ép khuôn, vuốt cuốn lá và bóc dải 1-2-3 cảm ứng mượt mà`
+- **[FAIL]** `Mô phỏng Bếp ASMR & Bóc Rong Biển: Sự kiện touch không phản hồi đầy đủ` - *kitchen: false, seaweed: true*
 - **[PASS]** `Mô phỏng Tự Động Lưu: Tự động lưu LocalStorage định kỳ 5s và lưu tức thì sau mọi giao dịch`
 - **[PASS]** `Mô phỏng Lưu & Phục Hồi Tiến Trình: Tên thương hiệu, Tiền, Level, Uy tín ISO, Kho 15 vị, Xe cộ, 4 Chi nhánh, Chuỗi 20 NV phục hồi chính xác 100%`
 - **[PASS]** `Mô phỏng Hợp Nhất Dữ Liệu: Tự động bù đắp an toàn khi nạp dữ liệu cũ/hỏng, không bao giờ sập game`
@@ -195,6 +195,11 @@
 - **[PASS]** `Bố Cục Kho Bếp 4 Tầng: Khóa trọn 1 màn hình (max-height: 90dvh), tự ẩn phím ảo, không cuộn dài, 3 nút đáy nằm trọn trong viewport iPhone/Desktop`
 - **[PASS]** `Chức Năng Kho Bếp Tiện Lợi: Nấu Nhanh (+1) trừ đúng 1 Gạo/Nhân/Sốt, Nấu Đầy Thùng lấp đầy xe và Ra Phố phục hồi phím ảo chính xác 100%`
 - **[PASS]** `Cổng Thu Thập Data Màn Hình Chào: Tích hợp sẵn Chọn 4 Chi Nhánh (TP.HCM, Đắk Lắk, TP. Vinh, Hà Nội) & Ô nhập Số Điện Thoại nhận quà +200.000đ`
+- **[PASS]** `Tiến Trình Mở Khóa 15 Vị: Túi giữ nhiệt 6 nắm, mở sẵn 3 vị cơ bản 20k, khóa 12 vị còn lại kèm điều kiện Xưởng & Uy Tín rõ ràng`
+- **[PASS]** `Khu Vườn Nguyên Liệu Sạch: Khởi đầu 2 ô (Lúa 45s, Rong biển 60s), thu hoạch +10 kho, gieo hạt, tưới tự động (-30%) và mở rộng ô đất thành công`
+- **[PASS]** `Dây Chuyền Bếp Nấu Hàng Đợi: Xếp mẻ nấu có đếm ngược, máy ép khuôn (-40% time), mở thêm ô bếp, chín nóng hổi chuẩn ISO và thu hoạch vào xe 100% tươi`
+- **[PASS]** `Tính Bền Vững Thời Gian (Timestamp Persistence): Dữ liệu Nông trại & Hàng đợi Bếp lưu chuẩn Date.now() vào LocalStorage, nạp lại không mất tiến trình`
+- **[PASS]** `Giao Diện Tab Xưởng Bếp & Vườn Nguyên Liệu: Chuyển đổi 2 Tab mượt mà, đầy đủ lưới ô bếp và lưới ô đất chuẩn công thái học Mobile & Desktop`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---
