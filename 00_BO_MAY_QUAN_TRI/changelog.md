@@ -6,6 +6,7 @@
 
 ## 🏆 PHIÊN BẢN: v2.8.4-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP ĐẾ CHẾ – BƯỚC 1: KHỞI NGHIỆP TỪ NHỎ NHẶT, VƯỜN NGUYÊN LIỆU ĐẾM NGƯỢC & DÂY CHUYỀN BẾP HÀNG ĐỢI NÓNG HỔI CHUẨN ISO)
 - **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 4-tier factory evolution and automated farming/cooking robots
 - **Trạng thái:** Nghiệm thu **100% PASS (144/144 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
 - **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
   1. **Khởi Nghiệp Khiêm Tốn & Tiến Trình Mở Khóa 15 Vị (`src/state.js`, `src/kitchenASMR.js`):**
