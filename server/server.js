@@ -121,6 +121,9 @@ export class OnigiriServer {
         // Quản lý tin nhắn cho cơ chế polling fallback
         this.pollingQueues = new Map();
         this.pollingWaitingRes = new Map();
+
+        // [THANH ĐUA CẤP SÁT SƯỜN] Quản lý đối thủ đứng ngay trên để phát hiện VƯỢT MẶT
+        this.playerLastRivalAbove = new Map(); // socketId -> { id, name, score }
     }
 
     async start() {
@@ -435,6 +438,23 @@ export class OnigiriServer {
             // [BẢNG XẾP HẠNG TỶ PHÚ]
             socket.on('billionaires:get', (data) => this.handleGetBillionaires(socket.id, data));
 
+            // [THANH RADAR ĐUA CẤP SÁT SƯỜN]
+            socket.on('rival:query', (data) => {
+                const p = this.players.get(socket.id);
+                if (p && data) {
+                    if (typeof data.level === 'number') p.level = data.level;
+                    if (typeof data.exp === 'number') p.exp = data.exp;
+                    if (typeof data.totalRevenue === 'number') p.totalRevenue = data.totalRevenue;
+                }
+                const rInfo = this.calculateRivals(socket.id);
+                if (rInfo) {
+                    if (rInfo.overtakeEvent) {
+                        socket.emit('pvp:overtake_alert', rInfo.overtakeEvent);
+                    }
+                    socket.emit('rival:radar_update', rInfo);
+                }
+            });
+
             // Sự kiện 5: Ngắt kết nối
             socket.on('disconnect', () => {
                 const playerId = this.socketToPlayerId.get(socket.id);
@@ -667,6 +687,20 @@ export class OnigiriServer {
             this.handleChatGetHistory(sid);
         } else if (event === 'billionaires:get') {
             this.handleGetBillionaires(sid, data);
+        } else if (event === 'rival:query' || event === 'rival_query') {
+            const p = this.players.get(sid);
+            if (p && data) {
+                if (typeof data.level === 'number') p.level = data.level;
+                if (typeof data.exp === 'number') p.exp = data.exp;
+                if (typeof data.totalRevenue === 'number') p.totalRevenue = data.totalRevenue;
+            }
+            const rInfo = this.calculateRivals(sid);
+            if (rInfo) {
+                if (rInfo.overtakeEvent) {
+                    this.sendToClient(sid, 'pvp:overtake_alert', rInfo.overtakeEvent);
+                }
+                this.sendToClient(sid, 'rival:radar_update', rInfo);
+            }
         }
     }
 
@@ -1308,6 +1342,128 @@ export class OnigiriServer {
         const topReputation = [...all].sort((a, b) => b.reputation - a.reputation).slice(0, 20);
 
         return { topRevenue, topReputation };
+    }
+
+    // [THANH ĐUA CẤP SÁT SƯỜN] Tính toán đối thủ liền kề (trên/dưới) và phát hiện VƯỢT MẶT thời gian thực
+    calculateRivals(socketId) {
+        const player = this.players.get(socketId);
+        if (!player) return null;
+
+        const allCompetitors = [];
+        const seenIds = new Set();
+
+        // 1. Thêm online players
+        for (const [sid, p] of this.players.entries()) {
+            const pid = p.playerId || sid;
+            seenIds.add(pid);
+            seenIds.add(sid);
+            const score = (Number(p.level) || 1) * 100000 + (Number(p.exp) || 0) + Math.round((Number(p.totalRevenue) || 0) / 1000);
+            allCompetitors.push({
+                id: sid,
+                playerId: pid,
+                name: p.brandName || p.name || 'Người chơi',
+                level: Number(p.level) || 1,
+                exp: Number(p.exp) || 0,
+                score: score,
+                city: p.city || 'hcm',
+                isSelf: sid === socketId || pid === player.playerId,
+                isOnline: true
+            });
+        }
+
+        // 2. Thêm mock competitors từ danh sách bảng xếp hạng
+        for (const m of this.mockLeaderboard) {
+            if (!seenIds.has(m.id)) {
+                const score = (Number(m.level) || 1) * 100000 + Math.round((Number(m.revenue) || 0) / 1000);
+                allCompetitors.push({
+                    id: m.id,
+                    playerId: m.id,
+                    name: m.name,
+                    level: Number(m.level) || 1,
+                    exp: m.level * 250,
+                    score: score,
+                    city: m.city || 'hcm',
+                    isSelf: false,
+                    isOnline: false
+                });
+            }
+        }
+
+        // Sắp xếp giảm dần theo điểm số
+        allCompetitors.sort((a, b) => b.score - a.score);
+
+        const selfIndex = allCompetitors.findIndex(c => c.isSelf);
+        if (selfIndex === -1) return null;
+
+        const currentRank = selfIndex + 1;
+        const rivalAbove = selfIndex > 0 ? allCompetitors[selfIndex - 1] : null;
+        const rivalBelow = selfIndex < allCompetitors.length - 1 ? allCompetitors[selfIndex + 1] : null;
+        const selfData = allCompetitors[selfIndex];
+
+        // 3. Kiểm tra VƯỢT MẶT (Overtake Detection)
+        const prevRivalAbove = this.playerLastRivalAbove.get(socketId);
+        let overtakeEvent = null;
+
+        if (prevRivalAbove && rivalAbove && prevRivalAbove.id !== rivalAbove.id) {
+            const prevRivalCurrentIndex = allCompetitors.findIndex(c => c.id === prevRivalAbove.id);
+            if (prevRivalCurrentIndex > selfIndex) {
+                // Đã vượt mặt thành công đối thủ xếp trên trước đó!
+                overtakeEvent = {
+                    targetName: prevRivalAbove.name,
+                    targetId: prevRivalAbove.id,
+                    newRank: currentRank,
+                    bonusMoney: 25000,
+                    bonusReputation: 10
+                };
+
+                // Nếu đối thủ bị vượt là người chơi online thực, gửi cảnh báo cho họ
+                if (prevRivalAbove.isOnline) {
+                    this.sendEventToUser(prevRivalAbove.id, 'pvp:overtaken_warning', {
+                        byName: player.brandName,
+                        byRank: currentRank
+                    });
+                }
+            }
+        }
+
+        if (rivalAbove) {
+            this.playerLastRivalAbove.set(socketId, { id: rivalAbove.id, name: rivalAbove.name, score: rivalAbove.score });
+        } else {
+            this.playerLastRivalAbove.delete(socketId);
+        }
+
+        return {
+            rank: currentRank,
+            totalPlayers: allCompetitors.length,
+            rivalAbove: rivalAbove ? {
+                id: rivalAbove.id,
+                playerId: rivalAbove.playerId,
+                name: rivalAbove.name,
+                level: rivalAbove.level,
+                exp: rivalAbove.exp,
+                score: rivalAbove.score,
+                city: rivalAbove.city,
+                isOnline: rivalAbove.isOnline
+            } : null,
+            self: {
+                rank: currentRank,
+                name: selfData.name,
+                level: selfData.level,
+                exp: selfData.exp,
+                score: selfData.score
+            },
+            rivalBelow: rivalBelow ? {
+                id: rivalBelow.id,
+                playerId: rivalBelow.playerId,
+                name: rivalBelow.name,
+                level: rivalBelow.level,
+                exp: rivalBelow.exp,
+                score: rivalBelow.score,
+                city: rivalBelow.city,
+                isOnline: rivalBelow.isOnline
+            } : null,
+            overtakeEvent
+        };
     }
 
     getClientSocketIoScript() {

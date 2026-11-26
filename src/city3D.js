@@ -729,6 +729,206 @@ export class City3DManager {
             this.renderCustomer3D(ctx, cust, camera);
         });
     }
+
+    /**
+     * NÂNG CẤP THỊ GIÁC CYBER FOOD-TECH TƯƠNG LAI
+     * 1. Vùng Chiếu Hologram Công Nghệ Xanh Ngọc cho các Ô Vạch Xanh Hợp Pháp
+     */
+    renderCyberHologramZone(ctx, spot) {
+        if (!ctx || !spot) return;
+
+        const now = Date.now();
+        const pulse = Math.sin(now / 350) * 0.08 + 0.22;
+        const scanlineY = spot.y + ((now / 20) % spot.h);
+
+        ctx.save();
+
+        // 1. Nền Hologram Xanh Ngọc Cyber quét năng lượng
+        const holoGrad = ctx.createLinearGradient(spot.x, spot.y, spot.x + spot.w, spot.y + spot.h);
+        holoGrad.addColorStop(0, `rgba(0, 240, 255, ${pulse * 0.85})`);
+        holoGrad.addColorStop(0.5, `rgba(16, 185, 129, ${pulse * 1.1})`);
+        holoGrad.addColorStop(1, `rgba(6, 182, 212, ${pulse * 0.85})`);
+
+        ctx.fillStyle = holoGrad;
+        ctx.fillRect(spot.x, spot.y, spot.w, spot.h);
+
+        // 2. Dòng quét năng lượng Hologram (Scanline)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(spot.x, scanlineY, spot.w, 3);
+
+        // 3. Viền sáng Neon Cyber chuyển động
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 10;
+        ctx.setLineDash([12, 6]);
+        ctx.lineDashOffset = -(now / 40);
+        ctx.strokeRect(spot.x, spot.y, spot.w, spot.h);
+        ctx.setLineDash([]);
+        ctx.shadowBlur = 0;
+
+        // 4. Bốn góc định vị Cyber HUD sắc sảo
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 3.5;
+        const cLen = 14;
+        // Top-left
+        ctx.beginPath();
+        ctx.moveTo(spot.x, spot.y + cLen);
+        ctx.lineTo(spot.x, spot.y);
+        ctx.lineTo(spot.x + cLen, spot.y);
+        ctx.stroke();
+        // Top-right
+        ctx.beginPath();
+        ctx.moveTo(spot.x + spot.w - cLen, spot.y);
+        ctx.lineTo(spot.x + spot.w, spot.y);
+        ctx.lineTo(spot.x + spot.w, spot.y + cLen);
+        ctx.stroke();
+        // Bottom-left
+        ctx.beginPath();
+        ctx.moveTo(spot.x, spot.y + spot.h - cLen);
+        ctx.lineTo(spot.x, spot.y + spot.h);
+        ctx.lineTo(spot.x + cLen, spot.y + spot.h);
+        ctx.stroke();
+        // Bottom-right
+        ctx.beginPath();
+        ctx.moveTo(spot.x + spot.w - cLen, spot.y + spot.h);
+        ctx.lineTo(spot.x + spot.w, spot.y + spot.h);
+        ctx.lineTo(spot.x + spot.w, spot.y + spot.h - cLen);
+        ctx.stroke();
+
+        // 5. Khiên ISO & ATVSTP xoay lơ lửng 3D phía trên
+        const centerX = spot.x + spot.w / 2;
+        const centerY = spot.y + spot.h / 2;
+        const hoverY = centerY - 14 + Math.sin(now / 300) * 4;
+        const shieldScaleX = Math.cos(now / 500); // Hiệu ứng xoay 3D quanh trục Y
+
+        ctx.save();
+        ctx.translate(centerX, hoverY);
+        ctx.scale(Math.abs(shieldScaleX) < 0.15 ? 0.15 : shieldScaleX, 1);
+
+        // Vẽ biểu tượng khiên bảo chứng ISO phát sáng
+        ctx.fillStyle = '#06b6d4';
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(0, -14);
+        ctx.lineTo(12, -8);
+        ctx.lineTo(9, 6);
+        ctx.lineTo(0, 14);
+        ctx.lineTo(-9, 6);
+        ctx.lineTo(-12, -8);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.restore();
+
+        // 6. Nhãn Hologram phát sáng công nghệ
+        ctx.fillStyle = '#00f0ff';
+        ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+        ctx.shadowBlur = 6;
+        ctx.fillText('CYBER FOOD-TECH ZONE', centerX, centerY + 10);
+        ctx.font = '8px "Be Vietnam Pro", sans-serif';
+        ctx.fillStyle = '#a7f3d0';
+        ctx.fillText('🛡️ CHUẨN ISO 22000 & ATVSTP (HỢP PHÁP)', centerX, centerY + 22);
+
+        ctx.restore();
+    }
+
+    /**
+     * NÂNG CẤP THỊ GIÁC CYBER FOOD-TECH TƯƠNG LAI
+     * 2. Xe Bán Hàng Công Nghệ Tương Lai (Cyber Food-Pod & Drone Giao Hàng)
+     */
+    renderCyberFoodPodAndDrone(ctx, player, currentVehicle = 'walk', kitchenTier = 1) {
+        if (!ctx || !player) return;
+
+        const now = Date.now();
+        const px = player.x;
+        const py = player.y;
+
+        ctx.save();
+
+        // Dải đèn LED Neon chạy dưới gầm xe hoặc chân nhân vật khi có xưởng/xe nâng cấp
+        const isAdvanced = kitchenTier >= 2 || currentVehicle !== 'walk';
+        if (isAdvanced) {
+            const neonPulse = Math.sin(now / 200) * 0.15 + 0.45;
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(px, py + 14, 28, 10, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 240, 255, ${neonPulse})`;
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 16;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Drone Giao Hàng Tương Lai Mini lơ lửng phía trên bên phải nhân vật
+        const droneAngle = (now / 600) % (Math.PI * 2);
+        const droneHoverY = py - 48 + Math.sin(now / 250) * 5;
+        const droneHoverX = px + 24 + Math.cos(now / 500) * 6;
+
+        ctx.save();
+        ctx.translate(droneHoverX, droneHoverY);
+
+        // Đèn định vị Drone
+        ctx.fillStyle = (now % 600 < 300) ? '#00f0ff' : '#ec4899';
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(0, -6, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Thân Drone Cyber kim loại đen xám
+        ctx.fillStyle = '#0f172a';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(-10, -4, 20, 8, 3);
+        } else {
+            ctx.rect(-10, -4, 20, 8);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // 2 Cánh quạt Drone xoay tít mù
+        const propBlur = Math.sin(now / 40) * 8;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1;
+        // Cánh trái
+        ctx.beginPath();
+        ctx.moveTo(-14, -6);
+        ctx.lineTo(-6 + propBlur * 0.2, -6);
+        ctx.stroke();
+        // Cánh phải
+        ctx.beginPath();
+        ctx.moveTo(6, -6);
+        ctx.lineTo(14 - propBlur * 0.2, -6);
+        ctx.stroke();
+
+        // Hộp cơm nắm Onigiri phát sáng được Drone mang theo
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.moveTo(0, 6);
+        ctx.lineTo(5, 13);
+        ctx.lineTo(-5, 13);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-2, 10, 4, 3);
+
+        ctx.restore();
+
+        ctx.restore();
+    }
 }
 
 export const city3D = new City3DManager();

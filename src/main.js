@@ -13,6 +13,7 @@ import { seaweedGame } from './seaweedGame.js';
 import { network } from './network.js';
 import { onlineUI } from './onlineUI.js';
 import { characterRenderer } from './characterRenderer.js';
+import { city3D } from './city3D.js';
 import { TutorialManager } from './tutorial.js';
 
 class GameApp {
@@ -1282,6 +1283,19 @@ class GameApp {
         this.ctx.translate(-this.camera.x, -this.camera.y);
         this.player.render(this.ctx);
         this.ctx.restore();
+
+        // 3.5. Vẽ Đèn Neon Cyber Food-Pod & Drone Giao Hàng Tương Lai
+        if (city3D && typeof city3D.renderCyberFoodPodAndDrone === 'function') {
+            this.ctx.save();
+            this.ctx.translate(-this.camera.x, -this.camera.y);
+            city3D.renderCyberFoodPodAndDrone(
+                this.ctx,
+                this.player,
+                state.currentVehicle,
+                state.kitchenTier || state.kitchenManualTier || 1
+            );
+            this.ctx.restore();
+        }
 
         // 4. Vẽ Vùng Phát Sáng & Mũi Tên Chỉ Đường Đơn Hỏa Tốc
         deliveryManager.render(this.ctx, this.camera, this.player);

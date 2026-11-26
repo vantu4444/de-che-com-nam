@@ -416,6 +416,28 @@ export class NetworkManager {
         this.socket.on('billionaires:list', (data) => {
             this.emitEvent('onBillionairesList', data?.list || []);
         });
+
+        // [THANH RADAR ĐUA CẤP SÁT SƯỜN & OVERTAKE ALERT]
+        this.socket.on('rival:radar_update', (data) => {
+            this.emitEvent('onRivalRadarUpdate', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.updateRivalRadar(data);
+            }
+        });
+
+        this.socket.on('pvp:overtake_alert', (data) => {
+            this.emitEvent('onOvertakeAlert', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showOvertakeAlert(data);
+            }
+        });
+
+        this.socket.on('pvp:overtaken_warning', (data) => {
+            this.emitEvent('onOvertakenWarning', data);
+            if (typeof window !== 'undefined' && window.onlineUI) {
+                window.onlineUI.showOvertakenWarning(data);
+            }
+        });
     }
 
     // Cập nhật đèn báo trạng thái kết nối trên thanh HUD
@@ -905,6 +927,13 @@ export class NetworkManager {
 
     // Cập nhật vòng lặp Game Loop (di chuyển Bot & countdown đấu trường)
     update(dt = 0.016) {
+        // Cập nhật định kỳ cho Thanh Radar Đua Cấp Sát Sườn (mỗi 3 giây)
+        this.radarTimer = (this.radarTimer || 0) + dt;
+        if (this.radarTimer >= 3.0) {
+            this.radarTimer = 0;
+            this.queryRivalRadar();
+        }
+
         // Cập nhật hành vi di chuyển mượt mà của Bot khi ở chế độ offline
         if (this.status === 'OFFLINE_BOT_FALLBACK') {
             for (const bot of this.otherPlayers.values()) {
@@ -1017,6 +1046,101 @@ export class NetworkManager {
                 }
             });
         }
+    }
+
+    // Yêu cầu dữ liệu Thanh Radar Đua Cấp Sát Sườn
+    queryRivalRadar() {
+        if (this.socket && this.isOnline) {
+            this.socket.emit('rival:query', {
+                level: state.level || 1,
+                exp: state.exp || 0,
+                totalRevenue: state.stats?.totalRevenue || 0
+            });
+        } else {
+            this.simulateBotRivalRadar();
+        }
+    }
+
+    simulateBotRivalRadar() {
+        const selfScore = (state.level || 1) * 100000 + (state.exp || 0) + Math.round((state.stats?.totalRevenue || 0) / 1000);
+        const selfEntry = {
+            id: this.selfId,
+            name: state.brandName || state.playerName || 'Bạn',
+            level: state.level || 1,
+            exp: state.exp || 0,
+            revenue: state.stats?.totalRevenue || 0,
+            reputation: state.reputation || 100,
+            score: selfScore,
+            isSelf: true
+        };
+
+        const pool = [selfEntry];
+        for (const bot of this.otherPlayers.values()) {
+            const bScore = (bot.level || 1) * 100000 + Math.round((bot.totalRevenue || 0) / 1000);
+            pool.push({
+                id: bot.id,
+                name: bot.brandName || bot.name || 'Đối thủ AI',
+                level: bot.level || 1,
+                exp: 0,
+                revenue: bot.totalRevenue || 0,
+                reputation: bot.reputation || 100,
+                score: bScore,
+                isSelf: false
+            });
+        }
+
+        pool.sort((a, b) => b.score - a.score);
+
+        const selfIndex = pool.findIndex(p => p.isSelf);
+        const rank = selfIndex >= 0 ? selfIndex + 1 : 1;
+        const rivalAbove = selfIndex > 0 ? pool[selfIndex - 1] : null;
+        const rivalBelow = (selfIndex >= 0 && selfIndex < pool.length - 1) ? pool[selfIndex + 1] : null;
+
+        // Phát hiện vượt mặt trong chế độ offline bot
+        if (this._lastBotRivalAboveId && rivalAbove && this._lastBotRivalAboveId !== rivalAbove.id) {
+            const passedBot = pool.find(p => p.id === this._lastBotRivalAboveId);
+            if (passedBot && selfIndex < pool.indexOf(passedBot)) {
+                if (typeof window !== 'undefined' && window.onlineUI) {
+                    window.onlineUI.showOvertakeAlert({
+                        targetName: passedBot.name,
+                        newRank: rank,
+                        bonusMoney: 25000,
+                        bonusReputation: 10
+                    });
+                }
+            }
+        }
+        this._lastBotRivalAboveId = rivalAbove ? rivalAbove.id : null;
+
+        const radarData = {
+            rank,
+            totalPlayers: pool.length,
+            rivalAbove: rivalAbove ? {
+                id: rivalAbove.id,
+                name: rivalAbove.name,
+                level: rivalAbove.level,
+                score: rivalAbove.score,
+                reputation: rivalAbove.reputation
+            } : null,
+            self: {
+                id: this.selfId,
+                name: selfEntry.name,
+                level: selfEntry.level,
+                score: selfEntry.score
+            },
+            rivalBelow: rivalBelow ? {
+                id: rivalBelow.id,
+                name: rivalBelow.name,
+                level: rivalBelow.level,
+                score: rivalBelow.score,
+                reputation: rivalBelow.reputation
+            } : null
+        };
+
+        if (typeof window !== 'undefined' && window.onlineUI) {
+            window.onlineUI.updateRivalRadar(radarData);
+        }
+        this.emitEvent('onRivalRadarUpdate', radarData);
     }
 
     notifyStatus() {

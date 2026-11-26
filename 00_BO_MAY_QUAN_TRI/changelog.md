@@ -4,6 +4,27 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.7-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP TẦM CAO – ĐỢT 1: PHONG CÁCH CYBER FOOD-TECH TƯƠNG LAI & THANH ĐUA CẤP ĐỘ SÁT SƯỜN THỜI GIAN THỰC)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add cyber food-tech hologram zones, futuristic food pods, live rival radar bar and real-time overtake alerts
+- **Trạng thái:** Nghiệm thu **100% PASS (88/88 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Nâng Cấp Thị Giác Đô Thị Cyber Food-Tech Tương Lai (`src/city3D.js`, `src/world.js`, `src/main.js`, `style.css`):**
+     - Nâng cấp các **Ô Vạch Xanh Hợp Pháp** trên bản đồ 3D thành **Vùng Chiếu Hologram Công Nghệ Xanh Ngọc** (`#00f0ff` Cyan & `#10b981` Emerald), hiệu ứng quét tia sáng đa tầng chuyển động liên tục, 4 góc viền HUD công nghệ sắc sảo, biển báo phát quang chuẩn **ISO 22000** và biểu tượng khiên bảo chứng **ISO & ATVSTP 🛡️** xoay lơ lửng 3D.
+     - Tích hợp mô hình **Cyber Food-Pod & Drone Giao Hàng**: Dải đèn LED neon phát quang gầm xe và Drone mini lơ lửng mang hộp cơm nắm Onigiri phát sáng phía trên nóc xe khi xưởng đạt cấp cao hoặc sở hữu xe nâng cấp.
+     - Giữ vững chuẩn thương hiệu: **100% Cơm Nắm**, Menu 15 vị với 3 mức giá bán lẻ niêm yết (`20.000đ`, `22.000đ`, `25.000đ`), tuyệt đối không có bánh mì và không lộ giá vốn hay công thức.
+  2. **Thanh Đua Cấp Độ Sát Sườn Thời Gian Thực (`server/server.js`, `server.js`, `src/network.js`, `src/onlineUI.js`, `index.html`, `style.css`):**
+     - Thuật toán thời gian thực trên máy chủ tự động tính điểm người chơi (`score = level * 100000 + exp + round(totalRevenue / 1000)`) và gửi về Client cặp đối thủ sát sườn: **`rivalAbove`** (đối thủ xếp ngay trên 1 bậc) và **`rivalBelow`** (đối thủ bám đuổi ngay sau 1 bậc).
+     - Hiển thị **Thanh Radar Đua Cấp Sát Sườn (`#rivalRadarBar`)** gọn đẹp, công thái học, nút thu gọn `−` / `+`, nút **`⚔️`** khiêu chiến trực tiếp đối thủ xếp trên mở ngay Đấu Trường 1v1.
+     - Vị trí hình học an toàn chuẩn Mobile 375x812: `top: 215px; right: 10px; width: 165px;` (cách Minimap 26px $>12px$), không đè Joystick, nút `iGiri` hay nút `💬 Chat` (**Zero-Overlap**).
+     - **Hiệu Ứng Vượt Mặt (Overtake Alert Banner):** Ngay khoảnh khắc người chơi vượt điểm `rivalAbove`, phát âm thanh chiến thắng `audio.playLevelUp()`, bật thông báo sang trọng `#overtakeAlertBanner`: *"🚀 VƯỢT MẶT THÀNH CÔNG! Bạn đã vượt qua [Tên đối thủ]! Vươn lên Hạng #X"*, đồng thời **thưởng nóng ngay +25.000đ tiền mặt và +10 Điểm Uy Tín ⭐** và gửi cảnh báo nhẹ nhàng tới đối thủ bị vượt mặt.
+  3. **Nghiệm Thu Toàn Diện 88/88 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Giữ nguyên 100% tính năng Chat, Kết bạn, Thách đấu 1v1, Vườn nguyên liệu, Bếp hàng đợi, Robot tự động, 4 Chi nhánh toàn quốc, Tự động bán sạp và Hướng dẫn tân thủ 5 bước.
+     - 0 Console Error, 0 va chạm hình học giao diện trên Desktop (1440x900) và iPhone (375x812).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.6-PROD (CHÍNH THỨC XUẤT XƯỞNG: TỰ ĐỘNG PHỤC VỤ TẠI SẠP, NÚT BÁN CHO KHÁCH TRỰC TIẾP & HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC KÈM CẨM NANG KHỞI NGHIỆP CƠM NẮM)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 5-step interactive tutorial system, entrepreneurship guide handbook, smart auto-serving and quick sell button

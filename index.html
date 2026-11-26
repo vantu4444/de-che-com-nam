@@ -236,6 +236,54 @@
         <!-- 11. Hệ thống Thẻ Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp -->
         <div id="tutorialCardContainer" class="tutorial-card-container hidden"></div>
         <div id="tutorialGuideModal" class="tutorial-guide-modal-layer hidden"></div>
+
+        <!-- 12. Thanh Radar Đua Cấp Sát Sườn Thời Gian Thực & Banner Vượt Mặt -->
+        <div id="rivalRadarBar" class="rival-radar-bar">
+            <div class="rrb-header">
+                <div class="rrb-title"><span class="rrb-radar-dot"></span> RADAR ĐUA CẤP</div>
+                <button type="button" id="btnToggleRadar" class="btn-rrb-toggle" title="Thu gọn / Mở rộng">−</button>
+            </div>
+            <div class="rrb-content" id="rrbContent">
+                <!-- Rival Above (Người xếp trên bạn) -->
+                <div class="rrb-row rrb-row-above" id="rrbRowAbove">
+                    <div class="rrb-row-left">
+                        <span class="rrb-badge-tag tag-above">🔺 TRÊN</span>
+                        <span class="rrb-name" id="rrbAboveName">Đang quét...</span>
+                    </div>
+                    <div class="rrb-row-right">
+                        <span class="rrb-level" id="rrbAboveLevel">Lv.0</span>
+                        <button type="button" id="btnChallengeAbove" class="btn-rrb-challenge" title="Thách đấu ngay">⚔️</button>
+                    </div>
+                </div>
+
+                <!-- Self (Bạn) -->
+                <div class="rrb-row rrb-row-self" id="rrbRowSelf">
+                    <div class="rrb-row-left">
+                        <span class="rrb-badge-tag tag-self">🍙 BẠN</span>
+                        <span class="rrb-rank" id="rrbSelfRank">#--</span>
+                    </div>
+                    <div class="rrb-row-right">
+                        <span class="rrb-level" id="rrbSelfLevel">Lv.1</span>
+                        <div class="rrb-exp-bar"><div class="rrb-exp-fill" id="rrbSelfExpFill" style="width: 50%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- Rival Below (Người xếp sau bạn) -->
+                <div class="rrb-row rrb-row-below" id="rrbRowBelow">
+                    <div class="rrb-row-left">
+                        <span class="rrb-badge-tag tag-below">🔻 DƯỚI</span>
+                        <span class="rrb-name" id="rrbBelowName">Đang quét...</span>
+                    </div>
+                    <div class="rrb-row-right">
+                        <span class="rrb-level" id="rrbBelowLevel">Lv.0</span>
+                        <span class="rrb-diff" id="rrbBelowDiff">-0đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Banner Thông Báo Vượt Mặt Nổi Bật -->
+        <div id="overtakeAlertBanner" class="overtake-alert-banner hidden"></div>
     </div>
 
     <!-- Nạp Three.js 3D Engine (CDN với Fallback tự động an toàn) -->

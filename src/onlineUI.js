@@ -37,7 +37,15 @@ export class OnlineUIManager {
         this.challengeDialogElement = null;
         this.floatingChatElement = null;
 
+        // Thanh radar đua cấp sát sườn thời gian thực
+        this.rivalRadarBar = null;
+        this.btnToggleRadar = null;
+        this.btnChallengeAbove = null;
+        this.overtakeAlertBanner = null;
+        this.currentRivalAbove = null;
+
         this.initDomElements();
+        this.initRivalRadarDom();
         this.bindNetworkEvents();
     }
 
@@ -2079,6 +2087,173 @@ export class OnlineUIManager {
                 this.showToastNotification(`🛒 Mua thành công +${amount} phần từ quầy ký gửi bạn bè!`);
             };
         });
+    }
+
+    /**
+     * Khởi tạo DOM và lắng nghe sự kiện Thanh Radar Đua Cấp Sát Sườn
+     */
+    initRivalRadarDom() {
+        if (typeof document === 'undefined') return;
+
+        this.rivalRadarBar = document.getElementById('rivalRadarBar');
+        this.btnToggleRadar = document.getElementById('btnToggleRadar');
+        this.btnChallengeAbove = document.getElementById('btnChallengeAbove');
+        this.overtakeAlertBanner = document.getElementById('overtakeAlertBanner');
+
+        if (this.btnToggleRadar && this.rivalRadarBar) {
+            this.btnToggleRadar.onclick = () => {
+                try { audio.playClick(); } catch (e) {}
+                this.rivalRadarBar.classList.toggle('collapsed');
+                const isCollapsed = this.rivalRadarBar.classList.contains('collapsed');
+                this.btnToggleRadar.textContent = isCollapsed ? '+' : '−';
+            };
+        }
+
+        if (this.btnChallengeAbove) {
+            this.btnChallengeAbove.onclick = () => {
+                if (!this.currentRivalAbove) {
+                    this.showToastNotification('⚠️ Không tìm thấy đối thủ trên để thách đấu!');
+                    return;
+                }
+                try { audio.playClick(); } catch (e) {}
+                this.showChallengeDialog(this.currentRivalAbove);
+            };
+        }
+
+        // Đưa onlineUI vào window để network và các module khác dễ dàng gọi
+        if (typeof window !== 'undefined') {
+            window.onlineUI = this;
+        }
+    }
+
+    /**
+     * Cập nhật giao diện Thanh Radar Đua Cấp Sát Sườn
+     * @param {Object} data 
+     */
+    updateRivalRadar(data) {
+        if (!data || typeof document === 'undefined') return;
+
+        if (!this.rivalRadarBar) {
+            this.rivalRadarBar = document.getElementById('rivalRadarBar');
+        }
+        if (!this.rivalRadarBar) return;
+
+        this.rivalRadarBar.classList.remove('hidden');
+
+        // 1. Đối thủ xếp ngay trên
+        const aboveNameEl = document.getElementById('rrbAboveName');
+        const aboveLevelEl = document.getElementById('rrbAboveLevel');
+        const btnChallenge = document.getElementById('btnChallengeAbove');
+
+        if (data.rivalAbove) {
+            this.currentRivalAbove = {
+                id: data.rivalAbove.id,
+                name: data.rivalAbove.name || 'Đối thủ sát trên',
+                level: data.rivalAbove.level || 1,
+                reputation: data.rivalAbove.reputation || 100
+            };
+            if (aboveNameEl) aboveNameEl.textContent = data.rivalAbove.name || 'Đối thủ';
+            if (aboveLevelEl) aboveLevelEl.textContent = `Lv.${data.rivalAbove.level || 1}`;
+            if (btnChallenge) {
+                btnChallenge.style.display = 'inline-block';
+                btnChallenge.title = `Thách đấu ${data.rivalAbove.name}`;
+            }
+        } else {
+            this.currentRivalAbove = null;
+            if (aboveNameEl) aboveNameEl.textContent = '🏆 BẠN ĐANG TOP 1!';
+            if (aboveLevelEl) aboveLevelEl.textContent = 'VÔ ĐỐI';
+            if (btnChallenge) btnChallenge.style.display = 'none';
+        }
+
+        // 2. Bản thân
+        const selfRankEl = document.getElementById('rrbSelfRank');
+        const selfLevelEl = document.getElementById('rrbSelfLevel');
+        const selfExpFillEl = document.getElementById('rrbSelfExpFill');
+
+        if (selfRankEl) selfRankEl.textContent = `#${data.rank || 1}`;
+        if (selfLevelEl) selfLevelEl.textContent = `Lv.${data.self?.level || state.level || 1}`;
+
+        if (selfExpFillEl) {
+            const nextLevelExp = state.getNextLevelExp ? state.getNextLevelExp() : 100;
+            const curExp = state.exp || 0;
+            const pct = Math.min(100, Math.max(0, (curExp / nextLevelExp) * 100));
+            selfExpFillEl.style.width = `${pct}%`;
+        }
+
+        // 3. Đối thủ bám đuổi ngay sau
+        const belowNameEl = document.getElementById('rrbBelowName');
+        const belowLevelEl = document.getElementById('rrbBelowLevel');
+
+        if (data.rivalBelow) {
+            if (belowNameEl) belowNameEl.textContent = data.rivalBelow.name || 'Đối thủ sát dưới';
+            if (belowLevelEl) belowLevelEl.textContent = `Lv.${data.rivalBelow.level || 1}`;
+        } else {
+            if (belowNameEl) belowNameEl.textContent = '🏁 Chưa có người sau';
+            if (belowLevelEl) belowLevelEl.textContent = '–';
+        }
+    }
+
+    /**
+     * Hiển thị thông báo Overtake Alert khi vượt mặt thành công
+     * @param {Object} data 
+     */
+    showOvertakeAlert(data) {
+        if (!data || typeof document === 'undefined') return;
+
+        if (!this.overtakeAlertBanner) {
+            this.overtakeAlertBanner = document.getElementById('overtakeAlertBanner');
+        }
+        if (!this.overtakeAlertBanner) return;
+
+        const targetName = data.targetName || 'Đối thủ';
+        const newRank = data.newRank || 1;
+        const bonusMoney = Number(data.bonusMoney) || 25000;
+        const bonusRep = Number(data.bonusReputation) || 10;
+
+        // Thưởng nóng trực tiếp
+        if (state.addMoney) {
+            state.addMoney(bonusMoney);
+        } else {
+            state.money = (state.money || 0) + bonusMoney;
+        }
+
+        if (state.addReputation) {
+            state.addReputation(bonusRep);
+        } else {
+            state.reputation = (state.reputation || 0) + bonusRep;
+        }
+        state.notify();
+
+        // Âm thanh ăn mừng
+        try {
+            audio.playLevelUp();
+            audio.playTingComplete();
+        } catch (e) {}
+
+        this.overtakeAlertBanner.innerHTML = `
+            <div class="oab-title">🚀 VƯỢT MẶT THÀNH CÔNG!</div>
+            <div class="oab-desc">Bạn vừa vượt qua <strong>${targetName}</strong>! Vươn lên Hạng #${newRank}</div>
+            <div class="oab-reward">+${bonusMoney.toLocaleString('vi-VN')}đ  +${bonusRep} Uy Tín ⭐</div>
+        `;
+        this.overtakeAlertBanner.classList.remove('hidden');
+
+        if (this._overtakeTimer) clearTimeout(this._overtakeTimer);
+        this._overtakeTimer = setTimeout(() => {
+            if (this.overtakeAlertBanner) {
+                this.overtakeAlertBanner.classList.add('hidden');
+            }
+        }, 4500);
+    }
+
+    /**
+     * Cảnh báo khi bị đối thủ vượt mặt
+     * @param {Object} data 
+     */
+    showOvertakenWarning(data) {
+        if (!data) return;
+        const byName = data.byName || 'Một người chơi';
+        try { audio.playError(); } catch (e) {}
+        this.showToastNotification(`⚠️ Cảnh báo: ${byName} vừa vượt mặt bạn! Hãy tăng tốc sạp hàng!`);
     }
 }
 

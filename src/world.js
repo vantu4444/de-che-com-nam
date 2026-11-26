@@ -548,55 +548,17 @@ export class World {
                 return;
             }
 
-            // Nền xanh neon mờ cho ô đã mở
-            ctx.fillStyle = `rgba(34, 197, 94, ${pulseGreen})`;
-            ctx.fillRect(spot.x, spot.y, spot.w, spot.h);
-
-            // Viền nét đứt màu xanh lá neon nổi bật
-            ctx.strokeStyle = '#22c55e';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([8, 6]);
-            ctx.strokeRect(spot.x, spot.y, spot.w, spot.h);
-            ctx.setLineDash([]);
-
-            // 4 Góc định vị
-            ctx.strokeStyle = '#15803d';
-            ctx.lineWidth = 4;
-            const cornerLen = 12;
-            // Top-left
-            ctx.beginPath();
-            ctx.moveTo(spot.x, spot.y + cornerLen);
-            ctx.lineTo(spot.x, spot.y);
-            ctx.lineTo(spot.x + cornerLen, spot.y);
-            ctx.stroke();
-            // Top-right
-            ctx.beginPath();
-            ctx.moveTo(spot.x + spot.w - cornerLen, spot.y);
-            ctx.lineTo(spot.x + spot.w, spot.y);
-            ctx.lineTo(spot.x + spot.w, spot.y + cornerLen);
-            ctx.stroke();
-            // Bottom-left
-            ctx.beginPath();
-            ctx.moveTo(spot.x, spot.y + spot.h - cornerLen);
-            ctx.lineTo(spot.x, spot.y + spot.h);
-            ctx.lineTo(spot.x + cornerLen, spot.y + spot.h);
-            ctx.stroke();
-            // Bottom-right
-            ctx.beginPath();
-            ctx.moveTo(spot.x + spot.w - cornerLen, spot.y + spot.h);
-            ctx.lineTo(spot.x + spot.w, spot.y + spot.h);
-            ctx.lineTo(spot.x + spot.w, spot.y + spot.h - cornerLen);
-            ctx.stroke();
-
-            // Nhãn hiển thị Ô BÁN HÀNG HỢP LỆ
-            ctx.fillStyle = '#15803d';
-            ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('🅿️ Ô BÁN HÀNG', spot.x + spot.w / 2, spot.y + spot.h / 2 - 8);
-            ctx.font = '9px "Be Vietnam Pro", sans-serif';
-            ctx.fillStyle = '#166534';
-            ctx.fillText('(HỢP LỆ)', spot.x + spot.w / 2, spot.y + spot.h / 2 + 8);
+            // Nâng cấp Vùng Chiếu Hologram Công Nghệ Xanh Ngọc Cyber cho các Ô Vạch Xanh đã mở
+            if (city3D && typeof city3D.renderCyberHologramZone === 'function') {
+                city3D.renderCyberHologramZone(ctx, spot);
+            } else {
+                // Fallback truyền thống
+                ctx.fillStyle = `rgba(34, 197, 94, ${pulseGreen})`;
+                ctx.fillRect(spot.x, spot.y, spot.w, spot.h);
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(spot.x, spot.y, spot.w, spot.h);
+            }
         });
 
         // 3. Xe cộ giao thông AI chạy trên đường
