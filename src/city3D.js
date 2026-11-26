@@ -1306,6 +1306,68 @@ export class City3DManager {
 
         ctx.restore();
     }
+
+    /**
+     * VẼ VẠCH SÁNG CHỈ ĐƯỜNG AUTO-PILOT TRÊN MẶT ĐẤT
+     * Dải ánh sáng laser neon dẫn đường nối từ chân nhân vật tới điểm đến
+     */
+    renderAutoPilotRoute(ctx, camera, player, autoPilot) {
+        if (!autoPilot || typeof autoPilot.x !== 'number' || typeof autoPilot.y !== 'number' || !player) return;
+        ctx.save();
+        ctx.translate(-camera.x, -camera.y);
+
+        const now = Date.now();
+        const dashOffset = (now / 22) % 32;
+
+        // 1. Dải ánh sáng nền mờ xanh ngọc trên mặt đường
+        ctx.strokeStyle = 'rgba(16, 185, 129, 0.22)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(autoPilot.x, autoPilot.y);
+        ctx.stroke();
+
+        // 2. Dải laser neon chuyển động
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 3.5;
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 14;
+        ctx.setLineDash([14, 10]);
+        ctx.lineDashOffset = -dashOffset;
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y);
+        ctx.lineTo(autoPilot.x, autoPilot.y);
+        ctx.stroke();
+
+        // 3. Vòng đích phát quang nhấp nháy tại điểm đến
+        const pulseR = 26 + Math.sin(now / 160) * 6;
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#fbbf24';
+        ctx.shadowBlur = 16;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(autoPilot.x, autoPilot.y, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Icon cờ đích
+        ctx.font = '20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🏁', autoPilot.x, autoPilot.y - 12);
+
+        // Tên điểm đến trên cờ
+        ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 3;
+        const destLabel = autoPilot.name || 'Điểm Giao Hàng';
+        ctx.strokeText(destLabel, autoPilot.x, autoPilot.y + 24);
+        ctx.fillText(destLabel, autoPilot.x, autoPilot.y + 24);
+
+        ctx.restore();
+    }
 }
 
 export const city3D = new City3DManager();

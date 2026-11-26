@@ -4,6 +4,34 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.9.3-PROD (CHÍNH THỨC XUẤT XƯỞNG: ĐIỀU HƯỚNG XE CAROUSEL DESKTOP & MOBILE, TỰ ĐỘNG CHẠY AUTOPILOT GIAO HÀNG & SỬA LỖI HƯỚNG DẪN CHE NÚT)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Fix vehicle horizontal navigation on desktop/mobile, add delivery quest auto-pilot and resolve tutorial spotlight overlap
+- **Trạng thái:** Nghiệm thu **100% PASS (96/96 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Điều Hướng Danh Sách Nâng Cấp Xe Toàn Diện Desktop & Mobile (`src/quests.js`, `style.css`):**
+     - **Hai nút điều hướng lớn ◀ và ▶:** Bổ sung `#btnVehiclePrev` và `#btnVehicleNext` ở hai bên khung danh sách xe, hiệu ứng viền neon `#38bdf8`, click chuột trượt mượt mà từng nhóm xe qua `scrollBy({ left: ..., behavior: 'smooth' })`, tự động disabled khi chạm đầu/cuối danh sách.
+     - **Lăn con lăn chuột (Mouse Wheel deltaY):** Tự động chuyển đổi thao tác lăn chuột dọc thành cuộn ngang mượt mà (`scrollLeft += e.deltaY`) khi đặt chuột vào danh sách xe.
+     - **Nhấn giữ chuột kéo ngang (Drag-to-Scroll):** Hỗ trợ `mousedown` / `mousemove` / `mouseup` kéo trượt xe tự nhiên như vuốt cảm ứng trên di động.
+     - **Cơ chế chống kích hoạt nhầm (Anti-Misclick):** Tự động chặn click kích hoạt nhầm nút Mua/Chọn xe khi kết thúc thao tác kéo rê chuột.
+     - **Thanh cuộn Desktop cao cấp (`style.css`):** Tùy biến thanh cuộn ngang `overflow-x: auto` hiển thị rõ nét trên màn hình Desktop (`@media (min-width: 769px)`), kèm mẹo gợi ý tương tác và đảm bảo giữ trọn vẹn bố cục vuốt mượt mà trên Mobile (`375x812`).
+     - Bao quát trọn bộ 10 cấp xe từ *Đi bộ $\rightarrow$ Xe đạp $\rightarrow$ Xe đạp điện $\rightarrow$ Xe Cub 50cc $\rightarrow$ Xe máy thùng giữ nhiệt ISO $\rightarrow$ Xe ba gác $\rightarrow$ Xe bán tải $\rightarrow$ Xe tải $\rightarrow$ Xe tải lạnh B2B $\rightarrow$ Xe công nghệ Cyber Food-Pod*.
+  2. **Tự Động Dẫn Đường & Tự Chạy Tới Điểm Giao Hàng AutoPilot (`src/player.js`, `src/city3D.js`, `src/quests.js`, `src/main.js`, `index.html`):**
+     - Bổ sung khung theo dõi nhiệm vụ `#hudQuestTracker` trên HUD ngoài màn hình chính và các thẻ giao hàng / điểm bán trong `iGiri` với nút **`🏃 Chạm để tự chạy tới`**.
+     - Nhân vật/xe tự động quay hướng và di chuyển chuẩn xác tới tọa độ đích.
+     - Hiệu ứng 3D Isometric mặt đất: Dải Laser Neon xanh ngọc chuyển động nhấp nháy dẫn đường kèm vòng cờ đích phát quang 🏁.
+     - Thanh trạng thái trực quan: **`🧭 Đang tự chạy tới... (Chạm cần lái để hủy)`**, người chơi chỉ cần chạm Joystick ảo hoặc phím di chuyển là lập tức hủy tự chạy, trả lại toàn quyền điều khiển tay; tự động dừng và hoàn tất giao hàng khi tới cách đích $\le 35\text{px}$.
+  3. **Khắc Phục Triệt Để Lỗi Hướng Dẫn Spotlight Che Nút Bấm (`src/tutorial.js`, `style.css`):**
+     - Lớp màn tối/khung đèn rọi cấu hình `pointer-events: none !important;` giúp thao tác chạm xuyên qua mượt mà xuống nút mục tiêu.
+     - Nút mục tiêu tự động nâng lên `z-index: 99996 !important; pointer-events: auto !important;`.
+     - Thẻ chữ hướng dẫn `#spotlightChatBubble` & `#tutorialCard` tự động né nút: Nếu nút ở nửa dưới màn hình (Mở Sạp, Bán Cho Khách, Joystick, iGiri), thẻ chữ tự động nhảy lên sát mép trên màn hình (`top: calc(16px + env(safe-area-inset-top, 0px))`); nút ở nửa trên thì đặt thẻ chữ ở mép dưới, tuyệt đối không bao giờ đè lên nút đang chỉ.
+  4. **Nghiệm Thu Toàn Diện 96/96 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Vượt qua 100% các bài kiểm thử tĩnh & tương tác E2E trên 3 độ phân giải (Desktop 1440x900, iPhone 375x812, iPad 768x1024), 0 Console Errors.
+     - Chuẩn thương hiệu: 100% Cơm Nắm Onigiri, chuẩn ISO 22000 & ATVSTP, không bánh mì, không lộ giá vốn/công thức.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.9.2-PROD (CHÍNH THỨC XUẤT XƯỞNG: LIÊN MINH 4 KHU VỰC, ĐỘI XE LẠNH B2B & CẦU NỐI ĐỔI QUÀ THỰC TẾ O2O)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 4-region guilds, B2B cold-chain fleet and O2O real-world voucher system

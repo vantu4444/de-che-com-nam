@@ -823,7 +823,12 @@ export class QuestManager {
                     <div class="exp-guide-hint">
                         👉 Lái xe theo <strong>mũi tên vàng chỉ hướng</strong> tới vùng phát sáng tại ${activeOrder.destName} và nhấn <strong>E</strong>!
                     </div>
-                    <button type="button" class="btn-cancel-express" id="btnCancelExpress">✕ Hủy Đơn Hỏa Tốc</button>
+                    <div class="exp-actions-row">
+                        <button type="button" class="btn-card-autopilot btn-autopilot-primary" data-target-type="express" data-x="${activeOrder.destX}" data-y="${activeOrder.destY}" data-name="${activeOrder.destName}">
+                            🏃 Chạm để tự chạy tới (${activeOrder.destName})
+                        </button>
+                        <button type="button" class="btn-cancel-express" id="btnCancelExpress">✕ Hủy Đơn Hỏa Tốc</button>
+                    </div>
                 </div>
             `;
         }
@@ -926,9 +931,14 @@ export class QuestManager {
                     <p class="sq-stock-info">Cơm mang theo: <strong>${inStock} / ${sq.count} nắm</strong></p>
                     <div class="sq-bottom">
                         <span class="sq-reward">💰 +${sq.rewardMoney.toLocaleString('vi-VN')}đ | ⭐ +${sq.rewardExp} EXP</span>
-                        <button type="button" class="btn-deliver-sq ${canDeliver ? '' : 'disabled'}" id="btnDeliverSQ" ${canDeliver ? '' : 'disabled'}>
-                            ${canDeliver ? '📦 Giao Hàng Ngay' : 'Thiếu cơm mang theo'}
-                        </button>
+                        <div class="sq-btns-row">
+                            <button type="button" class="btn-card-autopilot btn-autopilot-primary" data-target-type="sidequest" data-loc-id="${sq.locId}" data-name="${sq.locName}">
+                                🏃 Chạm để tự chạy tới
+                            </button>
+                            <button type="button" class="btn-deliver-sq ${canDeliver ? '' : 'disabled'}" id="btnDeliverSQ" ${canDeliver ? '' : 'disabled'}>
+                                ${canDeliver ? '📦 Giao Hàng Ngay' : 'Thiếu cơm'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1016,6 +1026,9 @@ export class QuestManager {
                     <div class="quest-inprogress-note">
                         ${def.desc}
                     </div>
+                    <button type="button" class="btn-card-autopilot btn-quest-run" data-target-type="mainquest" data-qid="${qId}">
+                        🏃 Chạm để tự chạy tới
+                    </button>
                 `;
             }
         }
@@ -1220,50 +1233,62 @@ export class QuestManager {
         return `
             <div class="tab-content vehicles-view">
                 <div class="tab-banner-hint">
-                    🛵 Nâng cấp phương tiện giúp tăng tốc độ di chuyển và mở rộng sức chứa thùng xe (Đi bộ: 10 → Xe đạp: 25 → Xe máy: 60 → Xe tải: 150 nắm)!
+                    🛵 Nâng cấp phương tiện giúp tăng tốc độ di chuyển và mở rộng sức chứa thùng xe (Đi bộ: 6 → Xe đạp: 25 → Xe máy: 60 → Xe tải lạnh: 150 nắm)! Chuẩn ISO 22000 & ATVSTP.
                 </div>
 
-                <div class="vehicle-list">
-                    ${VEHICLE_ORDER.map((vKey) => {
-                        const veh = VEHICLES[vKey];
-                        const isCurrent = state.currentVehicle === vKey;
-                        const isUnlocked = state.unlockedVehicles.includes(vKey);
-                        const isNext = nextVeh && nextVeh.id === vKey;
-                        const canAfford = state.money >= veh.price;
+                <!-- Khung Điều Hướng Carousel 2 Mũi Tên Trái / Phải Cho Máy Tính & Điện Thoại -->
+                <div class="vehicle-carousel-wrapper">
+                    <button type="button" id="btnVehiclePrev" class="btn-vehicle-nav btn-vehicle-prev" aria-label="Xem xe trước" title="Xe trước (◀)">◀</button>
 
-                        let statusBadge = isCurrent ? '🟢 Đang dùng' : isUnlocked ? '✓ Đã sở hữu' : isNext ? '🛒 Kế tiếp' : '🔒 Khóa';
+                    <div class="vehicle-list" id="vehicleScrollTrack" tabindex="0" role="region" aria-label="Danh sách phương tiện">
+                        ${VEHICLE_ORDER.map((vKey) => {
+                            const veh = VEHICLES[vKey];
+                            const isCurrent = state.currentVehicle === vKey;
+                            const isUnlocked = state.unlockedVehicles.includes(vKey);
+                            const isNext = nextVeh && nextVeh.id === vKey;
+                            const canAfford = state.money >= veh.price;
 
-                        return `
-                            <div class="vehicle-card ${isCurrent ? 'active' : ''} ${isUnlocked ? 'unlocked' : ''}">
-                                <div class="veh-left-icon">${veh.icon}</div>
-                                <div class="veh-center-info">
-                                    <div class="veh-title-row">
-                                        <h4>${veh.name}</h4>
-                                        <span class="veh-badge ${isCurrent ? 'badge-current' : ''}">${statusBadge}</span>
+                            let statusBadge = isCurrent ? '🟢 Đang dùng' : isUnlocked ? '✓ Đã sở hữu' : isNext ? '🛒 Kế tiếp' : '🔒 Khóa';
+
+                            return `
+                                <div class="vehicle-card ${isCurrent ? 'active' : ''} ${isUnlocked ? 'unlocked' : ''}" data-vid="${veh.id}">
+                                    <div class="veh-left-icon">${veh.icon}</div>
+                                    <div class="veh-center-info">
+                                        <div class="veh-title-row">
+                                            <h4>${veh.name}</h4>
+                                            <span class="veh-badge ${isCurrent ? 'badge-current' : ''}">${statusBadge}</span>
+                                        </div>
+                                        <p class="veh-desc">${veh.desc}</p>
+                                        <div class="veh-stats">
+                                            <span class="veh-stat-pill">⚡ Tốc độ: +${veh.speedBonus}%</span>
+                                            <span class="veh-stat-pill" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">🎒 Sức chứa: ${veh.capacity} nắm</span>
+                                            <span class="veh-price-pill">${veh.price === 0 ? 'Miễn phí' : veh.price.toLocaleString('vi-VN') + 'đ'}</span>
+                                        </div>
                                     </div>
-                                    <p class="veh-desc">${veh.desc}</p>
-                                    <div class="veh-stats">
-                                        <span class="veh-stat-pill">⚡ Tốc độ: +${veh.speedBonus}%</span>
-                                        <span class="veh-stat-pill" style="background: rgba(249, 115, 22, 0.15); color: #f97316;">🎒 Sức chứa: ${veh.capacity} nắm</span>
-                                        <span class="veh-price-pill">${veh.price === 0 ? 'Miễn phí' : veh.price.toLocaleString('vi-VN') + 'đ'}</span>
+                                    <div class="veh-right-action">
+                                        ${isCurrent ? `
+                                            <button type="button" class="btn-veh-action current" disabled>Đang chạy</button>
+                                        ` : isUnlocked ? `
+                                            <button type="button" class="btn-veh-action equip" data-vid="${veh.id}">Chọn dùng</button>
+                                        ` : isNext ? `
+                                            <button type="button" class="btn-veh-action buy ${canAfford ? '' : 'disabled'}" data-vid="${veh.id}" ${canAfford ? '' : 'disabled'}>
+                                                ${canAfford ? 'Nâng cấp' : 'Chưa đủ tiền'}
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn-veh-action locked" disabled>Bậc trước</button>
+                                        `}
                                     </div>
                                 </div>
-                                <div class="veh-right-action">
-                                    ${isCurrent ? `
-                                        <button type="button" class="btn-veh-action current" disabled>Đang chạy</button>
-                                    ` : isUnlocked ? `
-                                        <button type="button" class="btn-veh-action equip" data-vid="${veh.id}">Chọn dùng</button>
-                                    ` : isNext ? `
-                                        <button type="button" class="btn-veh-action buy ${canAfford ? '' : 'disabled'}" data-vid="${veh.id}" ${canAfford ? '' : 'disabled'}>
-                                            ${canAfford ? 'Nâng cấp' : 'Chưa đủ tiền'}
-                                        </button>
-                                    ` : `
-                                        <button type="button" class="btn-veh-action locked" disabled>Bậc trước</button>
-                                    `}
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <button type="button" id="btnVehicleNext" class="btn-vehicle-nav btn-vehicle-next" aria-label="Xem xe tiếp theo" title="Xe tiếp theo (▶)">▶</button>
+                </div>
+
+                <div class="vehicle-desktop-tip">
+                    <span class="vdt-icon">💡</span>
+                    <span>Dùng 2 nút <strong>◀ ▶</strong>, lăn chuột dọc hoặc nhấn giữ kéo ngang để xem trọn bộ 10 cấp xe nâng cấp!</span>
                 </div>
             </div>
         `;
@@ -2210,31 +2235,142 @@ export class QuestManager {
             };
         }
 
-        // Nâng cấp & Chọn phương tiện
-        const buyVehBtns = this.container.querySelectorAll('.btn-veh-action.buy');
-        buyVehBtns.forEach(btn => {
-            btn.onclick = () => {
-                if (state.buyNextVehicle()) {
-                    audio.playLevelUp();
-                    this.render();
-                } else {
-                    audio.playError();
-                }
-            };
-        });
+        // --- NÂNG CẤP & ĐIỀU HƯỚNG PHƯƠNG TIỆN (CAROUSEL, WHEEL, DRAG-TO-SCROLL) ---
+        const scrollTrack = document.getElementById('vehicleScrollTrack') || (this.container ? this.container.querySelector('.vehicle-list') : null);
+        const btnVehPrev = document.getElementById('btnVehiclePrev');
+        const btnVehNext = document.getElementById('btnVehicleNext');
 
-        const equipVehBtns = this.container.querySelectorAll('.btn-veh-action.equip');
-        equipVehBtns.forEach(btn => {
-            btn.onclick = () => {
-                const vid = btn.dataset.vid;
-                if (state.unlockedVehicles.includes(vid)) {
-                    state.currentVehicle = vid;
-                    audio.playClick();
-                    state.save();
-                    state.notify();
-                    this.render();
+        let isVehDragging = false;
+        let vehHasDragged = false;
+        let vehStartX = 0;
+        let vehScrollStart = 0;
+
+        if (scrollTrack) {
+            // Cập nhật trạng thái disabled của 2 nút mũi tên khi cuộn
+            const updateNavButtons = () => {
+                if (!scrollTrack) return;
+                const maxScroll = Math.max(0, scrollTrack.scrollWidth - scrollTrack.clientWidth);
+                if (btnVehPrev) {
+                    btnVehPrev.disabled = scrollTrack.scrollLeft <= 5;
+                }
+                if (btnVehNext) {
+                    btnVehNext.disabled = scrollTrack.scrollLeft >= maxScroll - 5;
                 }
             };
+
+            // 1. Thao tác 2 nút mũi tên ◀ và ▶ chuyển xe mượt mà
+            if (btnVehPrev) {
+                btnVehPrev.onclick = (e) => {
+                    e.preventDefault();
+                    try { audio.playClick(); } catch (err) {}
+                    const scrollAmount = Math.max(200, Math.floor(scrollTrack.clientWidth * 0.75));
+                    scrollTrack.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                    setTimeout(updateNavButtons, 250);
+                };
+            }
+
+            if (btnVehNext) {
+                btnVehNext.onclick = (e) => {
+                    e.preventDefault();
+                    try { audio.playClick(); } catch (err) {}
+                    const scrollAmount = Math.max(200, Math.floor(scrollTrack.clientWidth * 0.75));
+                    scrollTrack.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+                    setTimeout(updateNavButtons, 250);
+                };
+            }
+
+            // 2. Chuyển đổi lăn chuột dọc (Mouse Wheel deltaY) thành cuộn ngang
+            scrollTrack.onwheel = (e) => {
+                const delta = e.deltaY !== 0 ? e.deltaY : e.deltaX;
+                if (delta !== 0) {
+                    e.preventDefault();
+                    scrollTrack.scrollLeft += delta;
+                    updateNavButtons();
+                }
+            };
+
+            // 3. Nhấn giữ chuột trái kéo ngang (Mouse Drag-to-Scroll)
+            scrollTrack.onmousedown = (e) => {
+                if (e.button !== 0) return; // Chỉ nhận chuột trái
+                isVehDragging = true;
+                vehHasDragged = false;
+                const trackLeft = scrollTrack.offsetLeft || 0;
+                const clientX = typeof e.pageX === 'number' ? e.pageX : (e.clientX || 0);
+                vehStartX = clientX - trackLeft;
+                vehScrollStart = scrollTrack.scrollLeft || 0;
+                scrollTrack.classList.add('is-dragging');
+            };
+
+            scrollTrack.onmousemove = (e) => {
+                if (!isVehDragging) return;
+                const trackLeft = scrollTrack.offsetLeft || 0;
+                const clientX = typeof e.pageX === 'number' ? e.pageX : (e.clientX || 0);
+                const currentX = clientX - trackLeft;
+                const distance = currentX - vehStartX;
+                if (Math.abs(distance) > 6) {
+                    vehHasDragged = true;
+                    if (typeof e.preventDefault === 'function') e.preventDefault();
+                }
+                scrollTrack.scrollLeft = vehScrollStart - distance;
+                updateNavButtons();
+            };
+
+            const finishVehDrag = () => {
+                if (isVehDragging) {
+                    isVehDragging = false;
+                    scrollTrack.classList.remove('is-dragging');
+                    setTimeout(() => {
+                        vehHasDragged = false;
+                    }, 80);
+                    updateNavButtons();
+                }
+            };
+
+            scrollTrack.onmouseup = finishVehDrag;
+            scrollTrack.onmouseleave = finishVehDrag;
+            scrollTrack.onscroll = updateNavButtons;
+
+            // Khởi tạo trạng thái ban đầu của 2 nút
+            setTimeout(updateNavButtons, 60);
+        }
+
+        // Nâng cấp & Chọn phương tiện (An toàn tuyệt đối không trigger khi vừa kéo rê chuột)
+        const allVehActionBtns = this.container.querySelectorAll('.btn-veh-action');
+        allVehActionBtns.forEach(btn => {
+            if (btn.classList.contains('buy')) {
+                btn.onclick = (e) => {
+                    if (vehHasDragged) {
+                        vehHasDragged = false;
+                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        return;
+                    }
+                    const buySuccess = state.buyNextVehicle();
+                    if (buySuccess) {
+                        audio.playLevelUp();
+                        this.render();
+                    } else {
+                        audio.playError();
+                    }
+                };
+            } else if (btn.classList.contains('equip')) {
+                btn.onclick = (e) => {
+                    if (vehHasDragged) {
+                        vehHasDragged = false;
+                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        return;
+                    }
+                    const vid = btn.dataset.vid;
+                    if (state.unlockedVehicles.includes(vid)) {
+                        state.currentVehicle = vid;
+                        audio.playClick();
+                        state.save();
+                        state.notify();
+                        this.render();
+                    }
+                };
+            }
         });
 
         // Nâng cấp Xưởng Bếp - Nhánh 1: Thủ Công
@@ -2367,8 +2503,33 @@ export class QuestManager {
             btn.onclick = () => {
                 const oid = btn.dataset.oid;
                 if (deliveryManager.acceptOrder(oid)) {
-                    sellingManager.showToast('⚡ Đã nhận đơn hỏa tốc 60s! Hãy lái xe theo mũi tên chỉ đường!');
                     this.close(); // Đóng điện thoại để người chơi lái xe
+                    if (window.game && typeof window.game.startAutoPilotToActiveDelivery === 'function') {
+                        window.game.startAutoPilotToActiveDelivery();
+                    } else {
+                        sellingManager.showToast('⚡ Đã nhận đơn hỏa tốc 60s! Hãy lái xe theo mũi tên chỉ đường!');
+                    }
+                }
+            };
+        });
+
+        // Nút Chạm để tự chạy tới (AutoPilot) trên các thẻ nhiệm vụ & đơn giao hàng trong iGiri
+        const cardAutoPilotBtns = this.container.querySelectorAll('.btn-card-autopilot');
+        cardAutoPilotBtns.forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                const targetX = parseFloat(btn.dataset.x);
+                const targetY = parseFloat(btn.dataset.y);
+                const targetName = btn.dataset.name || 'Điểm Đến';
+
+                this.close();
+
+                if (!isNaN(targetX) && !isNaN(targetY)) {
+                    if (window.game && typeof window.game.startAutoPilotTo === 'function') {
+                        window.game.startAutoPilotTo(targetX, targetY, targetName);
+                    }
+                } else if (window.game && typeof window.game.startAutoPilotToActiveDelivery === 'function') {
+                    window.game.startAutoPilotToActiveDelivery();
                 }
             };
         });

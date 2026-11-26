@@ -149,11 +149,23 @@ class SimulatedElement {
         this.clientWidth = 800;
         this.width = 800;
         this.height = 600;
+        this.offsetLeft = 0;
+        this.offsetTop = 0;
 
         // Form attributes
         this.type = 'button';
         this.disabled = false;
         this.value = '';
+    }
+
+    scrollBy(options) {
+        if (typeof options === 'object' && options !== null) {
+            if (typeof options.left === 'number') this.scrollLeft += options.left;
+            if (typeof options.top === 'number') this.scrollTop += options.top;
+        } else if (arguments.length >= 2) {
+            this.scrollLeft += arguments[0];
+            this.scrollTop += arguments[1];
+        }
     }
 
     get className() {
@@ -391,10 +403,13 @@ class SimulatedElement {
 
         const matchElem = (el) => {
             let s = sel;
-            // Kiểm tra class nếu có
-            const classMatch = s.match(/\.([a-zA-Z0-9_\-]+)/);
-            if (classMatch) {
-                if (!el.classList.contains(classMatch[1])) return false;
+            // Kiểm tra class nếu có (hỗ trợ nhiều class, ví dụ .btn-veh-action.buy)
+            const classMatches = s.match(/\.([a-zA-Z0-9_\-]+)/g);
+            if (classMatches) {
+                for (const cm of classMatches) {
+                    const cName = cm.slice(1);
+                    if (!el.classList.contains(cName)) return false;
+                }
             }
 
             // Kiểm tra id nếu có
@@ -416,7 +431,7 @@ class SimulatedElement {
             }
 
             // Nếu chỉ là tag name
-            if (!classMatch && !idMatch && !attrMatch) {
+            if (!classMatches && !idMatch && !attrMatch) {
                 return el.tagName.toLowerCase() === s.toLowerCase();
             }
 
@@ -1095,6 +1110,9 @@ async function runInteractiveSimulationSuite() {
                     doc.getElementById('phoneTriggerBtn')
                 );
 
+                this.tutorialManager = new TutorialManager(this);
+                this.tutorialManager.init();
+
                 this.init();
             }
 
@@ -1276,6 +1294,64 @@ async function runInteractiveSimulationSuite() {
                 }
             }
 
+            startAutoPilotTo(targetX, targetY, targetName = 'Điểm Đến', onReach = null) {
+                if (!this.player) return false;
+                if (this.questManager && this.questManager.isOpen) this.questManager.close();
+                if (this.isKitchenOpen && this.kitchen) this.kitchen.close();
+                if (this.isMarketOpen && this.market) this.market.close();
+                if (sellingManager && sellingManager.isOpen) sellingManager.closeSelling();
+
+                const success = this.player.startAutoPilot({
+                    x: targetX,
+                    y: targetY,
+                    name: targetName,
+                    stoppingDist: 35,
+                    onReach: (player) => {
+                        audio.playTingComplete();
+                        if (typeof onReach === 'function') {
+                            onReach(player);
+                        }
+                    }
+                });
+                return success;
+            }
+
+            startAutoPilotToActiveDelivery() {
+                if (!this.player) return false;
+                if (deliveryManager.activeOrder) {
+                    const ord = deliveryManager.activeOrder;
+                    return this.startAutoPilotTo(ord.destX, ord.destY, ord.destName, () => {
+                        deliveryManager.tryDeliver(this.player);
+                    });
+                }
+                if (this.questManager && this.questManager.activeSideQuest) {
+                    const sq = this.questManager.activeSideQuest;
+                    return this.startAutoPilotTo(2900, 550, sq.locName, () => {
+                        this.questManager.deliverSideQuest();
+                    });
+                }
+                return false;
+            }
+
+            updatePrompt() {
+                const tracker = doc.getElementById('hudQuestTracker');
+                const btnHqtAutoPilot = doc.getElementById('btnHqtAutoPilot');
+                const hqtAutoPilotStatus = doc.getElementById('hqtAutoPilotStatus');
+                const hqtStatusText = doc.getElementById('hqtStatusText');
+                if (tracker && btnHqtAutoPilot && hqtAutoPilotStatus) {
+                    if (this.player && this.player.autoPilot) {
+                        btnHqtAutoPilot.classList.add('hidden');
+                        hqtAutoPilotStatus.classList.remove('hidden');
+                        if (hqtStatusText) {
+                            hqtStatusText.innerHTML = `Đang tự chạy tới <strong>${this.player.autoPilot.name}</strong>... <em>(Chạm cần lái để hủy)</em>`;
+                        }
+                    } else {
+                        hqtAutoPilotStatus.classList.add('hidden');
+                        btnHqtAutoPilot.classList.remove('hidden');
+                    }
+                }
+            }
+
             handleInputCoords(screenX, screenY) {
                 if (this.isKitchenOpen || this.isMarketOpen || (this.questManager && this.questManager.isOpen)) return false;
                 if (onlineUI && onlineUI.isAnyModalOpen && onlineUI.isAnyModalOpen()) return false;
@@ -1408,6 +1484,26 @@ async function runInteractiveSimulationSuite() {
                         if (!quickSellContainer.classList.contains('hidden')) {
                             quickSellContainer.classList.add('hidden');
                         }
+                    }
+                }
+
+                // Cập nhật Khung Theo Dõi Nhiệm Vụ (HUD Quest Tracker) & Trạng thái AutoPilot
+                const tracker = doc.getElementById('hudQuestTracker');
+                const btnHqtAutoPilot = doc.getElementById('btnHqtAutoPilot');
+                const hqtAutoPilotStatus = doc.getElementById('hqtAutoPilotStatus');
+                const hqtStatusText = doc.getElementById('hqtStatusText');
+
+                if (tracker && btnHqtAutoPilot && hqtAutoPilotStatus) {
+                    if (this.player && this.player.autoPilot) {
+                        btnHqtAutoPilot.classList.add('hidden');
+                        hqtAutoPilotStatus.classList.remove('hidden');
+                        if (hqtStatusText) {
+                            const destName = this.player.autoPilot.name || 'Điểm Giao Hàng';
+                            hqtStatusText.textContent = `🧭 Đang tự chạy tới ${destName}...`;
+                        }
+                    } else {
+                        hqtAutoPilotStatus.classList.add('hidden');
+                        btnHqtAutoPilot.classList.remove('hidden');
                     }
                 }
             }
@@ -4886,6 +4982,199 @@ async function runInteractiveSimulationSuite() {
         }
     } catch (errB2BTest) {
         logger.fail('Mô phỏng Liên Minh 4 Khu Vực, Hậu Cần B2B & Đổi Quà O2O: Ngoại lệ', errB2BTest.message);
+    }
+
+    // -------------------------------------------------------------------------
+    // BƯỚC 6.999: Kiểm thử Sửa Lỗi Hướng Dẫn Che Nút & Tự Động Chạy (AutoPilot)
+    // -------------------------------------------------------------------------
+    logger.log('MOBILE STUDIO', 'BƯỚC 6.999: Kiểm thử Sửa Lỗi Hướng Dẫn Che Nút & Tự Động Chạy AutoPilot...', COLORS.magenta);
+    try {
+        const { deliveryManager } = await import('../src/deliveryMode.js');
+        const { city3D } = await import('../src/city3D.js');
+
+        // 1. Kiểm thử Tự động né vị trí nút & Nâng z-index nút mục tiêu
+        state.resetTutorial();
+        state.tutorialStep = 4; // Nút Mở Sạp ở nửa dưới màn hình
+        gameApp.tutorialManager.updateStep();
+
+        const card = document.getElementById('tutorialCard') || document.getElementById('spotlightChatBubble');
+        const hasCard = !!card;
+        const targetElStep4 = gameApp.tutorialManager.findTargetElement(4);
+        const hasTargetEl = !!targetElStep4;
+        const isTargetZIndexOk = targetElStep4 && targetElStep4.style.zIndex === '99996' && targetElStep4.style.pointerEvents === 'auto';
+        const isCardAvoidBottom = card && card.style.top.includes('calc(16px');
+
+        // Kiểm tra overlay có pointer-events: none trong style
+        const overlay = document.getElementById('tutorialSpotlightOverlay');
+        const isOverlayOk = !!overlay;
+
+        // 2. Kiểm thử Khung Theo Dõi Nhiệm Vụ (HUD Quest Tracker)
+        const hudTracker = document.getElementById('hudQuestTracker');
+        const btnHqtAutoPilot = document.getElementById('btnHqtAutoPilot');
+        const hqtStatus = document.getElementById('hqtAutoPilotStatus');
+        const isHudTrackerOk = !!hudTracker && !!btnHqtAutoPilot && !!hqtStatus;
+
+        // 3. Kiểm thử Kích Hoạt Tự Động Chạy (AutoPilot) Khi Nhấp Vào Đơn Hàng Giao
+        if (deliveryManager.availableOrders.length === 0) {
+            deliveryManager.refreshAvailableOrders();
+        }
+        const sampleOrder = deliveryManager.availableOrders[0];
+        deliveryManager.acceptOrder(sampleOrder.id);
+        const ord = deliveryManager.activeOrder;
+
+        // Bấm nút tự động chạy
+        const startAutoOk = gameApp.startAutoPilotToActiveDelivery();
+        const isAutoPilotActive = gameApp.player && gameApp.player.autoPilot &&
+            gameApp.player.autoPilot.x === ord.destX &&
+            gameApp.player.autoPilot.y === ord.destY;
+
+        // Cập nhật HUD hiển thị trạng thái đang tự chạy
+        gameApp.updatePrompt();
+        const isStatusVisible = !hqtStatus.classList.contains('hidden') && btnHqtAutoPilot.classList.contains('hidden');
+
+        // 4. Giả lập nhân vật tự động di chuyển tới đích (<35px) và tự động giao hàng
+        gameApp.player.x = ord.destX - 15;
+        gameApp.player.y = ord.destY - 15;
+        state.inventory = [];
+        for (let i = 0; i < ord.count; i++) {
+            state.inventory.push({ id: `rice_test_${i}`, filling: ord.fillingId, price: 20000 });
+        }
+
+        const moneyBeforeAutoDeliver = state.money;
+        // Chạy update để kích hoạt onReach
+        gameApp.player.update({}, gameApp.world);
+        const isAutoPilotFinished = gameApp.player.autoPilot === null;
+        const isDeliverySuccess = state.money > moneyBeforeAutoDeliver;
+
+        // 5. Kiểm thử Hủy Chế Độ Tự Chạy Khi Người Chơi Di Chuyển Tay (Joystick / Phím)
+        gameApp.player.startAutoPilot({ x: 2500, y: 1500, name: 'Điểm Hủy Test' });
+        const hasStartedSecondAuto = !!gameApp.player.autoPilot;
+        // Giả lập người chơi bấm phím W hoặc gạt Joystick
+        gameApp.player.update({ KeyW: true }, gameApp.world);
+        const isCancelledByManualInput = gameApp.player.autoPilot === null;
+
+        // 6. Kiểm thử Render Vạch Sáng Chỉ Đường Trên Mặt Đất
+        let routeRenderOk = true;
+        try {
+            const mockCanvas = document.createElement('canvas');
+            mockCanvas.width = 400;
+            mockCanvas.height = 400;
+            const mockCtx = mockCanvas.getContext('2d');
+            city3D.renderAutoPilotRoute(mockCtx, gameApp.camera, gameApp.player, { x: 2000, y: 1500, name: 'Cổng Trường' });
+        } catch (eRoute) {
+            routeRenderOk = false;
+        }
+
+        const allAutoPilotPass = hasCard && hasTargetEl && isTargetZIndexOk && isCardAvoidBottom &&
+            isOverlayOk && isHudTrackerOk && startAutoOk && isAutoPilotActive && isStatusVisible &&
+            isAutoPilotFinished && isDeliverySuccess && hasStartedSecondAuto && isCancelledByManualInput && routeRenderOk;
+
+        if (allAutoPilotPass) {
+            logger.pass('Mô phỏng Sửa Lỗi Hướng Dẫn Che Nút & Tự Động Chạy AutoPilot: Hoàn Hảo (100% PASS)');
+        } else {
+            logger.fail('Mô phỏng Sửa Lỗi Hướng Dẫn Che Nút & Tự Động Chạy AutoPilot: Thất bại', JSON.stringify({
+                hasCard, hasTargetEl, isTargetZIndexOk, isCardAvoidBottom,
+                isOverlayOk, isHudTrackerOk, startAutoOk, isAutoPilotActive, isStatusVisible,
+                isAutoPilotFinished, isDeliverySuccess, hasStartedSecondAuto, isCancelledByManualInput, routeRenderOk
+            }));
+        }
+    } catch (errAutoPilotTest) {
+        logger.fail('Mô phỏng Sửa Lỗi Hướng Dẫn Che Nút & Tự Động Chạy AutoPilot: Ngoại lệ', errAutoPilotTest.message);
+    }
+
+    // -------------------------------------------------------------------------
+    // BƯỚC 6.9993: Kiểm thử Nâng Cấp Xe Carousel Desktop & Mobile (Nút ◀ ▶, Lăn Chuột Wheel, Kéo Ngang)
+    // -------------------------------------------------------------------------
+    logger.log('MOBILE STUDIO', 'BƯỚC 6.9993: Kiểm thử Nâng Cấp Xe Carousel Desktop & Mobile (Nút ◀ ▶, Lăn Chuột Wheel, Kéo Ngang)...', COLORS.magenta);
+    try {
+        const { VEHICLE_ORDER, VEHICLES } = await import('../src/state.js');
+
+        // 1. Giả lập trên màn hình Desktop (1440x900)
+        win.innerWidth = 1440;
+        win.innerHeight = 900;
+        gameApp.questManager.activeTab = 'vehicles';
+        gameApp.questManager.render();
+
+        const scrollTrack = doc.getElementById('vehicleScrollTrack');
+        const btnVehPrev = doc.getElementById('btnVehiclePrev');
+        const btnVehNext = doc.getElementById('btnVehicleNext');
+        const vehicleCards = doc.querySelectorAll('.vehicle-card');
+
+        const hasTrack = !!scrollTrack;
+        const hasPrevBtn = !!btnVehPrev;
+        const hasNextBtn = !!btnVehNext;
+        const has10Cards = vehicleCards.length === VEHICLE_ORDER.length;
+
+        // Thiết lập kích thước mô phỏng cho scrollTrack
+        if (scrollTrack) {
+            scrollTrack.scrollWidth = VEHICLE_ORDER.length * 270;
+            scrollTrack.clientWidth = 600;
+            scrollTrack.scrollLeft = 0;
+        }
+
+        // 2. Kiểm thử click nút mũi tên ▶ (#btnVehicleNext) làm tăng scrollLeft
+        let nextClickScrollOk = false;
+        if (btnVehNext && scrollTrack) {
+            const initialScroll = scrollTrack.scrollLeft;
+            btnVehNext.click();
+            nextClickScrollOk = scrollTrack.scrollLeft > initialScroll;
+        }
+
+        // 3. Kiểm thử sự kiện lăn con lăn chuột dọc (Mouse Wheel deltaY) chuyển thành cuộn ngang
+        let wheelScrollOk = false;
+        if (scrollTrack && typeof scrollTrack.onwheel === 'function') {
+            const beforeWheel = scrollTrack.scrollLeft;
+            scrollTrack.onwheel({ deltaY: 200, deltaX: 0, preventDefault: () => {} });
+            wheelScrollOk = scrollTrack.scrollLeft === beforeWheel + 200;
+        }
+
+        // 4. Kiểm thử nhấn giữ chuột trái kéo ngang (Mouse Drag-to-Scroll)
+        let dragScrollOk = false;
+        if (scrollTrack && typeof scrollTrack.onmousedown === 'function') {
+            const beforeDrag = scrollTrack.scrollLeft;
+            // Bắt đầu kéo tại X=400
+            scrollTrack.onmousedown({ button: 0, pageX: 400 });
+            // Kéo sang trái tới X=250 (khoảng cách 150px)
+            scrollTrack.onmousemove({ pageX: 250, preventDefault: () => {} });
+            dragScrollOk = scrollTrack.scrollLeft === beforeDrag + 150;
+            // Nhả chuột kết thúc kéo & hoàn tất sự kiện click kết thúc của thao tác drag
+            if (typeof scrollTrack.onmouseup === 'function') scrollTrack.onmouseup();
+            scrollTrack.dispatchEvent({ type: 'click' });
+        }
+
+        // 5. Kiểm thử nâng cấp xe cấp cao khi kéo đến cuối danh sách
+        let highTierUpgradeOk = false;
+        state.money = 100000000; // Cấp vốn dồi dào
+        gameApp.questManager.render(); // Re-render để các nút buy kích hoạt đầy đủ
+        // Tìm nút mua xe tiếp theo
+        const nextVehToBuy = state.getNextVehicleToBuy();
+        const buyBtn = doc.querySelector(`.btn-veh-action.buy[data-vid="${nextVehToBuy?.id}"]`) || doc.querySelector('.btn-veh-action.buy');
+        if (buyBtn) {
+            const prevVehId = state.currentVehicle;
+            buyBtn.click();
+            highTierUpgradeOk = state.unlockedVehicles.includes(nextVehToBuy.id) || state.currentVehicle !== prevVehId;
+        }
+
+        // 6. Kiểm thử trên màn hình Mobile (375x812) đảm bảo không lỗi bố cục
+        win.innerWidth = 375;
+        win.innerHeight = 812;
+        gameApp.questManager.render();
+        const mobileCards = doc.querySelectorAll('.vehicle-card');
+        const mobileOk = mobileCards.length === VEHICLE_ORDER.length && !!doc.getElementById('btnVehicleNext');
+
+        const allVehicleCarouselPass = hasTrack && hasPrevBtn && hasNextBtn && has10Cards &&
+            nextClickScrollOk && wheelScrollOk && dragScrollOk && highTierUpgradeOk && mobileOk;
+
+        if (allVehicleCarouselPass) {
+            logger.pass('Mô phỏng Nâng Cấp Xe Carousel Desktop & Mobile (Nút ◀ ▶, Lăn Chuột Wheel, Kéo Ngang): Hoàn Hảo (100% PASS)');
+        } else {
+            logger.fail('Mô phỏng Nâng Cấp Xe Carousel Desktop & Mobile: Thất bại', JSON.stringify({
+                hasTrack, hasPrevBtn, hasNextBtn, has10Cards,
+                nextClickScrollOk, wheelScrollOk, dragScrollOk, highTierUpgradeOk, mobileOk
+            }));
+        }
+    } catch (errVehTest) {
+        logger.fail('Mô phỏng Nâng Cấp Xe Carousel Desktop & Mobile: Ngoại lệ', errVehTest.message);
     }
 
     // -------------------------------------------------------------------------

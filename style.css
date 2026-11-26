@@ -2502,27 +2502,111 @@ body, html {
     font-size: 10px;
     color: #64748b;
 }
-.vehicle-list {
+/* --- TAB XE & THÙNG HÀNG (VEHICLES CAROUSEL & HORIZONTAL SCROLL) --- */
+.vehicles-view {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    padding-bottom: 24px;
+    width: 100%;
+}
+
+.vehicle-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    box-sizing: border-box;
+}
+
+.btn-vehicle-nav {
+    flex-shrink: 0;
+    width: 38px;
+    height: 52px;
+    background: rgba(30, 41, 59, 0.85);
+    color: #38bdf8;
+    border: 1.5px solid rgba(56, 189, 248, 0.4);
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.btn-vehicle-nav:hover:not(:disabled) {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #38bdf8;
+    transform: scale(1.06);
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+}
+
+.btn-vehicle-nav:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.btn-vehicle-nav:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    box-shadow: none;
+}
+
+.vehicle-list {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding: 6px 4px 14px 4px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    cursor: grab;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.vehicle-list.is-dragging {
+    cursor: grabbing;
+    scroll-behavior: auto;
 }
 
 .vehicle-card {
-    background: rgba(30, 41, 59, 0.7);
+    flex: 0 0 250px;
+    min-width: 250px;
+    max-width: 250px;
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95));
     border: 1.5px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 12px;
+    border-radius: 16px;
+    padding: 14px;
     display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: all 0.2s;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+    scroll-snap-align: start;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+.vehicle-card:hover {
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .vehicle-card.active {
     border-color: #22c55e;
-    background: rgba(34, 197, 94, 0.1);
+    background: linear-gradient(145deg, rgba(34, 197, 94, 0.12), rgba(15, 23, 42, 0.95));
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.25);
 }
 
 .veh-left-icon {
@@ -2530,6 +2614,7 @@ body, html {
     width: 48px;
     height: 48px;
     background: rgba(2, 132, 199, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.25);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -2541,7 +2626,7 @@ body, html {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 }
 
 .veh-title-row {
@@ -2552,7 +2637,7 @@ body, html {
 
 .veh-title-row h4 {
     margin: 0;
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 800;
     color: #ffffff;
 }
@@ -2573,15 +2658,17 @@ body, html {
 
 .veh-desc {
     margin: 0;
-    font-size: 10.5px;
+    font-size: 11px;
     color: #cbd5e1;
-    line-height: 1.35;
+    line-height: 1.4;
+    min-height: 44px;
 }
 
 .veh-stats {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 .veh-stat-pill {
@@ -2589,28 +2676,36 @@ body, html {
     font-weight: 700;
     color: #38bdf8;
     background: rgba(56, 189, 248, 0.12);
-    padding: 1px 6px;
-    border-radius: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 .veh-price-pill {
-    font-size: 9.5px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     color: #facc15;
     background: rgba(250, 204, 21, 0.12);
-    padding: 1px 6px;
-    border-radius: 4px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+.veh-right-action {
+    margin-top: 4px;
 }
 
 .btn-veh-action {
-    padding: 8px 10px;
-    font-size: 11px;
+    width: 100%;
+    padding: 9px 12px;
+    font-size: 11.5px;
     font-weight: 800;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
+    text-align: center;
 }
 
 .btn-veh-action.current {
@@ -2637,7 +2732,7 @@ body, html {
 }
 
 .btn-veh-action.buy:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 .btn-veh-action.disabled, .btn-veh-action.locked {
@@ -2645,6 +2740,67 @@ body, html {
     color: #64748b;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+.vehicle-desktop-tip {
+    font-size: 11px;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px dashed rgba(56, 189, 248, 0.25);
+    border-radius: 8px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+/* Thanh cuộn ngang hiển thị nổi bật trên màn hình Desktop (>= 769px) */
+@media (min-width: 769px) {
+    .vehicle-list::-webkit-scrollbar {
+        height: 8px;
+        display: block !important;
+    }
+    .vehicle-list::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .vehicle-list::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #0284c7, #38bdf8);
+        border-radius: 8px;
+        box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+    }
+    .vehicle-list::-webkit-scrollbar-thumb:hover {
+        background: #38bdf8;
+    }
+    .vehicle-list {
+        scrollbar-width: thin;
+        scrollbar-color: #38bdf8 rgba(15, 23, 42, 0.7);
+    }
+}
+
+/* Trên màn hình nhỏ Mobile (<= 768px): thanh cuộn mảnh, kích thước thẻ vừa vặn */
+@media (max-width: 768px) {
+    .btn-vehicle-nav {
+        width: 32px;
+        height: 44px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .vehicle-card {
+        flex: 0 0 225px;
+        min-width: 225px;
+        max-width: 225px;
+        padding: 12px;
+    }
+    .vehicle-list::-webkit-scrollbar {
+        height: 4px;
+    }
+    .vehicle-list::-webkit-scrollbar-thumb {
+        background: rgba(56, 189, 248, 0.4);
+        border-radius: 4px;
+    }
 }
 
 /* --- TAB 3: TYCOON SECTIONS --- */
@@ -9952,15 +10108,15 @@ body.tutorial-active .territory-overthrown-banner {
     display: none !important;
 }
 
-/* 2. Spotlight Overlay làm tối mờ 80% vùng không liên quan */
+/* 2. Spotlight Overlay làm tối mờ 80% vùng không liên quan - Cho phép chạm/click xuyên qua 100% */
 .tutorial-spotlight-overlay {
     position: fixed;
     inset: 0;
-    z-index: 100000;
-    background: rgba(0, 0, 0, 0.82);
-    pointer-events: auto;
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    z-index: 99990;
+    background: rgba(0, 0, 0, 0.76);
+    pointer-events: none !important;
+    backdrop-filter: blur(1.5px);
+    -webkit-backdrop-filter: blur(1.5px);
     transition: background 0.3s ease;
 }
 
@@ -9971,10 +10127,10 @@ body.tutorial-active .territory-overthrown-banner {
     -webkit-backdrop-filter: none !important;
 }
 
-/* 3. Phần tử mục tiêu được rọi sáng duy nhất */
+/* 3. Phần tử mục tiêu được rọi sáng duy nhất - Tự động nâng lên z-index: 99996; pointer-events: auto !important */
 .tutorial-spotlight-active-target {
     position: relative !important;
-    z-index: 100005 !important;
+    z-index: 99996 !important;
     pointer-events: auto !important;
     box-shadow: 0 0 0 4px #10b981, 0 0 25px rgba(16, 185, 129, 0.85) !important;
     animation: tutorialTargetPulse 1.2s infinite ease-in-out !important;
@@ -9996,8 +10152,8 @@ body.tutorial-active .territory-overthrown-banner {
     position: fixed;
     border: 3px solid #10b981;
     border-radius: 14px;
-    pointer-events: none;
-    z-index: 100004;
+    pointer-events: none !important;
+    z-index: 99994;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(16, 185, 129, 0.4);
     animation: borderNeonPulse 1.4s infinite ease-in-out;
 }
@@ -10017,8 +10173,8 @@ body.tutorial-active .territory-overthrown-banner {
 .spotlight-hand-pointer {
     position: fixed;
     font-size: 38px;
-    z-index: 100006;
-    pointer-events: none;
+    z-index: 99995;
+    pointer-events: none !important;
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.9));
     animation: handTapAnim 1s infinite ease-in-out;
     user-select: none;
@@ -10033,20 +10189,23 @@ body.tutorial-active .territory-overthrown-banner {
     }
 }
 
-/* 6. Bong bóng hướng dẫn dạng Chat Bubble */
-.spotlight-chat-bubble {
+/* 6. Thẻ chữ hướng dẫn dạng Chat Bubble (#tutorialCard) - Tự động né nút bấm & nhận click */
+.spotlight-chat-bubble,
+#tutorialCard {
     position: fixed;
-    z-index: 100006;
-    max-width: 290px;
+    z-index: 99998;
+    max-width: 320px;
+    width: 90%;
     background: rgba(15, 23, 42, 0.96);
     border: 2px solid #10b981;
     border-radius: 14px;
-    padding: 10px 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    padding: 12px 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
     color: #f8fafc;
     font-family: 'Be Vietnam Pro', sans-serif;
-    pointer-events: none;
+    pointer-events: auto !important;
     animation: bubblePopIn 0.25s ease-out;
+    transition: top 0.25s ease, bottom 0.25s ease, transform 0.25s ease;
 }
 
 @keyframes bubblePopIn {
@@ -10087,7 +10246,7 @@ body.tutorial-active .territory-overthrown-banner {
     position: fixed;
     top: calc(14px + env(safe-area-inset-top));
     right: 16px;
-    z-index: 100007;
+    z-index: 99999;
     background: rgba(30, 41, 59, 0.85);
     color: #cbd5e1;
     border: 1px solid #475569;
@@ -10096,7 +10255,7 @@ body.tutorial-active .territory-overthrown-banner {
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
-    pointer-events: auto;
+    pointer-events: auto !important;
     backdrop-filter: blur(4px);
     transition: all 0.15s ease;
 }
@@ -10117,7 +10276,8 @@ body.tutorial-active .territory-overthrown-banner {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 100008;
+    z-index: 99999;
+    pointer-events: auto !important;
     background: linear-gradient(135deg, #1e293b, #0f172a);
     border: 2px solid #f59e0b;
     border-radius: 20px;
@@ -11229,4 +11389,238 @@ body.tutorial-active .territory-overthrown-banner {
     font-size: 10px;
     color: #93c5fd;
     line-height: 1.4;
+}
+
+/* ==========================================================================
+   KHUNG THEO DÕI NHIỆM VỤ (HUD QUEST TRACKER) & TỰ ĐỘNG DẪN ĐƯỜNG (AUTOPILOT)
+   ========================================================================== */
+.hud-quest-tracker {
+    position: absolute;
+    top: calc(90px + env(safe-area-inset-top));
+    left: calc(16px + env(safe-area-inset-left));
+    z-index: 60;
+    width: 250px;
+    max-width: calc(100vw - 32px);
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(16, 185, 129, 0.45);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 14px rgba(16, 185, 129, 0.2);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: auto;
+}
+
+.hud-quest-tracker:hover {
+    border-color: #34d399;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65), 0 0 20px rgba(52, 211, 153, 0.35);
+    transform: translateY(-1px);
+}
+
+.hqt-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+.hqt-icon {
+    font-size: 14px;
+}
+
+.hqt-title {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: 0.3px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hqt-badge {
+    font-size: 9px;
+    font-weight: 800;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.18);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    padding: 1.5px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.hqt-body {
+    margin-bottom: 8px;
+}
+
+.hqt-desc {
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+    line-height: 1.35;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hqt-target {
+    font-size: 10.5px;
+    color: #94a3b8;
+}
+
+.hqt-target strong {
+    color: #38bdf8;
+}
+
+.btn-hqt-autopilot {
+    width: 100%;
+    padding: 7px 10px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    transition: transform 0.12s ease, filter 0.12s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-hqt-autopilot:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+}
+
+.btn-hqt-autopilot:active {
+    transform: scale(0.97);
+}
+
+.hqt-autopilot-status {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    border-radius: 8px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #34d399;
+}
+
+.hqt-spin {
+    animation: hqtRotate 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes hqtRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.hqt-status-text {
+    flex: 1;
+    line-height: 1.3;
+}
+
+.hqt-status-text em {
+    display: block;
+    font-size: 9px;
+    color: #94a3b8;
+    font-style: normal;
+}
+
+.btn-cancel-autopilot {
+    padding: 3px 8px;
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 9.5px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-cancel-autopilot:hover {
+    background: #dc2626;
+}
+
+/* Nút Tự Chạy Tới trên các thẻ trong iGiri */
+.btn-card-autopilot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 12px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    transition: transform 0.12s, filter 0.12s;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.btn-card-autopilot:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+}
+
+.btn-card-autopilot:active {
+    transform: scale(0.96);
+}
+
+.btn-quest-run {
+    margin-top: 6px;
+    width: 100%;
+}
+
+.exp-actions-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.exp-actions-row .btn-card-autopilot {
+    flex: 1;
+}
+
+.sq-btns-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+@media (max-width: 600px) {
+    .hud-quest-tracker {
+        top: calc(84px + env(safe-area-inset-top));
+        left: calc(10px + env(safe-area-inset-left));
+        width: 210px;
+        padding: 8px 10px;
+    }
+    .hqt-title {
+        font-size: 9.5px;
+    }
+    .hqt-desc {
+        font-size: 10px;
+    }
+    .btn-hqt-autopilot {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
 }

@@ -154,6 +154,27 @@
             </div>
         </header>
 
+        <!-- 1.1. Khung theo dõi nhiệm vụ ngoài màn hình chính (HUD Quest Tracker) -->
+        <div id="hudQuestTracker" class="hud-quest-tracker">
+            <div class="hqt-header">
+                <span class="hqt-icon" id="hqtIcon">🎯</span>
+                <span class="hqt-title" id="hqtTitle">NHIỆM VỤ GIAO HÀNG</span>
+                <span class="hqt-badge" id="hqtBadge">⚡ HỎA TỐC</span>
+            </div>
+            <div class="hqt-body">
+                <div class="hqt-desc" id="hqtDesc">Giao cơm nắm nóng hổi tới điểm đích</div>
+                <div class="hqt-target" id="hqtTarget">📍 Đích: <strong>Cổng Trường Hoa Mai</strong></div>
+            </div>
+            <button type="button" id="btnHqtAutoPilot" class="btn-hqt-autopilot" title="Chạm để tự động chạy tới điểm giao">
+                🏃 Chạm để tự chạy tới
+            </button>
+            <div id="hqtAutoPilotStatus" class="hqt-autopilot-status hidden">
+                <span class="hqt-spin">🧭</span>
+                <span class="hqt-status-text" id="hqtStatusText">Đang tự chạy tới điểm giao... <em>(Chạm cần lái để hủy)</em></span>
+                <button type="button" id="btnCancelAutoPilot" class="btn-cancel-autopilot" title="Hủy tự động chạy">✕ Hủy</button>
+            </div>
+        </div>
+
         <!-- 2. Canvas bản đồ thành phố 2D (GTA Top-down) -->
         <canvas id="gameCanvas"></canvas>
 

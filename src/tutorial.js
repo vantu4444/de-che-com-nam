@@ -109,10 +109,12 @@ export class TutorialManager {
                 <!-- Bàn tay chỉ điểm 👆 animated -->
                 <div id="spotlightHandPointer" class="spotlight-hand-pointer">👆</div>
 
-                <!-- Bong bóng hướng dẫn dạng chat bubble nổi -->
-                <div id="spotlightChatBubble" class="spotlight-chat-bubble">
-                    <div class="scb-badge" id="scbBadge">BƯỚC 1/6</div>
-                    <div class="scb-text" id="scbText">Đang chuẩn bị hướng dẫn...</div>
+                <!-- Bong bóng hướng dẫn dạng chat bubble nổi (#spotlightChatBubble & #tutorialCard) -->
+                <div id="spotlightChatBubble" class="spotlight-chat-bubble tutorial-card">
+                    <div id="tutorialCard" class="tutorial-card-inner">
+                        <div class="scb-badge" id="scbBadge">BƯỚC 1/6</div>
+                        <div class="scb-text" id="scbText">Đang chuẩn bị hướng dẫn...</div>
+                    </div>
                 </div>
 
                 <!-- Nút Bỏ qua tinh tế ở góc trên bên phải -->
@@ -135,7 +137,7 @@ export class TutorialManager {
         }
         this.overlay = overlay;
         this.pointerEl = document.getElementById('spotlightHandPointer');
-        this.bubbleEl = document.getElementById('spotlightChatBubble');
+        this.bubbleEl = document.getElementById('tutorialCard') || document.getElementById('spotlightChatBubble');
 
         // Nút Bỏ qua trên overlay
         const btnSkip = document.getElementById('btnSpotlightSkip');
@@ -393,8 +395,12 @@ export class TutorialManager {
         if (this.currentTargetEl !== targetEl) {
             this.clearTargetHighlight();
             this.currentTargetEl = targetEl;
-            targetEl.classList.add('tutorial-spotlight-active-target');
         }
+
+        // Tự động nâng nút mục tiêu lên z-index: 99996 và pointer-events: auto !important
+        targetEl.style.zIndex = '99996';
+        targetEl.style.pointerEvents = 'auto';
+        targetEl.classList.add('tutorial-spotlight-active-target');
 
         const rect = targetEl.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
@@ -408,44 +414,65 @@ export class TutorialManager {
             borderBox.style.display = 'block';
         }
 
-        // Bàn tay chỉ điểm 👆 trỏ vào tâm nút
+        const screenH = window.innerHeight || document.documentElement.clientHeight || 800;
+        const targetCenterY = rect.top + rect.height / 2;
+        // Kiểm tra nút nằm ở nửa dưới màn hình (Nút Mở Sạp / Bán Nhanh luôn ở nửa dưới)
+        const isBottomHalf = (curStep === 4 || curStep === 5 || targetEl.id === 'btnTouchStall' || targetEl.id === 'btnQuickSellStall' || targetEl.id === 'btnTouchSell') || (targetCenterY > screenH * 0.45);
+
+        // Bàn tay chỉ điểm 👆 animated
         if (this.pointerEl && curStep !== 6) {
             const centerX = rect.left + rect.width / 2;
-            const targetY = rect.top - 48; // Đặt phía trên nút trỏ xuống
-            this.pointerEl.style.left = `${centerX - 16}px`;
-            this.pointerEl.style.top = `${Math.max(12, targetY)}px`;
+            if (isBottomHalf) {
+                // Nút ở nửa dưới (như Mở Sạp, Bán Cho Khách, Joystick, iGiri): đặt bàn tay phía trên nút trỏ xuống
+                this.pointerEl.style.left = `${centerX - 19}px`;
+                this.pointerEl.style.top = `${Math.max(10, rect.top - 46)}px`;
+            } else {
+                // Nút ở nửa trên: đặt bàn tay phía dưới nút
+                this.pointerEl.style.left = `${centerX - 19}px`;
+                this.pointerEl.style.top = `${Math.min(screenH - 50, rect.bottom + 6)}px`;
+            }
             this.pointerEl.classList.remove('hidden');
         }
 
-        // Bong bóng hướng dẫn
-        if (this.bubbleEl && curStep !== 6) {
-            // Nếu nút ở nửa dưới màn hình: bong bóng nằm phía trên
-            // Nếu nút ở nửa trên màn hình: bong bóng nằm phía dưới
-            const isBottomHalf = rect.top > window.innerHeight * 0.45;
-            const bubbleX = Math.max(12, Math.min(window.innerWidth - 300, rect.left + rect.width / 2 - 140));
+        // Tự động né vị trí nút bấm: Thẻ chữ hướng dẫn (#tutorialCard & #spotlightChatBubble)
+        const cardBubble = document.getElementById('spotlightChatBubble');
+        const cardInner = document.getElementById('tutorialCard');
+        const cardsToStyle = [cardBubble, cardInner, this.bubbleEl].filter(Boolean);
 
-            if (isBottomHalf) {
-                const bubbleY = Math.max(12, rect.top - 110);
-                this.bubbleEl.style.left = `${bubbleX}px`;
-                this.bubbleEl.style.top = `${bubbleY}px`;
-                this.bubbleEl.classList.remove('bubble-below');
-                this.bubbleEl.classList.add('bubble-above');
-            } else {
-                const bubbleY = rect.bottom + 20;
-                this.bubbleEl.style.left = `${bubbleX}px`;
-                this.bubbleEl.style.top = `${bubbleY}px`;
-                this.bubbleEl.classList.remove('bubble-above');
-                this.bubbleEl.classList.add('bubble-below');
+        for (const card of cardsToStyle) {
+            if (curStep !== 6) {
+                card.style.left = '50%';
+                card.style.transform = 'translateX(-50%)';
+                card.style.right = 'auto';
+                card.style.pointerEvents = 'auto';
+
+                if (isBottomHalf) {
+                    // Nút nằm ở nửa dưới màn hình: đẩy thẻ chữ hướng dẫn lên sát mép trên!
+                    card.style.top = 'calc(16px + env(safe-area-inset-top, 0px))';
+                    card.style.bottom = 'auto';
+                    card.classList.remove('bubble-below');
+                    card.classList.add('bubble-above');
+                } else {
+                    // Nút nằm ở nửa trên màn hình: đặt thẻ chữ ở dưới, tuyệt đối không đè lên nút!
+                    card.style.top = 'auto';
+                    card.style.bottom = 'calc(24px + env(safe-area-inset-bottom, 0px))';
+                    card.classList.remove('bubble-above');
+                    card.classList.add('bubble-below');
+                }
             }
         }
     }
 
     clearTargetHighlight() {
         if (this.currentTargetEl) {
+            this.currentTargetEl.style.zIndex = '';
+            this.currentTargetEl.style.pointerEvents = '';
             this.currentTargetEl.classList.remove('tutorial-spotlight-active-target');
             this.currentTargetEl = null;
         }
         document.querySelectorAll('.tutorial-spotlight-active-target').forEach(el => {
+            el.style.zIndex = '';
+            el.style.pointerEvents = '';
             el.classList.remove('tutorial-spotlight-active-target');
         });
         const borderBox = document.getElementById('spotlightBorderBox');

@@ -2,7 +2,7 @@
 
 import { state, VEHICLES } from './state.js';
 import { audio } from './audio.js';
-import { World } from './world.js';
+import { World, LEGAL_SELLING_ZONES } from './world.js';
 import { Player } from './player.js';
 import { KitchenASMR } from './kitchenASMR.js';
 import { sellingManager } from './selling.js';
@@ -569,6 +569,140 @@ class GameApp {
                 sellingManager.sellQuick();
             });
         }
+
+        // Khung theo dõi nhiệm vụ ngoài màn hình chính (HUD Quest Tracker) & Tự Động Dẫn Đường
+        const btnHqtAutoPilot = document.getElementById('btnHqtAutoPilot');
+        if (btnHqtAutoPilot) {
+            btnHqtAutoPilot.onclick = (e) => {
+                e.stopPropagation();
+                audio.playClick();
+                this.startAutoPilotToActiveDelivery();
+            };
+        }
+
+        const btnCancelAutoPilot = document.getElementById('btnCancelAutoPilot');
+        if (btnCancelAutoPilot) {
+            btnCancelAutoPilot.onclick = (e) => {
+                e.stopPropagation();
+                audio.playClick();
+                if (this.player && this.player.autoPilot) {
+                    this.player.cancelAutoPilot('button_cancel');
+                    sellingManager.showToast('🛑 Đã hủy chế độ tự động dẫn đường.');
+                }
+            };
+        }
+
+        const hudQuestTracker = document.getElementById('hudQuestTracker');
+        if (hudQuestTracker) {
+            hudQuestTracker.onclick = () => {
+                if (this.player && this.player.autoPilot) {
+                    this.player.cancelAutoPilot('button_cancel');
+                    sellingManager.showToast('🛑 Đã hủy chế độ tự động dẫn đường.');
+                } else {
+                    this.startAutoPilotToActiveDelivery();
+                }
+            };
+        }
+    }
+
+    startAutoPilotTo(targetX, targetY, targetName = 'Điểm Đến', onReach = null) {
+        if (!this.player) return false;
+
+        // Nếu điện thoại, bếp, chợ đang mở -> đóng lại để người chơi nhìn thấy phố
+        if (this.questManager && this.questManager.isOpen) this.questManager.close();
+        if (this.isKitchenOpen && this.kitchen) this.kitchen.close();
+        if (this.isMarketOpen && this.market) this.market.close();
+        if (sellingManager.isOpen) sellingManager.closeSelling();
+
+        const success = this.player.startAutoPilot({
+            x: targetX,
+            y: targetY,
+            name: targetName,
+            stoppingDist: 35,
+            onReach: (player) => {
+                audio.playTingComplete();
+                if (typeof onReach === 'function') {
+                    onReach(player);
+                } else {
+                    sellingManager.showToast(`🏁 Đã tới ${targetName}!`);
+                }
+            }
+        });
+
+        if (success) {
+            audio.playClick();
+            sellingManager.showToast(`🧭 Bắt đầu tự chạy tới ${targetName}...`);
+        }
+        return success;
+    }
+
+    startAutoPilotToActiveDelivery() {
+        if (!this.player) return false;
+
+        // 1. Ưu tiên 1: Đơn giao hàng hỏa tốc 60s
+        if (deliveryManager.activeOrder) {
+            const ord = deliveryManager.activeOrder;
+            return this.startAutoPilotTo(ord.destX, ord.destY, ord.destName, () => {
+                const res = deliveryManager.tryDeliver(this.player);
+                if (res && res.success) {
+                    sellingManager.showToast(`🎉 Giao thành công đơn Hỏa Tốc tại ${res.destName}! +${res.rewardMoney.toLocaleString('vi-VN')}đ`);
+                } else if (res && res.reason === 'missing_rice') {
+                    sellingManager.showToast(`⚠️ Đã đến ${res.destName} nhưng thiếu ${res.needed - res.current} nắm cơm!`);
+                } else {
+                    sellingManager.showToast(`🏁 Đã đến điểm giao ${ord.destName}! Hãy nhấn E để giao cơm.`);
+                }
+            });
+        }
+
+        // 2. Ưu tiên 2: Đơn hàng phụ GTA
+        if (this.questManager && this.questManager.activeSideQuest) {
+            const sq = this.questManager.activeSideQuest;
+            const dest = deliveryManager.destinations.find(d => d.id === sq.locId || d.name === sq.locName) ||
+                         (this.world.regions && this.world.regions.find(r => r.id === sq.locId || r.name === sq.locName)) ||
+                         { x: 1000, y: 550, name: sq.locName };
+            return this.startAutoPilotTo(dest.x, dest.y, sq.locName, () => {
+                const delivered = this.questManager.deliverSideQuest();
+                if (!delivered) {
+                    sellingManager.showToast(`🏁 Đã tới ${sq.locName}! Nhấn nút Giao Hàng trong điện thoại iGiri.`);
+                }
+            });
+        }
+
+        // 3. Ưu tiên 3: Hướng Dẫn Tân Thủ Bước 3 (Ra Ô Vạch Xanh Trường Học)
+        if (!state.tutorialCompleted && state.tutorialStep === 3) {
+            const targetX = 790;
+            const targetY = 625;
+            return this.startAutoPilotTo(targetX, targetY, 'Cổng Trường Hoa Mai', () => {
+                if (this.tutorialManager && typeof this.tutorialManager.completeTutorialStep === 'function') {
+                    this.tutorialManager.completeTutorialStep(3);
+                }
+                sellingManager.showToast('🟢 Đã tới Ô Vạch Xanh Cổng Trường! Hãy bấm nút Mở Sạp!');
+            });
+        }
+
+        // 4. Ưu tiên 4: Ô Vạch Xanh gần nhất hoặc Điểm bán hợp pháp
+        let targetSpot = null;
+        let minDist = Infinity;
+        const zones = LEGAL_SELLING_ZONES.filter(z => z.cityId === state.currentCity || !z.cityId);
+        const searchZones = zones.length > 0 ? zones : LEGAL_SELLING_ZONES;
+        for (const z of searchZones) {
+            const cx = z.x + (z.w || 140) / 2;
+            const cy = z.y + (z.h || 90) / 2;
+            const d = Math.hypot(this.player.x - cx, this.player.y - cy);
+            if (d < minDist) {
+                minDist = d;
+                targetSpot = { x: cx, y: cy, name: z.name };
+            }
+        }
+
+        if (targetSpot) {
+            return this.startAutoPilotTo(targetSpot.x, targetSpot.y, targetSpot.name, () => {
+                sellingManager.showToast(`🟢 Đã tới ${targetSpot.name}! Mở sạp để bán hàng chuẩn ATVSTP!`);
+            });
+        }
+
+        sellingManager.showToast('📍 Mở điện thoại iGiri để chọn nhiệm vụ giao hàng!');
+        return false;
     }
 
     resize() {
@@ -1135,6 +1269,72 @@ class GameApp {
             }
         }
 
+        // Cập nhật Khung Theo Dõi Nhiệm Vụ (HUD Quest Tracker) & Trạng thái AutoPilot
+        const tracker = document.getElementById('hudQuestTracker');
+        const hqtIcon = document.getElementById('hqtIcon');
+        const hqtTitle = document.getElementById('hqtTitle');
+        const hqtBadge = document.getElementById('hqtBadge');
+        const hqtDesc = document.getElementById('hqtDesc');
+        const hqtTarget = document.getElementById('hqtTarget');
+        const btnHqtAutoPilot = document.getElementById('btnHqtAutoPilot');
+        const hqtAutoPilotStatus = document.getElementById('hqtAutoPilotStatus');
+        const hqtStatusText = document.getElementById('hqtStatusText');
+
+        if (tracker && btnHqtAutoPilot && hqtAutoPilotStatus) {
+            if (this.player && this.player.autoPilot) {
+                btnHqtAutoPilot.classList.add('hidden');
+                hqtAutoPilotStatus.classList.remove('hidden');
+                if (hqtStatusText) {
+                    const destName = this.player.autoPilot.name || 'Điểm Giao Hàng';
+                    const statusMsg = `🧭 Đang tự chạy tới <strong>${destName}</strong>... <em>(Chạm cần lái để hủy)</em>`;
+                    if (hqtStatusText.innerHTML !== statusMsg) {
+                        hqtStatusText.innerHTML = statusMsg;
+                    }
+                }
+            } else {
+                hqtAutoPilotStatus.classList.add('hidden');
+                btnHqtAutoPilot.classList.remove('hidden');
+
+                if (deliveryManager.activeOrder) {
+                    const ord = deliveryManager.activeOrder;
+                    if (hqtIcon && hqtIcon.textContent !== '⚡') hqtIcon.textContent = '⚡';
+                    if (hqtBadge && hqtBadge.textContent !== '⚡ HỎA TỐC') hqtBadge.textContent = '⚡ HỎA TỐC';
+                    const timerSecs = Math.max(0, Math.ceil(deliveryManager.timer));
+                    const titleText = `HỎA TỐC (${timerSecs}s)`;
+                    if (hqtTitle && hqtTitle.textContent !== titleText) hqtTitle.textContent = titleText;
+                    const descText = `Giao ${ord.count} nắm ${ord.fillingName}`;
+                    if (hqtDesc && hqtDesc.textContent !== descText) hqtDesc.textContent = descText;
+                    const targetHTML = `📍 Đích: <strong>${ord.destName}</strong>`;
+                    if (hqtTarget && hqtTarget.innerHTML !== targetHTML) hqtTarget.innerHTML = targetHTML;
+                } else if (this.questManager && this.questManager.activeSideQuest) {
+                    const sq = this.questManager.activeSideQuest;
+                    if (hqtIcon && hqtIcon.textContent !== '🛵') hqtIcon.textContent = '🛵';
+                    if (hqtBadge && hqtBadge.textContent !== '🛵 ĐƠN PHỤ') hqtBadge.textContent = '🛵 ĐƠN PHỤ';
+                    if (hqtTitle && hqtTitle.textContent !== 'ĐƠN GẤP GTA') hqtTitle.textContent = 'ĐƠN GẤP GTA';
+                    const descText = `Giao ${sq.count} nắm ${sq.fillingName}`;
+                    if (hqtDesc && hqtDesc.textContent !== descText) hqtDesc.textContent = descText;
+                    const targetHTML = `📍 Đích: <strong>${sq.locName}</strong>`;
+                    if (hqtTarget && hqtTarget.innerHTML !== targetHTML) hqtTarget.innerHTML = targetHTML;
+                } else if (!state.tutorialCompleted && state.tutorialStep === 3) {
+                    if (hqtIcon && hqtIcon.textContent !== '🟢') hqtIcon.textContent = '🟢';
+                    if (hqtBadge && hqtBadge.textContent !== '🟢 TÂN THỦ') hqtBadge.textContent = '🟢 TÂN THỦ';
+                    if (hqtTitle && hqtTitle.textContent !== 'HƯỚNG DẪN 60S') hqtTitle.textContent = 'HƯỚNG DẪN 60S';
+                    const descText = 'Lái xe ra Ô Vạch Xanh bán an toàn';
+                    if (hqtDesc && hqtDesc.textContent !== descText) hqtDesc.textContent = descText;
+                    const targetHTML = '📍 Đích: <strong>Cổng Trường Hoa Mai</strong>';
+                    if (hqtTarget && hqtTarget.innerHTML !== targetHTML) hqtTarget.innerHTML = targetHTML;
+                } else {
+                    if (hqtIcon && hqtIcon.textContent !== '🍙') hqtIcon.textContent = '🍙';
+                    if (hqtBadge && hqtBadge.textContent !== '🟢 ĐIỂM BÁN') hqtBadge.textContent = '🟢 ĐIỂM BÁN';
+                    if (hqtTitle && hqtTitle.textContent !== 'Ô VẠCH XANH') hqtTitle.textContent = 'Ô VẠCH XANH';
+                    const descText = 'Bán Cơm Nắm chuẩn ISO & ATVSTP';
+                    if (hqtDesc && hqtDesc.textContent !== descText) hqtDesc.textContent = descText;
+                    const targetHTML = '📍 Đích: <strong>Khu Bán Hàng Hợp Pháp</strong>';
+                    if (hqtTarget && hqtTarget.innerHTML !== targetHTML) hqtTarget.innerHTML = targetHTML;
+                }
+            }
+        }
+
         const promptBanner = document.getElementById('proximityPrompt');
         if (!promptBanner) return;
 
@@ -1327,6 +1527,11 @@ class GameApp {
         // 4.5. Vẽ Mũi Tên Dẫn Đường Hướng Dẫn Tân Thủ (Bước 3: Ô Vạch Xanh Trường Học)
         if (this.tutorialManager && typeof this.tutorialManager.renderWayfinding === 'function') {
             this.tutorialManager.renderWayfinding(this.ctx, this.camera, this.player.x, this.player.y);
+        }
+
+        // 4.6. Vẽ Vạch Sáng Chỉ Đường Tự Động Dẫn Đường (AutoPilot)
+        if (city3D && typeof city3D.renderAutoPilotRoute === 'function' && this.player && this.player.autoPilot) {
+            city3D.renderAutoPilotRoute(this.ctx, this.camera, this.player, this.player.autoPilot);
         }
 
         // 5. Vẽ UI cố định trên màn hình (Toast thông báo & Banner Lên Cấp)

@@ -18,6 +18,29 @@ export class Player {
         this.canMove = true; // Trạng thái cho phép di chuyển (không bị khóa cứng)
         this.virtualDx = 0; // Trục ảo từ Virtual Joystick (Mobile / Tablet)
         this.virtualDy = 0;
+        this.autoPilot = null; // Chế độ Tự Động Dẫn Đường tới điểm giao hàng / Ô Vạch Xanh
+    }
+
+    // Kích hoạt chế độ Tự Động Dẫn Đường (AutoPilot)
+    startAutoPilot(target) {
+        if (!target || typeof target.x !== 'number' || typeof target.y !== 'number') return false;
+        this.autoPilot = {
+            x: target.x,
+            y: target.y,
+            name: target.name || 'Điểm Giao Hàng',
+            type: target.type || 'delivery',
+            stoppingDist: target.stoppingDist || 35,
+            onReach: target.onReach || null
+        };
+        return true;
+    }
+
+    // Hủy chế độ Tự Động Dẫn Đường
+    cancelAutoPilot(reason = 'manual') {
+        if (!this.autoPilot) return false;
+        this.autoPilot = null;
+        this.isMoving = false;
+        return true;
     }
 
     // Đặt vector điều hướng từ Joystick ảo
@@ -60,20 +83,54 @@ export class Player {
             dy += this.virtualDy;
         }
 
+        const isManualInput = (dx !== 0 || dy !== 0);
+
+        if (isManualInput) {
+            // Khi người chơi chạm vào Joystick ảo hoặc bấm phím di chuyển (WASD/mũi tên),
+            // lập tức hủy chế độ tự chạy để trả quyền điều khiển tay!
+            if (this.autoPilot) {
+                this.cancelAutoPilot('manual_override');
+            }
+        } else if (this.autoPilot) {
+            // Đang ở chế độ Tự Động Dẫn Đường (autoPilot)
+            const targetDx = this.autoPilot.x - this.x;
+            const targetDy = this.autoPilot.y - this.y;
+            const dist = Math.hypot(targetDx, targetDy);
+
+            if (dist <= (this.autoPilot.stoppingDist || 35)) {
+                // Tự chạy tới sát điểm đích (khoảng cách < 35px), tự động dừng lại và hoàn tất giao hàng / mở bảng tương tác ngay
+                const reached = this.autoPilot;
+                this.autoPilot = null;
+                this.isMoving = false;
+                if (typeof reached.onReach === 'function') {
+                    try {
+                        reached.onReach(this);
+                    } catch (eReach) {
+                        console.error('[AutoPilot] Error executing onReach callback:', eReach);
+                    }
+                }
+            } else {
+                // Tự động quay hướng và di chuyển thẳng tới tọa độ điểm giao hàng
+                dx = targetDx;
+                dy = targetDy;
+            }
+        }
+
         if (dx !== 0 || dy !== 0) {
             // Chuẩn hóa vector di chuyển để đi chéo không bị nhanh gấp đôi
             const len = Math.sqrt(dx * dx + dy * dy);
-            const normFactor = len > 1 ? (1 / len) : 1;
-            this.x += dx * normFactor * this.speed;
-            this.y += dy * normFactor * this.speed;
+            const normFactor = len > 0 ? (1 / len) : 1;
+            const moveStep = this.autoPilot ? Math.min(len, this.speed) : this.speed;
+            this.x += dx * normFactor * moveStep;
+            this.y += dy * normFactor * moveStep;
             this.angle = Math.atan2(dy, dx);
             this.stepCycle += 0.22;
             this.isMoving = true;
 
             // Tự động lật ngang (flip) khi di chuyển trái / phải
-            if (dx < 0) {
+            if (dx < -0.1) {
                 this.facing = -1;
-            } else if (dx > 0) {
+            } else if (dx > 0.1) {
                 this.facing = 1;
             }
         } else {
