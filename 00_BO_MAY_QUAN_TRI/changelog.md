@@ -4,6 +4,32 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.9.1-PROD (CHÍNH THỨC XUẤT XƯỞNG: HƯỚNG DẪN TÂN THỦ "CẦM TAY CHỈ VIỆC" 60 GIÂY ĐẦU TIÊN – SPOTLIGHT, BÀN TAY CHỈ ĐIỂM & DẪN ĐƯỜNG VẠCH XANH)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 60-second interactive spotlight tutorial, hand pointer and neon wayfinding
+- **Trạng thái:** Nghiệm thu **100% PASS (94/94 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Cơ Chế Đèn Rọi Spotlight & Bàn Tay Chỉ Điểm (`👆`) Trực Quan (`src/tutorial.js`, `style.css`):**
+     - Kích hoạt lớp phủ tối mờ 80% `#tutorialSpotlightOverlay` khóa tạm thời tương tác ngoài luồng (`pointer-events: none`).
+     - Tự động khoét khung sáng viền neon phát quang `#spotlightBorderBox` ôm sát nút mục tiêu duy nhất (`z-index: 100005`), kèm biểu tượng bàn tay `#spotlightHandPointer` (`👆`) nhấp nháy chỉ thẳng vào tâm nút và bong bóng hướng dẫn `#spotlightChatBubble`.
+     - Loại bỏ nút "Tiếp theo": Hệ thống chỉ tự động chuyển bước ngay khoảnh khắc người chơi thực hiện thao tác thật trên màn hình.
+     - Khi đang ở chế độ tân thủ (`body.tutorial-active`), tự động ẩn các thanh tính năng nâng cao (Radar Đua Cấp, Hợp Đồng Độc Quyền, Thông Báo Soán Ngôi) để giữ màn hình iPhone (`375x812`) cực kỳ thoáng đãng, dễ tập trung.
+  2. **Kịch Bản 6 Bước "Cầm Tay Chỉ Việc" Hoàn Tất Trong 60 Giây (`src/tutorial.js`, `src/state.js`, `src/selling.js`):**
+     - **Bước 1 (Thu hoạch nguyên liệu đầu tiên):** Đèn rọi nút mở Bếp $\rightarrow$ chỉ vào Ruộng Lúa Nhật chín sẵn $\rightarrow$ chạm thu hoạch lúa sạch chuẩn ISO vào kho.
+     - **Bước 2 (Nấu mẻ cơm chuẩn ISO siêu tốc 3 giây):** Rút ngắn thời gian nấu còn 3 giây cho mẻ cơm đầu tiên $\rightarrow$ thu hoạch nắm cơm nóng hổi 100% tươi vào thùng xe.
+     - **Bước 3 (Dải dẫn đường xanh ngọc ra Ô Vạch Xanh):** Vẽ dải mũi tên hạt phát sáng xanh ngọc trên mặt đất từ chân nhân vật nối thẳng tới Cổng trường THPT Trưng Vương (`790, 625`) kèm vòng hào quang nhấp nháy $\rightarrow$ chạm vạch xanh tự chuyển bước.
+     - **Bước 4 (Bấm Mở Sạp):** Đèn rọi nút Mở Sạp $\rightarrow$ bấm mở sạp lập tức gọi 2 học sinh chạy tới xếp hàng trước quầy.
+     - **Bước 5 (Chạm nút Bán Cho Khách):** Đèn rọi nút `🍙 Bán Cho Khách` $\rightarrow$ bấm bán thành công nhận `+20.000đ` bay lên kèm hiệu ứng âm thanh ting ting.
+     - **Bước 6 (Hoàn tất & Mở khóa toàn bộ Đế Chế):** Bật thẻ chúc mừng `#tutorialCelebrationCard`, tặng ngay `+100.000đ Vốn Khởi Nghiệp`, mở khóa toàn diện thanh Đua Cấp, 4 Chi Nhánh, Robot 4.0 và Tủ Đồ.
+     - Nút `Bỏ qua ✕` góc trên và nút `📖 Hướng Dẫn` trên thanh HUD giúp mở lại Cẩm Nang Khởi Nghiệp 6 bước bất kỳ lúc nào.
+  3. **Nghiệm Thu Toàn Diện 94/94 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Mô phỏng Spotlight khóa đúng mục tiêu, dải dẫn đường Canvas mượt mà, gặt lúa, nấu 3s, mở sạp có 2 học sinh xếp hàng, bán thành công cộng tiền và mở khóa đầy đủ giao diện.
+     - 0 Console Error, WebGL & 2D Canvas hoạt động hoàn hảo trên Desktop (1440x900), iPhone (375x812) và iPad (768x1024).
+     - Giữ vững chuẩn thương hiệu: 100% Cơm Nắm Onigiri, 15 vị, 3 mức giá (20k/22k/25k), cam kết ISO 22000 & ATVSTP.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.9.0-PROD (CHÍNH THỨC XUẤT XƯỞNG: VÁ DỨT ĐIỂM SAU TỔNG KIỂM TOÁN – BẢO MẬT MÃ PIN 202688, XUẤT FILE EXCEL CSV UTF-8 BOM & KHỞI CHẠY MÁY CHỦ CHUẨN RENDER)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Secure /admin with PIN 202688, add UTF-8 BOM CSV export and fix root start script

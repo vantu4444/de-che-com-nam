@@ -1030,6 +1030,15 @@ class GameApp {
                 } catch (errPrompt) {
                     console.error('[GameApp] updatePrompt error:', errPrompt);
                 }
+
+                // 6.5. Cập nhật Hướng Dẫn Tân Thủ "Cầm Tay Chỉ Việc" 60s
+                try {
+                    if (this.tutorialManager && typeof this.tutorialManager.update === 'function') {
+                        this.tutorialManager.update();
+                    }
+                } catch (errTut) {
+                    console.error('[GameApp] tutorialManager.update error:', errTut);
+                }
             }
 
             // 7. Render đồ họa

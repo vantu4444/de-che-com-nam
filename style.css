@@ -9941,6 +9941,265 @@ body, html {
     }
 }
 
+/* ==========================================================================
+   HỆ THỐNG HƯỚNG DẪN TÂN THỦ "CẦM TAY CHỈ VIỆC" 6 BƯỚC SIÊU TỐC (SPOTLIGHT)
+   ========================================================================== */
+
+/* 1. Tạm ẩn các tính năng nâng cao trong 6 bước tân thủ để màn hình cực thoáng */
+body.tutorial-active #rivalRadarBar,
+body.tutorial-active #exclusiveContractWidget,
+body.tutorial-active .territory-overthrown-banner {
+    display: none !important;
+}
+
+/* 2. Spotlight Overlay làm tối mờ 80% vùng không liên quan */
+.tutorial-spotlight-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(0, 0, 0, 0.82);
+    pointer-events: auto;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: background 0.3s ease;
+}
+
+.tutorial-spotlight-overlay.step-3-nav-mode {
+    background: transparent !important;
+    pointer-events: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* 3. Phần tử mục tiêu được rọi sáng duy nhất */
+.tutorial-spotlight-active-target {
+    position: relative !important;
+    z-index: 100005 !important;
+    pointer-events: auto !important;
+    box-shadow: 0 0 0 4px #10b981, 0 0 25px rgba(16, 185, 129, 0.85) !important;
+    animation: tutorialTargetPulse 1.2s infinite ease-in-out !important;
+}
+
+@keyframes tutorialTargetPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px #10b981, 0 0 20px rgba(16, 185, 129, 0.7);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 0 6px #34d399, 0 0 35px rgba(52, 211, 153, 0.95);
+        transform: scale(1.04);
+    }
+}
+
+/* 4. Khung viền neon phát quang */
+.spotlight-border-box {
+    position: fixed;
+    border: 3px solid #10b981;
+    border-radius: 14px;
+    pointer-events: none;
+    z-index: 100004;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), inset 0 0 10px rgba(16, 185, 129, 0.4);
+    animation: borderNeonPulse 1.4s infinite ease-in-out;
+}
+
+@keyframes borderNeonPulse {
+    0%, 100% {
+        border-color: #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+    }
+    50% {
+        border-color: #34d399;
+        box-shadow: 0 0 30px rgba(52, 211, 153, 1);
+    }
+}
+
+/* 5. Bàn tay chỉ điểm animated 👆 */
+.spotlight-hand-pointer {
+    position: fixed;
+    font-size: 38px;
+    z-index: 100006;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.9));
+    animation: handTapAnim 1s infinite ease-in-out;
+    user-select: none;
+}
+
+@keyframes handTapAnim {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(12px) scale(0.9);
+    }
+}
+
+/* 6. Bong bóng hướng dẫn dạng Chat Bubble */
+.spotlight-chat-bubble {
+    position: fixed;
+    z-index: 100006;
+    max-width: 290px;
+    background: rgba(15, 23, 42, 0.96);
+    border: 2px solid #10b981;
+    border-radius: 14px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    color: #f8fafc;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    pointer-events: none;
+    animation: bubblePopIn 0.25s ease-out;
+}
+
+@keyframes bubblePopIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.scb-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+}
+
+.scb-text {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #e2e8f0;
+}
+
+.scb-text strong {
+    color: #38bdf8;
+}
+
+/* 7. Nút Bỏ qua góc trên */
+.btn-spotlight-skip {
+    position: fixed;
+    top: calc(14px + env(safe-area-inset-top));
+    right: 16px;
+    z-index: 100007;
+    background: rgba(30, 41, 59, 0.85);
+    color: #cbd5e1;
+    border: 1px solid #475569;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+    backdrop-filter: blur(4px);
+    transition: all 0.15s ease;
+}
+
+.btn-spotlight-skip:hover {
+    background: #334155;
+    color: #ffffff;
+    border-color: #64748b;
+}
+
+.btn-spotlight-skip:active {
+    transform: scale(0.95);
+}
+
+/* 8. Thẻ Chúc mừng Bước 6 */
+.tutorial-celebration-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100008;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border: 2px solid #f59e0b;
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 158, 11, 0.3);
+    animation: celebCardPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes celebCardPop {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -46%) scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.tcc-crown {
+    font-size: 48px;
+    margin-bottom: 8px;
+    animation: crownFloat 2s infinite ease-in-out;
+}
+
+@keyframes crownFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.tutorial-celebration-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: -0.2px;
+}
+
+.tutorial-celebration-card p {
+    margin: 0 0 16px;
+    font-size: 12px;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+.tcc-reward {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fbbf24;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.btn-claim-tutorial-bonus {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    transition: transform 0.15s, filter 0.15s;
+}
+
+.btn-claim-tutorial-bonus:hover {
+    filter: brightness(1.1);
+}
+
+.btn-claim-tutorial-bonus:active {
+    transform: scale(0.97);
+}
+
 
 
 

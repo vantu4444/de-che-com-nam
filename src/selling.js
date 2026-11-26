@@ -186,7 +186,47 @@ export class SellingManager {
         }
 
         // Sinh ngay khách hàng đầu tiên ngay khi bấm Mở Sạp
-        this.trySpawnCustomer();
+        if (!state.tutorialCompleted && state.tutorialStep === 4) {
+            // Tân thủ Bước 4: Lập tức gọi 2 học sinh xếp hàng trước sạp
+            this.customers = [];
+            this.customers.push({
+                id: 'cust_tut_1',
+                type: 'student',
+                variant: 'student',
+                status: 'waiting',
+                x: this.stallX + 38,
+                y: this.stallY - 14,
+                queueIndex: 0,
+                speed: 2.2,
+                recipeId: 'crab_egg_mayo',
+                requestedFilling: 'crab_egg_mayo',
+                maxWaitTime: 120,
+                waitTimer: 120,
+                patience: 1.0,
+                eatingTimer: 0,
+                colorVar: 0
+            });
+            this.customers.push({
+                id: 'cust_tut_2',
+                type: 'student',
+                variant: 'student',
+                status: 'waiting',
+                x: this.stallX + 70,
+                y: this.stallY - 14,
+                queueIndex: 1,
+                speed: 2.2,
+                recipeId: 'crab_egg_mayo',
+                requestedFilling: 'crab_egg_mayo',
+                maxWaitTime: 120,
+                waitTimer: 120,
+                patience: 1.0,
+                eatingTimer: 0,
+                colorVar: 1
+            });
+            state.completeTutorialStep(4);
+        } else {
+            this.trySpawnCustomer();
+        }
         this.spawnTimer = 0;
         audio.playClick();
     }
@@ -858,6 +898,11 @@ export class SellingManager {
         // Ghi nhận phân khúc giá đã bán (20k / 22k / 25k)
         if (fillingConfig && fillingConfig.priceGroup && typeof state.recordSoldPriceGroup === 'function') {
             state.recordSoldPriceGroup(fillingConfig.priceGroup);
+        }
+
+        // Tân thủ Bước 5: Bán cơm thành công chuyển sang Bước 6 (Hoàn tất & Mở khóa)
+        if (!state.tutorialCompleted && state.tutorialStep === 5) {
+            state.completeTutorialStep(5);
         }
 
         // Ghi nhận phục vụ khách giờ cao điểm (nếu đang trong giờ cao điểm)

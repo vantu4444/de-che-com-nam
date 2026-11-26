@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 15:24:51, 26/11/2026  
+**Thời điểm thực thi:** 16:01:29, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -210,7 +210,7 @@
 - **[PASS]** `Thăm Xưởng Bạn Bè & Tiếp Lửa Dây Chuyền: Cooldown 2 giờ, thưởng người giúp +15.000đ & +10 Uy Tín, rút ngắn ngay 20% thời gian nấu của mẻ cơm`
 - **[PASS]** `Giao Diện Đế Chế Bước 2B: Tab Chi Nhánh có Quick-Nav & Địa chỉ, 3 Modal (Điểm Danh 7 Ngày, Sổ Tay Tinh Thông 15 Vị, Thăm Xưởng & Quầy Ký Gửi) hiển thị sắc nét`
 - **[PASS]** `Mô phỏng Bán Hàng Sạp & Tự Động Phục Vụ: Nút #btnQuickSellStall hiển thị chuẩn, click bán ngay cộng tiền & đổi vị tự động khi hết đúng vị, tự động phục vụ sau 1.5s, cảnh báo khi hết cơm và chuyển hướng vào Bếp mượt mà`
-- **[PASS]** `Mô phỏng Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang: Chạy mượt mà 5 bước (Vườn -> Bếp ISO -> Vạch Xanh -> Bán Sạp -> +100k Vốn), nút Bỏ Qua và nút 📖 Hướng Dẫn HUD hoạt động chuẩn xác 100%`
+- **[PASS]** `Mô phỏng Hướng Dẫn Tân Thủ "Cầm Tay Chỉ Việc" 6 Bước: Đèn Spotlight rọi khóa mục tiêu, gặt lúa chuẩn ISO, nấu siêu tốc 3s, vạch dẫn đường xanh ngọc tới vạch xanh, mở sạp gọi 2 học sinh, bán nhận +20k và thưởng +100k mở khóa toàn bộ HUD mượt mà 100%`
 - **[PASS]** `Mô phỏng Cyber Food-Tech & Radar Đua Cấp Sát Sườn: Hologram 3D mượt mà, Radar cập nhật đối thủ trên/dưới thời gian thực, nút Thách Đấu và Overtake Alert thưởng nóng +25k/10 Sao chuẩn xác 100%`
 - **[PASS]** `Mô phỏng Tranh Đoạt Địa Bàn Vàng & Hợp Đồng Độc Quyền: Tượng Hologram 3D sắc nét, Bản quyền +5k, Soán ngôi toàn server kèm nút Giành Lại, Giao cơm thầu trừ kho chính xác và Trao thưởng độc quyền +300k/50 Sao đạt chuẩn 100%`
 - **[PASS]** `Mô phỏng Tiến Hóa Nhân Vật 4 Bậc, Tủ Đồ & Túi Mù Onigiri: Tính toán 4 bậc chuẩn xác, Buff chỉ số thực tế (+25% Speed, -15% Nấu, +20% VIP), Mở Túi Mù 50k/20 Sao, Chống trùng quy đổi +15 Sao/+150 EXP, Live Preview Canvas sắc nét và Render 3D/2D mượt mà 100%`

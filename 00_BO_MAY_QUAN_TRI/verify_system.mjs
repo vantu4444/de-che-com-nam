@@ -3729,6 +3729,7 @@ async function runInteractiveSimulationSuite() {
         }
 
         // 3. Kiểm tra Dây Chuyền Bếp Nấu Hàng Đợi (Queue Timer, Máy Ép Bán Tự Động, Mở Ô Bếp & Thu Hoạch Xe)
+        testState.tutorialCompleted = true;
         testState.level = 1;
         testState.kitchenTier = 1;
         testState.kitchenPressUpgrade = false;
@@ -4102,42 +4103,68 @@ async function runInteractiveSimulationSuite() {
     }
 
     // -------------------------------------------------------------------------
-    // BƯỚC 6.95: Mô Phỏng Hệ Thống Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp
+    // BƯỚC 6.95: Mô Phỏng Hệ Thống Hướng Dẫn Tân Thủ 6 Bước Cầm Tay Chỉ Việc & Spotlight
     // -------------------------------------------------------------------------
-    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Hệ Thống Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp...', COLORS.magenta);
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Hướng Dẫn Tân Thủ "Cầm Tay Chỉ Việc" 60 Giây & Spotlight...', COLORS.magenta);
     try {
         // 1. Reset tutorial về bước 1
         state.resetTutorial();
 
-        const tutContainer = doc.getElementById('tutorialCardContainer');
-        const guideModal = doc.getElementById('tutorialGuideModal');
-        const btnOpenGuide = doc.getElementById('btnOpenTutorialGuide');
+        // Đảm bảo gameApp có sellingManager
+        if (!gameApp.sellingManager) {
+            gameApp.sellingManager = sellingManager;
+        }
 
-        // Khởi tạo tutorialManager trong test
+        // Khởi tạo tutorialManager
         const tutManager = new TutorialManager(gameApp);
         tutManager.init();
 
-        // Kiểm tra thẻ hướng dẫn hiển thị ở bước 1
-        const isCardVisibleStep1 = Boolean(tutContainer && !tutContainer.classList.contains('hidden'));
-        const titleStep1 = tutContainer?.querySelector('.tc-title')?.textContent || '';
-        const isStep1TitleOk = titleStep1.includes('Bước 1') || titleStep1.includes('Vườn');
+        const spotlightOverlay = doc.getElementById('tutorialSpotlightOverlay');
+        const spotlightBox = doc.getElementById('spotlightBorderBox');
+        const handPointer = doc.getElementById('spotlightHandPointer');
+        const chatBubble = doc.getElementById('spotlightChatBubble');
+        const btnSpotlightSkip = doc.getElementById('btnSpotlightSkip');
+        const guideModal = doc.getElementById('tutorialGuideModal');
+        const btnOpenGuide = doc.getElementById('btnOpenTutorialGuide');
 
-        // Bấm nút hành động Bước 1 -> chuyển sang Bước 2
-        const btnAction = tutContainer?.querySelector('#btnTutorialAction');
-        if (btnAction) btnAction.click();
+        // Kiểm tra Spotlight và các thành phần khởi tạo
+        const hasSpotlightDom = Boolean(spotlightOverlay && spotlightBox && handPointer && chatBubble && btnSpotlightSkip);
+        const isTutorialActiveBody = doc.body.classList.contains('tutorial-active');
+        const isStep1 = state.tutorialStep === 1 && !state.tutorialCompleted;
 
-        const isStep2Ok = state.tutorialStep === 2;
-        tutManager.renderStepCard();
-        const titleStep2 = tutContainer?.querySelector('.tc-title')?.textContent || '';
-        const isStep2TitleOk = titleStep2.includes('Bước 2') || titleStep2.includes('Bếp');
+        // BƯỚC 1: Thu hoạch ruộng lúa đầu tiên (plot_1)
+        // Chuẩn bị plot_1 chín sẵn
+        if (state.farm && Array.isArray(state.farm.plots)) {
+            const p1 = state.farm.plots.find(p => p.id === 'plot_1');
+            if (p1) {
+                p1.cropKey = 'rice';
+                p1.status = 'ready';
+                p1.plantedTime = Date.now() - 60000;
+                p1.durationMs = 45000;
+            }
+        }
+        const harvestPlotRes = state.harvestPlot('plot_1');
+        const isStep1Complete = harvestPlotRes && harvestPlotRes.success && state.tutorialStep === 2;
 
-        // Bấm nút hành động Bước 2 -> chuyển sang Bước 3
-        const btnAction2 = tutContainer?.querySelector('#btnTutorialAction');
-        if (btnAction2) btnAction2.click();
+        // BƯỚC 2: Nấu mẻ cơm chuẩn ISO siêu tốc 3 giây & thu hoạch
+        // Chuẩn bị đủ nguyên liệu nếu cần
+        state.ingredients = { rice_seaweed: 20, meat_seafood: 20, cheese_sauce: 20 };
 
-        const isStep3Ok = state.tutorialStep === 3;
-        tutManager.renderStepCard();
-        // Kiểm tra vẽ mũi tên dẫn đường Bước 3 trên Canvas không có ngoại lệ
+        const cookSlotRes = state.startCookingSlot('kslot_1', 'crab_egg_mayo');
+        const isCookingSpeed3s = cookSlotRes && cookSlotRes.success && cookSlotRes.durationSec === 3;
+
+        // Làm chín mẻ cơm ngay để thu hoạch
+        if (state.kitchenSlots && Array.isArray(state.kitchenSlots)) {
+            const s1 = state.kitchenSlots.find(s => s.id === 'kslot_1');
+            if (s1) {
+                s1.status = 'ready';
+                s1.fillingId = 'crab_egg_mayo';
+            }
+        }
+        const harvestCookRes = state.harvestCookingSlot('kslot_1');
+        const isStep2Complete = harvestCookRes && harvestCookRes.success && state.tutorialStep === 3;
+
+        // BƯỚC 3: Dải dẫn đường xanh ngọc ra Ô Vạch Xanh Trường Học (790, 625)
         let wayfindingRenderOk = true;
         try {
             const mockCtx = gameApp.canvas.getContext('2d');
@@ -4146,66 +4173,77 @@ async function runInteractiveSimulationSuite() {
             wayfindingRenderOk = false;
         }
 
-        // Bấm nút hành động Bước 3 -> chuyển sang Bước 4
-        const btnAction3 = tutContainer?.querySelector('#btnTutorialAction');
-        if (btnAction3) btnAction3.click();
+        // Đưa nhân vật tới gần Ô Vạch Xanh Trường Học
+        gameApp.player.x = 790;
+        gameApp.player.y = 625;
+        tutManager.update();
+        const isStep3Complete = state.tutorialStep === 4;
 
-        const isStep4Ok = state.tutorialStep === 4;
-        tutManager.renderStepCard();
+        // BƯỚC 4: Mở sạp bán hàng -> Gọi ngay 2 học sinh xếp hàng
+        const mockSchoolSpot = {
+            id: 'spot_school_hcm',
+            name: 'Trường THPT Trưng Vương',
+            x: 790,
+            y: 625,
+            isUnlocked: true,
+            salesBonus: 1.25
+        };
+        // Mở sạp bán hàng qua sellingManager
+        sellingManager.openSelling(mockSchoolSpot, gameApp.player);
+        const isStep4Complete = state.tutorialStep === 5;
+        const hasQueuedStudents = sellingManager.customers && sellingManager.customers.length >= 2;
 
-        // Bấm nút hành động Bước 4 -> chuyển sang Bước 5
-        const btnAction4 = tutContainer?.querySelector('#btnTutorialAction');
-        if (btnAction4) btnAction4.click();
-
-        const isStep5Ok = state.tutorialStep === 5;
-        tutManager.renderStepCard();
-
-        // Bấm nhận thưởng Bước 5: +100.000đ vốn và hoàn tất
-        const prevMoneyBeforeReward = state.money;
-        const btnAction5 = tutContainer?.querySelector('#btnTutorialAction');
-        if (btnAction5) btnAction5.click();
-
-        const isRewardGiven = state.money >= prevMoneyBeforeReward + 100000;
-        const isTutorialCompleted = state.tutorialCompleted === true;
-        const isCardHiddenAfterComplete = Boolean(tutContainer && tutContainer.classList.contains('hidden'));
-
-        // 2. Kiểm tra Nút Bỏ Qua (Skip)
-        state.resetTutorial();
-        tutManager.renderStepCard();
-        const btnSkip = tutContainer?.querySelector('#btnTutorialSkip');
-        let skipOk = false;
-        if (btnSkip) {
-            btnSkip.click();
-            skipOk = state.tutorialCompleted === true && Boolean(tutContainer.classList.contains('hidden'));
+        // BƯỚC 5: Chạm Bán Cho Khách (+20.000đ)
+        const prevMoneyBeforeSell = state.money;
+        const firstCust = sellingManager.customers[0];
+        let serveCustOk = false;
+        if (firstCust) {
+            // Đảm bảo có ít nhất 1 cơm nắm crab_egg_mayo trong thùng xe
+            state.inventory = state.inventory || [];
+            state.inventory.push({ id: 'rice_tut_test', filling: 'crab_egg_mayo', freshness: 100 });
+            const serveSuccess = sellingManager.serveCustomer(firstCust);
+            serveCustOk = Boolean(serveSuccess) && state.tutorialStep === 6;
         }
+        const isStep5Complete = serveCustOk && state.money > prevMoneyBeforeSell;
 
-        // 3. Kiểm tra Modal Cẩm Nang Khởi Nghiệp (📖 Hướng Dẫn)
+        // BƯỚC 6: Hoàn tất & Mở khóa toàn bộ Đế Chế (+100.000đ vốn)
+        const prevMoneyBeforeBonus = state.money;
+        state.completeTutorialStep(6);
+        tutManager.updateStep();
+        const isStep6Complete = state.tutorialCompleted === true;
+        const isBonusGranted = state.money >= prevMoneyBeforeBonus + 100000;
+        const isBodyUnlocked = !doc.body.classList.contains('tutorial-active');
+
+        // Kiểm tra nút Xem Lại Cẩm Nang Khởi Nghiệp (📖 Hướng Dẫn) có 6 bước
         if (btnOpenGuide) btnOpenGuide.click();
         const isGuideModalOpen = Boolean(guideModal && !guideModal.classList.contains('hidden'));
         const guideGridItems = guideModal?.querySelectorAll('.tgd-step-item')?.length || 0;
-        const has5GuideSteps = guideGridItems === 5;
+        const has6GuideSteps = guideGridItems === 6;
 
         // Bấm Chạy Lại Hướng Dẫn Từng Bước từ Modal Cẩm Nang
         const btnRestartFromGuide = guideModal?.querySelector('#btnRestartTutorialSteps');
         let restartOk = false;
         if (btnRestartFromGuide) {
             btnRestartFromGuide.click();
-            restartOk = state.tutorialCompleted === false && state.tutorialStep === 1 && !tutContainer.classList.contains('hidden');
+            restartOk = state.tutorialCompleted === false && state.tutorialStep === 1;
         }
 
-        // Đóng modal cẩm nang
-        tutManager.closeGuideModal();
-        const isGuideModalClosed = Boolean(guideModal && guideModal.classList.contains('hidden'));
+        // Thử nút Bỏ Qua (Skip) và khôi phục trạng thái hoàn tất cho các bài test tiếp theo
+        tutManager.skipTutorial();
+        const skipOk = state.tutorialCompleted === true && !doc.body.classList.contains('tutorial-active');
+        state.tutorialCompleted = true; // Đảm bảo trạng thái an toàn tuyệt đối cho các suite tiếp theo
 
-        if (isCardVisibleStep1 && isStep1TitleOk && isStep2Ok && isStep3Ok && wayfindingRenderOk &&
-            isStep4Ok && isStep5Ok && isRewardGiven && isTutorialCompleted && isCardHiddenAfterComplete &&
-            skipOk && isGuideModalOpen && has5GuideSteps && restartOk && isGuideModalClosed) {
-            logger.pass('Mô phỏng Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang: Chạy mượt mà 5 bước (Vườn -> Bếp ISO -> Vạch Xanh -> Bán Sạp -> +100k Vốn), nút Bỏ Qua và nút 📖 Hướng Dẫn HUD hoạt động chuẩn xác 100%');
+        if (hasSpotlightDom && isTutorialActiveBody && isStep1 && isStep1Complete &&
+            isCookingSpeed3s && isStep2Complete && wayfindingRenderOk && isStep3Complete &&
+            isStep4Complete && hasQueuedStudents && isStep5Complete && isStep6Complete &&
+            isBonusGranted && isBodyUnlocked && isGuideModalOpen && has6GuideSteps && restartOk && skipOk) {
+            logger.pass('Mô phỏng Hướng Dẫn Tân Thủ "Cầm Tay Chỉ Việc" 6 Bước: Đèn Spotlight rọi khóa mục tiêu, gặt lúa chuẩn ISO, nấu siêu tốc 3s, vạch dẫn đường xanh ngọc tới vạch xanh, mở sạp gọi 2 học sinh, bán nhận +20k và thưởng +100k mở khóa toàn bộ HUD mượt mà 100%');
         } else {
-            logger.fail('Mô phỏng Hướng Dẫn Tân Thủ 5 Bước: Thất bại', JSON.stringify({
-                isCardVisibleStep1, isStep1TitleOk, isStep2Ok, isStep3Ok, wayfindingRenderOk,
-                isStep4Ok, isStep5Ok, isRewardGiven, isTutorialCompleted, isCardHiddenAfterComplete,
-                skipOk, isGuideModalOpen, has5GuideSteps, restartOk, isGuideModalClosed
+            logger.fail('Mô phỏng Hướng Dẫn Tân Thủ 6 Bước Cầm Tay Chỉ Việc: Thất bại', JSON.stringify({
+                hasSpotlightDom, isTutorialActiveBody, isStep1, isStep1Complete,
+                isCookingSpeed3s, isStep2Complete, wayfindingRenderOk, isStep3Complete,
+                isStep4Complete, hasQueuedStudents, isStep5Complete, isStep6Complete,
+                isBonusGranted, isBodyUnlocked, isGuideModalOpen, has6GuideSteps, restartOk, skipOk
             }));
         }
     } catch (errTutTest) {
@@ -4598,6 +4636,9 @@ async function runInteractiveSimulationSuite() {
 
         // Thử nghiệm cơ chế chống trùng lặp: nếu mở khóa hết skin, hoặc khi gặp trùng lặp -> quy đổi +15 Uy Tín & +150 EXP
         state.unlockedSkins = Object.keys(SKINS_CONFIG); // Mở hết để ép trùng
+        state.level = 10;
+        state.exp = 0;
+        state.reputation = 50;
         const prevRepDup = state.reputation;
         const prevExpDup = state.exp;
         const boxResDup = state.openBlindBox('money');

@@ -1345,6 +1345,12 @@ class GameState {
         plot.durationMs = 0;
 
         this.addExp(25);
+
+        // Chuyển bước tân thủ nếu vừa thu hoạch nguyên liệu đầu tiên
+        if (!this.tutorialCompleted && this.tutorialStep === 1) {
+            this.completeTutorialStep(1);
+        }
+
         this.save();
         this.notify({ cropHarvested: true, plotId, crop: harvestedCrop });
         return { success: true, crop: harvestedCrop, yieldType: crop.yieldType, yieldCount: crop.yieldCount };
@@ -1453,6 +1459,11 @@ class GameState {
             durationSec = Math.round(durationSec * 0.85); // Giảm thêm 15% thời gian nấu của Bếp Trưởng ISO
         }
 
+        // Nấu siêu tốc 3 giây trong khóa hướng dẫn tân thủ (riêng Bước 2)
+        if (!this.tutorialCompleted && this.tutorialStep === 2) {
+            durationSec = 3;
+        }
+
         slot.status = 'cooking';
         slot.fillingId = resolvedFilling;
         slot.startTime = Date.now();
@@ -1503,6 +1514,11 @@ class GameState {
         slot.startTime = null;
         slot.durationMs = 0;
         slot.batchSize = 1;
+
+        // Chuyển bước tân thủ nếu vừa thu hoạch mẻ cơm chuẩn ISO đầu tiên
+        if (!this.tutorialCompleted && this.tutorialStep === 2) {
+            this.completeTutorialStep(2);
+        }
 
         this.save();
         this.notify({ cookingHarvested: true, slotId, harvestedInfo });
@@ -3691,18 +3707,19 @@ class GameState {
         this.kitchenPressUpgrade = Boolean(this.kitchenPressUpgrade);
     }
 
-    // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC]
+    // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 6 BƯỚC "CẦM TAY CHỈ VIỆC"]
     setTutorialStep(step) {
-        this.tutorialStep = Math.max(1, Math.min(5, step));
+        this.tutorialStep = Math.max(1, Math.min(6, step));
         this.save();
         this.notify({ tutorialUpdated: true, step: this.tutorialStep });
     }
 
     completeTutorialStep(step) {
         if (this.tutorialStep === step) {
-            if (step >= 5) {
+            if (step >= 6) {
                 this.tutorialCompleted = true;
-                this.tutorialStep = 5;
+                this.tutorialStep = 6;
+                this.addMoney(100000);
             } else {
                 this.tutorialStep = step + 1;
             }
@@ -3713,7 +3730,7 @@ class GameState {
 
     skipTutorial() {
         this.tutorialCompleted = true;
-        this.tutorialStep = 5;
+        this.tutorialStep = 6;
         this.save();
         this.notify({ tutorialUpdated: true, skipped: true, completed: true });
     }
@@ -3721,6 +3738,28 @@ class GameState {
     resetTutorial() {
         this.tutorialCompleted = false;
         this.tutorialStep = 1;
+        if (!Array.isArray(this.kitchenSlots) || this.kitchenSlots.length === 0) {
+            this.kitchenSlots = [{ id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 }];
+        } else {
+            const s1 = this.kitchenSlots.find(s => s.id === 'kslot_1');
+            if (s1) {
+                s1.status = 'idle';
+                s1.fillingId = null;
+                s1.startTime = null;
+                s1.durationMs = 0;
+            } else {
+                this.kitchenSlots.unshift({ id: 'kslot_1', status: 'idle', fillingId: null, startTime: null, durationMs: 0, batchSize: 1 });
+            }
+        }
+        if (!this.farm || !Array.isArray(this.farm.plots) || this.farm.plots.length === 0) {
+            this.farm = {
+                autoWaterLevel: 0,
+                plots: [
+                    { id: 'plot_1', cropKey: 'rice', plantedTime: Date.now() - 50000, durationMs: 45000, status: 'ready' },
+                    { id: 'plot_2', cropKey: 'seaweed', plantedTime: Date.now() - 70000, durationMs: 60000, status: 'ready' }
+                ]
+            };
+        }
         this.save();
         this.notify({ tutorialUpdated: true, reset: true });
     }
