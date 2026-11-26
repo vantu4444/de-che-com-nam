@@ -13,6 +13,7 @@ import { seaweedGame } from './seaweedGame.js';
 import { network } from './network.js';
 import { onlineUI } from './onlineUI.js';
 import { characterRenderer } from './characterRenderer.js';
+import { TutorialManager } from './tutorial.js';
 
 class GameApp {
     constructor() {
@@ -244,6 +245,10 @@ class GameApp {
 
         // Khởi tạo bộ điều khiển cảm ứng chuẩn Mobile & iPad
         this.initTouchControls();
+
+        // Khởi tạo hệ thống Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp
+        this.tutorialManager = new TutorialManager(this);
+        this.tutorialManager.init();
 
         // Khởi động vòng lặp game
         requestAnimationFrame(() => this.loop());
@@ -540,6 +545,27 @@ class GameApp {
                     audio.playError();
                     sellingManager.showToast('🏪 Hãy mở sạp trước khi bán nhanh cho khách!');
                 }
+            });
+        }
+
+        const btnQuickSellStall = document.getElementById('btnQuickSellStall');
+        if (btnQuickSellStall) {
+            attachTouchAction(btnQuickSellStall, () => {
+                audio.resume();
+                if (!sellingManager.isOpen) {
+                    sellingManager.showToast('🏪 Hãy mở sạp trước!');
+                    return;
+                }
+                const hasRice = Boolean(state.inventory && state.inventory.length > 0);
+                if (!hasRice) {
+                    // Nếu hết sạch cơm, bấm nút sẽ mở ngay Bếp ASMR để nấu thêm
+                    this.isKitchenOpen = true;
+                    if (this.kitchen && typeof this.kitchen.open === 'function') {
+                        this.kitchen.open();
+                    }
+                    return;
+                }
+                sellingManager.sellQuick();
             });
         }
     }
@@ -1046,6 +1072,56 @@ class GameApp {
             }
         }
 
+        // Cập nhật Nút Bán Cho Khách Trực Tiếp Khi Mở Sạp
+        const quickSellContainer = document.getElementById('quickSellStallContainer');
+        const btnQuickSellStall = document.getElementById('btnQuickSellStall');
+        const qssIcon = document.getElementById('qssIcon');
+        const qssText = document.getElementById('qssText');
+
+        if (quickSellContainer && btnQuickSellStall) {
+            const isAnyModalActive = Boolean(
+                this.isKitchenOpen || this.isMarketOpen || this.questManager.isOpen ||
+                seaweedGame.isOpen || (onlineUI && typeof onlineUI.isAnyModalOpen === 'function' && onlineUI.isAnyModalOpen())
+            );
+
+            if (sellingManager.isOpen && !isAnyModalActive) {
+                if (quickSellContainer.classList.contains('hidden')) {
+                    quickSellContainer.classList.remove('hidden');
+                }
+                const waitingCount = (sellingManager.customers || []).filter(c => c.status === 'waiting').length;
+                const hasRice = Boolean(state.inventory && state.inventory.length > 0);
+                const comboCount = sellingManager.comboCount || 1;
+
+                if (!hasRice) {
+                    btnQuickSellStall.classList.add('no-rice');
+                    btnQuickSellStall.classList.remove('has-waiting');
+                    if (qssIcon && qssIcon.textContent !== '⚠️') qssIcon.textContent = '⚠️';
+                    if (qssText && qssText.textContent !== 'Hết Cơm! Vào Bếp Nấu Thêm') {
+                        qssText.textContent = 'Hết Cơm! Vào Bếp Nấu Thêm';
+                    }
+                } else {
+                    btnQuickSellStall.classList.remove('no-rice');
+                    if (waitingCount > 0) {
+                        btnQuickSellStall.classList.add('has-waiting');
+                    } else {
+                        btnQuickSellStall.classList.remove('has-waiting');
+                    }
+                    if (qssIcon && qssIcon.textContent !== '🍙') qssIcon.textContent = '🍙';
+                    const comboStr = comboCount > 1 ? ` 🔥x${comboCount}` : '';
+                    const label = waitingCount > 0 
+                        ? `Bán Cho Khách (${waitingCount} chờ)${comboStr}`
+                        : `Bán Cho Khách${comboStr}`;
+                    if (qssText && qssText.textContent !== label) {
+                        qssText.textContent = label;
+                    }
+                }
+            } else {
+                if (!quickSellContainer.classList.contains('hidden')) {
+                    quickSellContainer.classList.add('hidden');
+                }
+            }
+        }
+
         const promptBanner = document.getElementById('proximityPrompt');
         if (!promptBanner) return;
 
@@ -1209,6 +1285,11 @@ class GameApp {
 
         // 4. Vẽ Vùng Phát Sáng & Mũi Tên Chỉ Đường Đơn Hỏa Tốc
         deliveryManager.render(this.ctx, this.camera, this.player);
+
+        // 4.5. Vẽ Mũi Tên Dẫn Đường Hướng Dẫn Tân Thủ (Bước 3: Ô Vạch Xanh Trường Học)
+        if (this.tutorialManager && typeof this.tutorialManager.renderWayfinding === 'function') {
+            this.tutorialManager.renderWayfinding(this.ctx, this.camera, this.player.x, this.player.y);
+        }
 
         // 5. Vẽ UI cố định trên màn hình (Toast thông báo & Banner Lên Cấp)
         sellingManager.renderScreenUI(this.ctx, this.canvas.width, this.canvas.height);

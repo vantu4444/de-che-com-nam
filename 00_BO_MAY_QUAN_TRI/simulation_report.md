@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 13:19:15, 26/11/2026  
+**Thời điểm thực thi:** 14:17:33, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,11 +10,11 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **151** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **151** | 100% | ✅ Đạt |
-| **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
+| **Tổng số bài kiểm thử** | **154** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **153** | 100% | ✅ Đạt |
+| **Số bài FAIL (Thất bại)** | **1** | **0** | ❌ Cần khắc phục |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
-| **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
+| **Tỷ lệ vượt qua (Pass Rate)** | **99.4%** | **100.0%** | ❌ Không đạt |
 
 ---
 
@@ -70,12 +70,13 @@
 - **[PASS]** `Cú pháp JavaScript: src/seaweedGame.js`
 - **[PASS]** `Cú pháp JavaScript: src/selling.js`
 - **[PASS]** `Cú pháp JavaScript: src/state.js`
+- **[PASS]** `Cú pháp JavaScript: src/tutorial.js`
 - **[PASS]** `Cú pháp JavaScript: src/world.js`
 - **[PASS]** `Cú pháp JavaScript: server.js`
 - **[PASS]** `Cú pháp JavaScript: server/server.js`
 - **[PASS]** `Đồ thị Module Import/Export: 100% đường dẫn tệp hợp lệ`
 - **[PASS]** `Liên kết HTML-JS: Đầy đủ 46 ID giao diện cốt lõi (Bao gồm Touch Controls & Reset)`
-- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (10 nút) có type="button"`
+- **[PASS]** `Phòng thủ UI: 100% thẻ <button> tĩnh (12 nút) có type="button"`
 - **[PASS]** `Phòng thủ CSS Mobile & iPad: Cấu hình touch-action: none, user-select: none và Responsive Media Queries hoàn chỉnh`
 - **[PASS]** `Kiến trúc Canvas-DOM: Không gọi innerHTML trong vòng lặp loop() 60fps`
 - **[PASS]** `Giao diện Smartphone: .phone-tab-content-wrapper cấu hình overflow-y: auto chuẩn`
@@ -137,7 +138,7 @@
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: One-Shot Trigger 100% trừ phạt đúng 1 lần, reset heat=0, đóng sạp, vòng lặp chạy mượt & nhân vật di chuyển bình thường`
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() chạy 100% ổn định mượt mà qua ngưỡng phạt 100%, canMove=true không bao giờ đơ game`
 - **[PASS]** `Mô phỏng Ô Vạch Xanh Trường Học: Đứng tâm (790, 625) bán 10s an toàn 100%, huy hiệu xanh sáng, 0 lần bị phạt, tiền tăng chuẩn giá 20.000đ`
-- **[PASS]** `Mô phỏng Khôi Phục Khách Hàng NPC: Mở sạp 5s có >= 2 khách xuất hiện, khách tới sát sạp (<80px) có bong bóng gọi món 20k/22k/25k, bán giảm kho đúng 1 nắm và tăng tiền chuẩn xác`
+- **[FAIL]** `Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại` - *{"totalSpawned":4,"customerArrivedAtStall":true,"renderWithoutError":true,"sellSuccess":false,"inventoryDecreased":false,"moneyDiff":115500,"happyCustomerOnigiri":false}*
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Cấu hình ban đầu chuẩn xác (TP.HCM mở sẵn Cấp 1, 3 tỉnh sẵn sàng mở rộng)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở Đắk Lắk khi chưa đạt Level 8 (dù có 20tr trong ví)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở chi nhánh khi không đủ 15.000.000đ (ví không bị trừ âm)`
@@ -206,6 +207,8 @@
 - **[PASS]** `Sổ Tay Tinh Thông 15 Vị: Theo dõi trọn bộ 15 vị Cơm Nắm chuẩn ISO & ATVSTP, tự động mở khóa Sao Tinh Thông và buff tốc độ + tip VIP`
 - **[PASS]** `Thăm Xưởng Bạn Bè & Tiếp Lửa Dây Chuyền: Cooldown 2 giờ, thưởng người giúp +15.000đ & +10 Uy Tín, rút ngắn ngay 20% thời gian nấu của mẻ cơm`
 - **[PASS]** `Giao Diện Đế Chế Bước 2B: Tab Chi Nhánh có Quick-Nav & Địa chỉ, 3 Modal (Điểm Danh 7 Ngày, Sổ Tay Tinh Thông 15 Vị, Thăm Xưởng & Quầy Ký Gửi) hiển thị sắc nét`
+- **[PASS]** `Mô phỏng Bán Hàng Sạp & Tự Động Phục Vụ: Nút #btnQuickSellStall hiển thị chuẩn, click bán ngay cộng tiền & đổi vị tự động khi hết đúng vị, tự động phục vụ sau 1.5s, cảnh báo khi hết cơm và chuyển hướng vào Bếp mượt mà`
+- **[PASS]** `Mô phỏng Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang: Chạy mượt mà 5 bước (Vườn -> Bếp ISO -> Vạch Xanh -> Bán Sạp -> +100k Vốn), nút Bỏ Qua và nút 📖 Hướng Dẫn HUD hoạt động chuẩn xác 100%`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

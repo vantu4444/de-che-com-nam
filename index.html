@@ -115,6 +115,10 @@
                     </div>
 
                     <div class="hud-actions-group">
+                        <button type="button" id="btnOpenTutorialGuide" class="hud-btn-action hud-btn-round" title="Xem Cẩm Nang & Hướng Dẫn Tân Thủ">
+                            <span class="hud-btn-icon">📖</span>
+                            <span class="hud-btn-text">Hướng Dẫn</span>
+                        </button>
                         <button type="button" id="btnToggleAudio" class="hud-btn-action hud-btn-round" title="Bật/Tắt âm thanh ASMR">
                             <span class="hud-btn-icon" id="hudAudioIcon">🔊</span>
                             <span class="hud-btn-text">Âm Thanh</span>
@@ -184,6 +188,14 @@
             </div>
         </div>
 
+        <!-- 2.2. Nút Bán Cho Khách Trực Tiếp Khi Mở Sạp (Tối ưu Mobile & Desktop) -->
+        <div id="quickSellStallContainer" class="quick-sell-stall-container hidden">
+            <button type="button" id="btnQuickSellStall" class="btn-quick-sell-stall" title="Bán ngay cho khách đang chờ (Phím Space)">
+                <span class="qss-icon" id="qssIcon">🍙</span>
+                <span class="qss-text" id="qssText">Bán Cho Khách (0 chờ)</span>
+            </button>
+        </div>
+
         <!-- 3. Thông báo tương tác khu vực -->
         <div id="proximityPrompt" class="proximity-banner hidden">
             <!-- Nội dung tự động cập nhật: "Nhấn E để vào [Tên khu vực]" -->
@@ -220,6 +232,10 @@
         <div id="pvpChallengeDialog" class="pvp-challenge-dialog-layer hidden"></div>
         <div id="floatingChatWidget" class="floating-chat-preview"></div>
         <div id="onlineToastNotification" class="online-toast-notification"></div>
+
+        <!-- 11. Hệ thống Thẻ Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp -->
+        <div id="tutorialCardContainer" class="tutorial-card-container hidden"></div>
+        <div id="tutorialGuideModal" class="tutorial-guide-modal-layer hidden"></div>
     </div>
 
     <!-- Nạp Three.js 3D Engine (CDN với Fallback tự động an toàn) -->

@@ -1081,6 +1081,10 @@ class GameState {
         this.lastHelpedFriends = {};
         this.friendConsignments = [];
         this.speedBoostExpiry = 0;
+
+        // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC]
+        this.tutorialCompleted = false;
+        this.tutorialStep = 1; // 1: Vườn, 2: Bếp, 3: Vạch Xanh, 4: Bán Sạp, 5: Đế Chế
     }
 
     onUpdate(fn) {
@@ -2363,6 +2367,29 @@ class GameState {
         return removedItem;
     }
 
+    // Lấy 1 nắm cơm bất kỳ còn lại trong thùng xe (ưu tiên cơm 5 sao) khi khách đổi vị
+    removeRiceBallAny() {
+        if (!this.inventory || this.inventory.length === 0) {
+            return null;
+        }
+
+        let selectedIndex = 0;
+        for (let i = 0; i < this.inventory.length; i++) {
+            if (this.inventory[i].stars === 5) {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        const [removedItem] = this.inventory.splice(selectedIndex, 1);
+        if (removedItem && removedItem.filling) {
+            this.recordFillingSold(removedItem.filling, 1);
+        }
+        this.notify();
+        this.save();
+        return removedItem;
+    }
+
     getFillingCount(fillingId) {
         const resolvedTarget = resolveFillingId(fillingId);
         return this.inventory.filter(item => resolveFillingId(item.filling) === resolvedTarget).length;
@@ -3015,7 +3042,9 @@ class GameState {
                 dailyAttendance: this.dailyAttendance,
                 fillingMastery: this.fillingMastery,
                 lastHelpedFriends: this.lastHelpedFriends,
-                speedBoostExpiry: this.speedBoostExpiry || 0
+                speedBoostExpiry: this.speedBoostExpiry || 0,
+                tutorialCompleted: Boolean(this.tutorialCompleted),
+                tutorialStep: typeof this.tutorialStep === 'number' ? this.tutorialStep : 1
             };
             localStorage.setItem(this.saveKey, JSON.stringify(data));
         } catch (e) {
@@ -3174,6 +3203,12 @@ class GameState {
             }
             if (typeof data.speedBoostExpiry === 'number') {
                 this.speedBoostExpiry = data.speedBoostExpiry;
+            }
+            if (data.tutorialCompleted !== undefined) {
+                this.tutorialCompleted = Boolean(data.tutorialCompleted);
+            }
+            if (typeof data.tutorialStep === 'number') {
+                this.tutorialStep = Math.max(1, Math.min(5, data.tutorialStep));
             }
             if (data.lastActiveTimestamp) {
                 this.lastActiveTimestamp = data.lastActiveTimestamp;
@@ -3537,6 +3572,40 @@ class GameState {
         }
         this.updateKitchenSlots();
         this.kitchenPressUpgrade = Boolean(this.kitchenPressUpgrade);
+    }
+
+    // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC]
+    setTutorialStep(step) {
+        this.tutorialStep = Math.max(1, Math.min(5, step));
+        this.save();
+        this.notify({ tutorialUpdated: true, step: this.tutorialStep });
+    }
+
+    completeTutorialStep(step) {
+        if (this.tutorialStep === step) {
+            if (step >= 5) {
+                this.tutorialCompleted = true;
+                this.tutorialStep = 5;
+            } else {
+                this.tutorialStep = step + 1;
+            }
+            this.save();
+            this.notify({ tutorialUpdated: true, step: this.tutorialStep, completed: this.tutorialCompleted });
+        }
+    }
+
+    skipTutorial() {
+        this.tutorialCompleted = true;
+        this.tutorialStep = 5;
+        this.save();
+        this.notify({ tutorialUpdated: true, skipped: true, completed: true });
+    }
+
+    resetTutorial() {
+        this.tutorialCompleted = false;
+        this.tutorialStep = 1;
+        this.save();
+        this.notify({ tutorialUpdated: true, reset: true });
     }
 }
 

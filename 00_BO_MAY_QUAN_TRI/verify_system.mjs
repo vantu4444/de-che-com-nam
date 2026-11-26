@@ -942,6 +942,7 @@ async function runInteractiveSimulationSuite() {
     let characterRenderer;
     let OnigiriServer;
     let SERVER_CONFIG;
+    let TutorialManager;
     try {
         ({ state } = await import(path.join(ROOT_DIR, 'src', 'state.js')));
         ({ audio } = await import(path.join(ROOT_DIR, 'src', 'audio.js')));
@@ -957,6 +958,7 @@ async function runInteractiveSimulationSuite() {
         ({ onlineUI } = await import(path.join(ROOT_DIR, 'src', 'onlineUI.js')));
         ({ characterRenderer } = await import(path.join(ROOT_DIR, 'src', 'characterRenderer.js')));
         ({ city3D } = await import(path.join(ROOT_DIR, 'src', 'city3D.js')));
+        ({ TutorialManager } = await import(path.join(ROOT_DIR, 'src', 'tutorial.js')));
         ({ OnigiriServer, SERVER_CONFIG } = await import(path.join(ROOT_DIR, 'server', 'server.js')));
 
         // Giả lập GameApp tương ứng src/main.js
@@ -1108,6 +1110,22 @@ async function runInteractiveSimulationSuite() {
                         if (sellingManager.isOpen) sellingManager.sellQuick();
                     };
                 }
+
+                const btnQuickSellStall = doc.getElementById('btnQuickSellStall');
+                if (btnQuickSellStall) {
+                    btnQuickSellStall.onclick = () => {
+                        if (!sellingManager.isOpen) return;
+                        const hasRice = Boolean(state.inventory && state.inventory.length > 0);
+                        if (!hasRice) {
+                            this.isKitchenOpen = true;
+                            if (this.kitchen && typeof this.kitchen.open === 'function') {
+                                this.kitchen.open();
+                            }
+                            return;
+                        }
+                        sellingManager.sellQuick();
+                    };
+                }
             }
 
             switchCity(cityId) {
@@ -1241,6 +1259,56 @@ async function runInteractiveSimulationSuite() {
                     const labelEl = stallBtn.querySelector ? stallBtn.querySelector('.touch-btn-label') : null;
                     if (labelEl) {
                         labelEl.textContent = sellingManager.isOpen ? 'Đóng Sạp' : 'Mở Sạp';
+                    }
+                }
+
+                // Cập nhật Nút Bán Cho Khách Trực Tiếp Khi Mở Sạp
+                const quickSellContainer = doc.getElementById('quickSellStallContainer');
+                const btnQuickSellStall = doc.getElementById('btnQuickSellStall');
+                const qssIcon = doc.getElementById('qssIcon');
+                const qssText = doc.getElementById('qssText');
+
+                if (quickSellContainer && btnQuickSellStall) {
+                    const isAnyModalActive = Boolean(
+                        this.isKitchenOpen || this.isMarketOpen || this.questManager?.isOpen ||
+                        seaweedGame?.isOpen || (onlineUI && typeof onlineUI.isAnyModalOpen === 'function' && onlineUI.isAnyModalOpen())
+                    );
+
+                    if (sellingManager.isOpen && !isAnyModalActive) {
+                        if (quickSellContainer.classList.contains('hidden')) {
+                            quickSellContainer.classList.remove('hidden');
+                        }
+                        const waitingCount = (sellingManager.customers || []).filter(c => c.status === 'waiting').length;
+                        const hasRice = Boolean(state.inventory && state.inventory.length > 0);
+                        const comboCount = sellingManager.comboCount || 1;
+
+                        if (!hasRice) {
+                            btnQuickSellStall.classList.add('no-rice');
+                            btnQuickSellStall.classList.remove('has-waiting');
+                            if (qssIcon && qssIcon.textContent !== '⚠️') qssIcon.textContent = '⚠️';
+                            if (qssText && qssText.textContent !== 'Hết Cơm! Vào Bếp Nấu Thêm') {
+                                qssText.textContent = 'Hết Cơm! Vào Bếp Nấu Thêm';
+                            }
+                        } else {
+                            btnQuickSellStall.classList.remove('no-rice');
+                            if (waitingCount > 0) {
+                                btnQuickSellStall.classList.add('has-waiting');
+                            } else {
+                                btnQuickSellStall.classList.remove('has-waiting');
+                            }
+                            if (qssIcon && qssIcon.textContent !== '🍙') qssIcon.textContent = '🍙';
+                            const comboStr = comboCount > 1 ? ` 🔥x${comboCount}` : '';
+                            const label = waitingCount > 0 
+                                ? `Bán Cho Khách (${waitingCount} chờ)${comboStr}`
+                                : `Bán Cho Khách${comboStr}`;
+                            if (qssText && qssText.textContent !== label) {
+                                qssText.textContent = label;
+                            }
+                        }
+                    } else {
+                        if (!quickSellContainer.classList.contains('hidden')) {
+                            quickSellContainer.classList.add('hidden');
+                        }
                     }
                 }
             }
@@ -3797,6 +3865,249 @@ async function runInteractiveSimulationSuite() {
 
     } catch (errEmpireStep2B) {
         logger.fail('Nâng Cấp Đế Chế Bước 2B: Ngoại lệ kiểm thử', errEmpireStep2B.message);
+    }
+
+    // -------------------------------------------------------------------------
+    // BƯỚC 6.9: Kịch Bản Kiểm Thử Tự Động Phục Vụ & Nút Bán Cho Khách Trực Tiếp
+    // -------------------------------------------------------------------------
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Tự Động Phục Vụ Thông Minh & Nút Bán Cho Khách (#btnQuickSellStall)...', COLORS.magenta);
+    try {
+        // Đặt nhân vật tại vị trí vạch xanh Cổng trường
+        gameApp.player.x = 790;
+        gameApp.player.y = 625;
+
+        // Chuẩn bị kho có 2 nắm cơm vị gà nướng Teriyaki
+        state.inventory = [
+            { id: 'rice_test_a', filling: 'chicken_teriyaki', freshness: 100, stars: 5 },
+            { id: 'rice_test_b', filling: 'chicken_teriyaki', freshness: 95, stars: 4 }
+        ];
+
+        // 1. Mở sạp
+        sellingManager.openSelling(schoolRegion, gameApp.player);
+
+        const quickSellContainer = doc.getElementById('quickSellStallContainer');
+        const btnQuickSellStall = doc.getElementById('btnQuickSellStall');
+        const qssText = doc.getElementById('qssText');
+
+        gameApp.updatePrompt();
+
+        // Kiểm tra nút hiển thị khi mở sạp
+        const isContainerVisibleOnOpen = Boolean(quickSellContainer && !quickSellContainer.classList.contains('hidden'));
+
+        // Giả lập 1 khách hàng đang đứng chờ (nhưng gọi món crab_egg_mayo mà trong kho không có)
+        const mockWaitingCustomer = {
+            id: 'cust_test_wait_1',
+            variant: 'student',
+            colorVariation: 1,
+            recipeId: 'crab_egg_mayo', // Món khác với kho (để kiểm tra đổi vị tự động)
+            x: sellingManager.stallX + 50,
+            y: sellingManager.stallY + 6,
+            facing: -1,
+            speed: 2.2,
+            stepCycle: 0,
+            status: 'waiting',
+            queueIndex: 0,
+            patience: 100,
+            decayRate: 0.07,
+            leaveTargetX: sellingManager.stallX + 250,
+            leaveTargetY: sellingManager.stallY + 20,
+            isHoldingOnigiri: false,
+            happyMessage: null
+        };
+        sellingManager.customers = [mockWaitingCustomer];
+
+        // Cập nhật giao diện
+        gameApp.updatePrompt();
+        const textWithWaiting = qssText ? qssText.textContent : '';
+        const hasWaitingClass = Boolean(btnQuickSellStall && btnQuickSellStall.classList.contains('has-waiting'));
+
+        // 2. Thao tác Click Nút Bán Cho Khách (#btnQuickSellStall)
+        const prevMoneyBeforeClick = state.money;
+        const prevInvBeforeClick = state.inventory.length;
+
+        // Kích hoạt click
+        btnQuickSellStall.click();
+
+        const moneyAfterClick = state.money;
+        const invAfterClick = state.inventory.length;
+        const clickSellSuccess = (invAfterClick === prevInvBeforeClick - 1) && (moneyAfterClick > prevMoneyBeforeClick);
+        const autoChangedFillingSuccess = Boolean(mockWaitingCustomer.isHoldingOnigiri === true && mockWaitingCustomer.recipeId === 'chicken_teriyaki');
+
+        // 3. Giả lập khách thứ 2 và kiểm tra Tự Động Phục Vụ sau 90 frames (1.5s)
+        const mockWaitingCustomer2 = {
+            id: 'cust_test_wait_2',
+            variant: 'student',
+            colorVariation: 2,
+            recipeId: 'chicken_teriyaki',
+            x: sellingManager.stallX + 50,
+            y: sellingManager.stallY + 6,
+            facing: -1,
+            speed: 2.2,
+            stepCycle: 0,
+            status: 'waiting',
+            queueIndex: 0,
+            patience: 100,
+            decayRate: 0.07,
+            leaveTargetX: sellingManager.stallX + 250,
+            leaveTargetY: sellingManager.stallY + 20,
+            isHoldingOnigiri: false,
+            happyMessage: null
+        };
+        sellingManager.customers = [mockWaitingCustomer2];
+
+        // Chạy 95 frames để autoServeTimer kích hoạt (ngưỡng 90)
+        for (let af = 0; af < 95; af++) {
+            sellingManager.update(gameApp.player, testWorld);
+        }
+
+        const autoServedCustomer2 = Boolean(mockWaitingCustomer2.isHoldingOnigiri === true);
+        const invEmptyAfterAuto = state.inventory.length === 0;
+
+        // 4. Kiểm tra trạng thái Hết Cơm (0 nắm) trên nút
+        gameApp.updatePrompt();
+        const isNoRiceClass = Boolean(btnQuickSellStall && btnQuickSellStall.classList.contains('no-rice'));
+        const isNoRiceText = Boolean(qssText && qssText.textContent.includes('Hết Cơm'));
+
+        // Click nút khi hết cơm -> Tự động mở Bếp ASMR
+        btnQuickSellStall.click();
+        const isKitchenOpenedOnEmpty = Boolean(
+            gameApp.isKitchenOpen || 
+            (gameApp.kitchen && gameApp.kitchen.container && !gameApp.kitchen.container.classList.contains('hidden'))
+        );
+        gameApp.isKitchenOpen = false;
+        if (gameApp.kitchen && typeof gameApp.kitchen.close === 'function') {
+            gameApp.kitchen.close();
+        }
+
+        // Đóng sạp -> Nút bán phải tự ẩn
+        sellingManager.closeSelling();
+        gameApp.updatePrompt();
+        const isContainerHiddenOnClose = Boolean(quickSellContainer && quickSellContainer.classList.contains('hidden'));
+
+        if (isContainerVisibleOnOpen && hasWaitingClass && clickSellSuccess && autoChangedFillingSuccess &&
+            autoServedCustomer2 && invEmptyAfterAuto && isNoRiceClass && isNoRiceText &&
+            isKitchenOpenedOnEmpty && isContainerHiddenOnClose) {
+            logger.pass('Mô phỏng Bán Hàng Sạp & Tự Động Phục Vụ: Nút #btnQuickSellStall hiển thị chuẩn, click bán ngay cộng tiền & đổi vị tự động khi hết đúng vị, tự động phục vụ sau 1.5s, cảnh báo khi hết cơm và chuyển hướng vào Bếp mượt mà');
+        } else {
+            logger.fail('Mô phỏng Bán Hàng Sạp & Tự Động Phục Vụ: Thất bại', JSON.stringify({
+                isContainerVisibleOnOpen, hasWaitingClass, textWithWaiting, clickSellSuccess,
+                autoChangedFillingSuccess, autoServedCustomer2, invEmptyAfterAuto, isNoRiceClass,
+                isNoRiceText, isKitchenOpenedOnEmpty, isContainerHiddenOnClose
+            }));
+        }
+    } catch (errStallServe) {
+        logger.fail('Mô phỏng Bán Hàng Sạp & Tự Động Phục Vụ: Ngoại lệ', errStallServe.message);
+    }
+
+    // -------------------------------------------------------------------------
+    // BƯỚC 6.95: Mô Phỏng Hệ Thống Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp
+    // -------------------------------------------------------------------------
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Hệ Thống Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang Khởi Nghiệp...', COLORS.magenta);
+    try {
+        // 1. Reset tutorial về bước 1
+        state.resetTutorial();
+
+        const tutContainer = doc.getElementById('tutorialCardContainer');
+        const guideModal = doc.getElementById('tutorialGuideModal');
+        const btnOpenGuide = doc.getElementById('btnOpenTutorialGuide');
+
+        // Khởi tạo tutorialManager trong test
+        const tutManager = new TutorialManager(gameApp);
+        tutManager.init();
+
+        // Kiểm tra thẻ hướng dẫn hiển thị ở bước 1
+        const isCardVisibleStep1 = Boolean(tutContainer && !tutContainer.classList.contains('hidden'));
+        const titleStep1 = tutContainer?.querySelector('.tc-title')?.textContent || '';
+        const isStep1TitleOk = titleStep1.includes('Bước 1') || titleStep1.includes('Vườn');
+
+        // Bấm nút hành động Bước 1 -> chuyển sang Bước 2
+        const btnAction = tutContainer?.querySelector('#btnTutorialAction');
+        if (btnAction) btnAction.click();
+
+        const isStep2Ok = state.tutorialStep === 2;
+        tutManager.renderStepCard();
+        const titleStep2 = tutContainer?.querySelector('.tc-title')?.textContent || '';
+        const isStep2TitleOk = titleStep2.includes('Bước 2') || titleStep2.includes('Bếp');
+
+        // Bấm nút hành động Bước 2 -> chuyển sang Bước 3
+        const btnAction2 = tutContainer?.querySelector('#btnTutorialAction');
+        if (btnAction2) btnAction2.click();
+
+        const isStep3Ok = state.tutorialStep === 3;
+        tutManager.renderStepCard();
+        // Kiểm tra vẽ mũi tên dẫn đường Bước 3 trên Canvas không có ngoại lệ
+        let wayfindingRenderOk = true;
+        try {
+            const mockCtx = gameApp.canvas.getContext('2d');
+            tutManager.renderWayfinding(mockCtx, { x: 0, y: 0 }, gameApp.player.x, gameApp.player.y);
+        } catch (eWf) {
+            wayfindingRenderOk = false;
+        }
+
+        // Bấm nút hành động Bước 3 -> chuyển sang Bước 4
+        const btnAction3 = tutContainer?.querySelector('#btnTutorialAction');
+        if (btnAction3) btnAction3.click();
+
+        const isStep4Ok = state.tutorialStep === 4;
+        tutManager.renderStepCard();
+
+        // Bấm nút hành động Bước 4 -> chuyển sang Bước 5
+        const btnAction4 = tutContainer?.querySelector('#btnTutorialAction');
+        if (btnAction4) btnAction4.click();
+
+        const isStep5Ok = state.tutorialStep === 5;
+        tutManager.renderStepCard();
+
+        // Bấm nhận thưởng Bước 5: +100.000đ vốn và hoàn tất
+        const prevMoneyBeforeReward = state.money;
+        const btnAction5 = tutContainer?.querySelector('#btnTutorialAction');
+        if (btnAction5) btnAction5.click();
+
+        const isRewardGiven = state.money >= prevMoneyBeforeReward + 100000;
+        const isTutorialCompleted = state.tutorialCompleted === true;
+        const isCardHiddenAfterComplete = Boolean(tutContainer && tutContainer.classList.contains('hidden'));
+
+        // 2. Kiểm tra Nút Bỏ Qua (Skip)
+        state.resetTutorial();
+        tutManager.renderStepCard();
+        const btnSkip = tutContainer?.querySelector('#btnTutorialSkip');
+        let skipOk = false;
+        if (btnSkip) {
+            btnSkip.click();
+            skipOk = state.tutorialCompleted === true && Boolean(tutContainer.classList.contains('hidden'));
+        }
+
+        // 3. Kiểm tra Modal Cẩm Nang Khởi Nghiệp (📖 Hướng Dẫn)
+        if (btnOpenGuide) btnOpenGuide.click();
+        const isGuideModalOpen = Boolean(guideModal && !guideModal.classList.contains('hidden'));
+        const guideGridItems = guideModal?.querySelectorAll('.tgd-step-item')?.length || 0;
+        const has5GuideSteps = guideGridItems === 5;
+
+        // Bấm Chạy Lại Hướng Dẫn Từng Bước từ Modal Cẩm Nang
+        const btnRestartFromGuide = guideModal?.querySelector('#btnRestartTutorialSteps');
+        let restartOk = false;
+        if (btnRestartFromGuide) {
+            btnRestartFromGuide.click();
+            restartOk = state.tutorialCompleted === false && state.tutorialStep === 1 && !tutContainer.classList.contains('hidden');
+        }
+
+        // Đóng modal cẩm nang
+        tutManager.closeGuideModal();
+        const isGuideModalClosed = Boolean(guideModal && guideModal.classList.contains('hidden'));
+
+        if (isCardVisibleStep1 && isStep1TitleOk && isStep2Ok && isStep3Ok && wayfindingRenderOk &&
+            isStep4Ok && isStep5Ok && isRewardGiven && isTutorialCompleted && isCardHiddenAfterComplete &&
+            skipOk && isGuideModalOpen && has5GuideSteps && restartOk && isGuideModalClosed) {
+            logger.pass('Mô phỏng Hướng Dẫn Tân Thủ 5 Bước & Cẩm Nang: Chạy mượt mà 5 bước (Vườn -> Bếp ISO -> Vạch Xanh -> Bán Sạp -> +100k Vốn), nút Bỏ Qua và nút 📖 Hướng Dẫn HUD hoạt động chuẩn xác 100%');
+        } else {
+            logger.fail('Mô phỏng Hướng Dẫn Tân Thủ 5 Bước: Thất bại', JSON.stringify({
+                isCardVisibleStep1, isStep1TitleOk, isStep2Ok, isStep3Ok, wayfindingRenderOk,
+                isStep4Ok, isStep5Ok, isRewardGiven, isTutorialCompleted, isCardHiddenAfterComplete,
+                skipOk, isGuideModalOpen, has5GuideSteps, restartOk, isGuideModalClosed
+            }));
+        }
+    } catch (errTutTest) {
+        logger.fail('Mô phỏng Hướng Dẫn Tân Thủ: Ngoại lệ', errTutTest.message);
     }
 
     // -------------------------------------------------------------------------

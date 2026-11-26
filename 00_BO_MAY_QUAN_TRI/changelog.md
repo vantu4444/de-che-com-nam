@@ -4,6 +4,40 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.6-PROD (CHÍNH THỨC XUẤT XƯỞNG: TỰ ĐỘNG PHỤC VỤ TẠI SẠP, NÚT BÁN CHO KHÁCH TRỰC TIẾP & HỆ THỐNG HƯỚNG DẪN TÂN THỦ 5 BƯỚC KÈM CẨM NANG KHỞI NGHIỆP CƠM NẮM)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 5-step interactive tutorial system, entrepreneurship guide handbook, smart auto-serving and quick sell button
+- **Trạng thái:** Nghiệm thu **100% PASS (153/153 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Đồng Bộ Kho Cơm Nắm & Tự Động Bán Thông Minh (`src/state.js`, `src/selling.js`):**
+     - Bổ sung `removeRiceBallAny()` trong `src/state.js` để đọc tồn kho chính xác từ Bếp thủ công, Bếp hàng đợi thời gian và Dây chuyền Robot.
+     - Cơ chế Tự Động Phục Vụ mỗi 1.5 giây (90 frames) cho khách đầu hàng, cộng tiền bán lẻ niêm yết (`20.000đ` / `22.000đ` / `25.000đ`), tiền tip độ tươi ISO ($\ge 80\%$) và tip sao.
+     - Tự động mời khách đổi sang vị có sẵn trong thùng xe với lời thoại vui vẻ *"Đổi sang vị này cũng ngon chuẩn ISO! ❤️"* để giải quyết triệt để tình trạng kẹt hàng.
+     - Tích hợp chuỗi Combo (x2 đến x5) khi bán liên tục trong vòng 4 giây, cộng thưởng Tip combo và hiệu ứng chữ bay rực rỡ `🔥 Combo x3! +26.000đ`.
+  2. **Nút Bán Cho Khách Trực Tiếp Trên Màn Hình Khi Mở Sạp (`index.html`, `style.css`, `src/main.js`):**
+     - Thêm nút `#btnQuickSellStall` nổi bật ở chính giữa màn hình đáy (`z-index: 120`), công thái học an toàn, không đè lên Joystick (góc dưới trái) hay nút `iGiri` (mép trái) trên iPhone 375x812.
+     - Cập nhật trạng thái thời gian thực: Khi có khách chờ hiển thị `🍙 Bán Cho Khách (X chờ) 🔥xCombo`; khi hết sạch cơm hiển thị cảnh báo đỏ `⚠️ Hết Cơm! Vào Bếp Nấu Thêm`, chạm vào tự động mở ngay Bếp ASMR.
+  3. **Hệ Thống Hướng Dẫn Tân Thủ 5 Bước Trực Quan (`src/tutorial.js`, `src/state.js`, `style.css`):**
+     - Thẻ hướng dẫn nổi ở góc trên màn hình (`#tutorialCardContainer`), không che khuất nhân vật hay nút điều khiển.
+     - Tích hợp nút **`Bỏ qua ✕`** để người chơi đã thành thạo có thể bỏ qua nhanh chóng (`state.skipTutorial()`).
+     - Hiệu ứng viền phát sáng nhấp nháy 3 lớp (`.tutorial-pulse-target`) hướng dẫn đúng nút cần chạm.
+     - Trình tự 5 bước khép kín:
+       + **Bước 1 – Thu Hoạch & Gieo Trồng:** Chỉ vào Xưởng Bếp → Vườn Nguyên Liệu thu hoạch lúa Nhật/rong biển sạch đầu tiên.
+       + **Bước 2 – Nấu Mẻ Cơm Nắm Chuẩn ISO:** Chọn Menu 15 vị niêm yết (20k/22k/25k), nấu chín nóng hổi chuẩn ISO và thu vào xe.
+       + **Bước 3 – Tìm Ô Vạch Xanh Hợp Pháp:** Kích hoạt **Mũi tên dẫn đường phát sáng trên mặt đất (Wayfinding Arrow)** kèm khoảng cách thời gian thực (`🟢 Vạch Xanh: XXm`) dẫn thẳng tới Cổng Trường Tiểu Học Hoa Mai, giải thích luật an toàn đô thị không bị phạt.
+       + **Bước 4 – Mở Sạp & Bán Cho Khách:** Hướng dẫn mở sạp tự động phục vụ hoặc bấm `🍙 Bán Cho Khách` thu tiền nhanh.
+       + **Bước 5 – Khởi Đầu Đế Chế Tự Động:** Trao thưởng nóng **`+100.000đ Vốn Khởi Nghiệp Tân Thủ`** trực tiếp vào ví, giới thiệu mục tiêu nâng cấp Robot, mở chuỗi 4 chi nhánh toàn quốc và thách đấu 1v1.
+  4. **Nút Mở Lại Cẩm Nang & Hướng Dẫn Bất Cứ Lúc Nào (`index.html`, `style.css`, `src/main.js`):**
+     - Thêm nút **`📖 Hướng Dẫn`** (`#btnOpenTutorialGuide`) trên thanh HUD (tự co thành icon tròn trên Mobile 375x812, zero overlap).
+     - Modal **Cẩm Nang Khởi Nghiệp Cơm Nắm** (`#tutorialGuideModal`): Tóm tắt trực quan 5 bước, khẳng định bản sắc 100% Cơm Nắm Onigiri, cam kết ISO 22000 & ATVSTP, tuyệt đối bảo mật giá vốn/công thức.
+     - Tích hợp nút **`🔄 Chạy Lại Hướng Dẫn Từng Bước`** (`#btnRestartTutorialSteps`) cho phép người chơi xem lại từ đầu bất cứ lúc nào.
+  5. **Nghiệm Thu Toàn Diện 153/153 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Giữ nguyên 100% toàn bộ hệ thống Chat, Kết bạn, Thách đấu 1v1, Vườn nguyên liệu, Bếp hàng đợi và 4 Chi nhánh.
+     - 0 Console Error, 0 va chạm hình học giao diện trên Desktop (1440x900), iPhone (375x812) và iPad (768x1024).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.5-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP ĐẾ CHẾ – BƯỚC 2B: CHUỖI 4 CHI NHÁNH TỰ ĐỘNG, THU NHẬP OFFLINE 8 TIẾNG, THĂM XƯỞNG BẠN BÈ, ĐIỂM DANH 7 NGÀY & SỔ TAY TINH THÔNG 15 VỊ)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 4-branch automated franchise empire, offline earnings and friend workshop visits

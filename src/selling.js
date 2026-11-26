@@ -53,6 +53,12 @@ export class SellingManager {
         this.lastPassiveCycleTime = Date.now();
         this.passiveCycleInterval = 15000;
 
+        // [TỰ ĐỘNG BÁN THÔNG MINH & COMBO TẠI SẠP]
+        this.autoServeTimer = 0;
+        this.autoServeInterval = 90; // 90 frames (~1.5 giây ở 60fps)
+        this.comboCount = 0;
+        this.lastServeTime = 0;
+
         // Lắng nghe sự kiện Level Up từ state
         state.onUpdate((s, extra) => {
             if (extra && extra.leveledUp) {
@@ -124,6 +130,16 @@ export class SellingManager {
         this.stallX = player.x;
         this.stallY = player.y;
         this.customers = [];
+        this.autoServeTimer = 0;
+        this.comboCount = 0;
+        this.lastServeTime = 0;
+
+        const currentRice = state.inventory ? state.inventory.length : 0;
+        if (currentRice === 0) {
+            this.showToast('⚠️ Hết sạch cơm trong thùng! Hãy về Xưởng nấu thêm.');
+        } else {
+            this.showToast(`🏪 Đã mở sạp! Trong thùng có ${currentRice} nắm cơm chuẩn ISO.`);
+        }
 
         const timeInfo = state.getTimePeriodInfo();
         const spotId = (spot.regionId || spot.id || '');
@@ -508,6 +524,21 @@ export class SellingManager {
                 }
             }
         }
+
+        // [CƠ CHẾ TỰ ĐỘNG PHỤC VỤ THÔNG MINH - MỖI 1.5 GIÂY / KHÁCH]
+        const waitingCustomer = this.customers.find(c => c.status === 'waiting' && c.queueIndex === 0)
+            || this.customers.find(c => c.status === 'waiting');
+        const hasRice = Boolean(state.inventory && state.inventory.length > 0);
+
+        if (waitingCustomer && hasRice) {
+            this.autoServeTimer = (this.autoServeTimer || 0) + 1;
+            if (this.autoServeTimer >= this.autoServeInterval) {
+                this.autoServeTimer = 0;
+                this.serveCustomer(waitingCustomer);
+            }
+        } else {
+            this.autoServeTimer = 0;
+        }
     }
 
     // Tính toán tọa độ xếp hàng gọn gàng (Anti-Stacking Queue)
@@ -641,13 +672,20 @@ export class SellingManager {
         this.customers.push(newCustomer);
     }
 
-    // Bán cho khách hàng đầu tiên trong hàng (Phím Space hoặc Nút Bán Nhanh)
+    // Bán cho khách hàng đầu tiên trong hàng (Phím Space hoặc Nút Bán Cho Khách)
     sellQuick() {
         if (!this.isOpen) return false;
+        if (!state.inventory || state.inventory.length === 0) {
+            this.showToast('⚠️ Hết sạch cơm trong thùng! Hãy về Xưởng nấu thêm.');
+            try {
+                if (audio && typeof audio.playError === 'function') audio.playError();
+            } catch (e) {}
+            return false;
+        }
         const waitingCustomer = this.customers.find(c => c.status === 'waiting' && c.queueIndex === 0)
             || this.customers.find(c => c.status === 'waiting');
         if (!waitingCustomer) {
-            this.showToast('⏳ Chưa có khách nào đứng vào sạp.');
+            this.showToast('⏳ Đang đợi khách xếp hàng vào sạp...');
             return false;
         }
         return this.serveCustomer(waitingCustomer);
@@ -671,26 +709,38 @@ export class SellingManager {
         return false;
     }
 
-    // Xử lý giao dịch bán hàng cho khách
+    // Xử lý giao dịch bán hàng cho khách (hỗ trợ Tự Động Đổi Vị và Chuỗi Combo)
     serveCustomer(cust) {
-        const fillingConfig = FILLINGS[cust.recipeId] || FILLINGS.crab_egg_mayo;
+        // 1. Kiểm tra kho hàng: Lấy đúng vị hoặc tự động đổi sang vị có sẵn
+        let wasRecipeChanged = false;
+        let riceItem = state.removeRiceBallByFilling(cust.recipeId);
 
-        // 1. Kiểm tra kho hàng
-        const riceItem = state.removeRiceBallByFilling(cust.recipeId);
+        if (!riceItem && state.inventory && state.inventory.length > 0) {
+            riceItem = state.removeRiceBallAny();
+            if (riceItem) {
+                cust.recipeId = riceItem.filling;
+                wasRecipeChanged = true;
+            }
+        }
 
         if (!riceItem) {
-            // Hết hàng: Thông báo nhẹ, âm thanh cảnh báo, tuyệt đối không trừ kho âm!
-            this.showToast(`⚠️ Hết ${fillingConfig.name} rồi! Về Xưởng Bếp làm thêm nhé.`);
-            audio.playError();
+            // Hết sạch cơm: Thông báo nhẹ, âm thanh cảnh báo, tuyệt đối không trừ kho âm!
+            this.showToast('⚠️ Hết sạch cơm trong thùng! Hãy về Xưởng nấu thêm.');
+            try {
+                if (audio && typeof audio.playError === 'function') audio.playError();
+            } catch (e) {}
             return false;
         }
 
+        const fillingConfig = FILLINGS[cust.recipeId] || FILLINGS.crab_egg_mayo;
         const freshness = typeof riceItem.freshness === 'number' ? riceItem.freshness : 100;
 
         // Chuẩn ATVSTP & ISO: Dưới 40% độ tươi khách từ chối mua và bị trừ điểm Uy Tín ISO
         if (freshness < 40) {
             this.showToast(`🤢 Cơm chỉ còn ${Math.round(freshness)}% độ tươi (ôi thiu)! Khách từ chối mua & trừ 2 Uy Tín.`);
-            audio.playError();
+            try {
+                if (audio && typeof audio.playError === 'function') audio.playError();
+            } catch (e) {}
             state.reputation = Math.max(0, (state.reputation || 100) - 2);
             cust.status = 'leaving_angry';
             cust.leaveTargetX = cust.x + (cust.x > this.stallX ? 250 : -250);
@@ -703,7 +753,16 @@ export class SellingManager {
 
         const timeInfo = state.getTimePeriodInfo();
 
-        // 2. Tính tiền & Tiền tip (bảo mật: tính theo giá bán lẻ niêm yết)
+        // 2. Tính chuỗi Combo (trong vòng 4 giây giữa 2 lượt bán)
+        const now = Date.now();
+        if (this.lastServeTime && (now - this.lastServeTime) <= 4000) {
+            this.comboCount = Math.min(5, (this.comboCount || 1) + 1);
+        } else {
+            this.comboCount = 1;
+        }
+        this.lastServeTime = now;
+
+        // 3. Tính tiền & Tiền tip (bảo mật: tính theo giá bán lẻ niêm yết)
         const itemRetailPrice = fillingConfig.price || fillingConfig.basePrice || 20000;
         const retailBuff = state.permanentBuffs?.retailBonus || 0;
         const basePrice = Math.round(itemRetailPrice * state.getPriceMultiplier() * (1 + retailBuff));
@@ -718,6 +777,12 @@ export class SellingManager {
         // Thưởng 30% Tip nếu cơm 5 sao
         if (riceItem.stars === 5) {
             tip += Math.round(basePrice * 0.30);
+        }
+
+        // Thưởng chuỗi Combo (x2 đến x5)
+        if (this.comboCount > 1) {
+            const comboBonusTip = Math.round(basePrice * 0.10 * (this.comboCount - 1));
+            tip += comboBonusTip;
         }
 
         // Thưởng gấp đôi Tip nếu là khách VIP
@@ -738,13 +803,13 @@ export class SellingManager {
 
         const totalEarned = basePrice + tip;
 
-        // 3. Tính EXP
-        let expGained = fillingConfig.baseExp;
+        // 4. Tính EXP
+        let expGained = fillingConfig.baseExp || 20;
         if (cust.variant === 'vip') expGained = Math.round(expGained * 1.5);
         const expBuff = state.permanentBuffs?.expBonus || 0;
         if (expBuff > 0) expGained = Math.round(expGained * (1 + expBuff));
 
-        // 4. Cập nhật Tiền & EXP vào hệ thống RPG
+        // 5. Cập nhật Tiền & EXP vào hệ thống RPG
         state.addMoney(totalEarned);
         state.addExp(expGained);
         state.recordRevenue(basePrice, tip);
@@ -803,26 +868,32 @@ export class SellingManager {
             }
         }
 
-        // 5. Âm thanh & Hiệu ứng chữ số bay
+        // 6. Âm thanh & Hiệu ứng chữ số bay
         try {
             if (typeof audio.playCoin === 'function') audio.playCoin();
             else if (typeof audio.playCoinKeng === 'function') audio.playCoinKeng();
         } catch (eAudio) {}
 
+        const comboPrefix = this.comboCount > 1 ? `🔥 Combo x${this.comboCount}! ` : '';
         const tipText = tip > 0 ? ` (Tip +${tip.toLocaleString('vi-VN')}đ)` : '';
         this.floatingTexts.push({
             x: cust.x,
             y: cust.y - 45,
-            text: `+${totalEarned.toLocaleString('vi-VN')}đ${tipText}  +${expGained} EXP`,
-            color: cust.variant === 'vip' ? '#fbbf24' : '#22c55e',
+            text: `${comboPrefix}+${totalEarned.toLocaleString('vi-VN')}đ${tipText}  +${expGained} EXP`,
+            color: cust.variant === 'vip' ? '#fbbf24' : (this.comboCount > 1 ? '#f97316' : '#22c55e'),
             alpha: 1.0,
             vy: 0.9
         });
 
-        // 6. Khách hàng vui vẻ cầm nắm cơm rời đi
+        // 7. Khách hàng vui vẻ cầm nắm cơm rời đi
         cust.status = 'leaving_happy';
         cust.isHoldingOnigiri = true;
-        cust.happyMessage = Math.random() < 0.35 ? 'Ngon chuẩn ISO! ❤️' : (Math.random() < 0.6 ? 'Tươi nóng hổi! 🍙' : 'Tuyệt vời! ⭐');
+        if (wasRecipeChanged) {
+            cust.happyMessage = 'Đổi sang vị này cũng ngon chuẩn ISO! ❤️';
+            this.showToast(`✨ Khách vui vẻ đổi sang ${fillingConfig.name} chuẩn ISO!`);
+        } else {
+            cust.happyMessage = Math.random() < 0.35 ? 'Ngon chuẩn ISO! ❤️' : (Math.random() < 0.6 ? 'Tươi nóng hổi! 🍙' : 'Tuyệt vời! ⭐');
+        }
         cust.leaveTargetX = cust.x + (cust.x > this.stallX ? 240 : -240);
         cust.leaveTargetY = cust.y + (Math.random() > 0.5 ? 160 : -160);
 
