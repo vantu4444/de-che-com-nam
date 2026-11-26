@@ -143,7 +143,9 @@ export class CharacterRenderer {
             variant = 'player',
             nearKitchen = false,
             customScale = 1.0,
-            vehicle = 'walk'
+            vehicle = 'walk',
+            colorVariation = 0,
+            isHoldingOnigiri = false
         } = options;
 
         const variantScale = (this.variantScales[variant] || 1.0) * customScale;
@@ -186,14 +188,19 @@ export class CharacterRenderer {
             ctx.drawImage(this.baseSprite, drawX, drawY, this.baseWidth, this.baseHeight);
 
             // Vẽ thêm phụ kiện vector chuyên biệt khớp 100% lên thân/đầu
-            this.drawAccessories(ctx, variant, nearKitchen);
+            this.drawAccessories(ctx, variant, nearKitchen, colorVariation);
         } else {
             // Trường hợp 3: Fallback an toàn khi chưa nạp xong ảnh
             this.drawFallback(ctx);
-            this.drawAccessories(ctx, variant, nearKitchen);
+            this.drawAccessories(ctx, variant, nearKitchen, colorVariation);
         }
 
-        // 7. VẼ PHƯƠNG TIỆN LỚP TRƯỚC (GHI ĐÔNG, BÁNH TRƯỚC, KHUNG XE)
+        // 7. VẼ NẮM CƠM CẦM TAY NẾU ĐÃ MUA THÀNH CÔNG
+        if (isHoldingOnigiri) {
+            this.drawHandheldOnigiri(ctx);
+        }
+
+        // 8. VẼ PHƯƠNG TIỆN LỚP TRƯỚC (GHI ĐÔNG, BÁNH TRƯỚC, KHUNG XE)
         if (variant === 'player' && vehicle && vehicle !== 'walk') {
             this.drawVehicleFront(ctx, vehicle);
         }
@@ -257,7 +264,7 @@ export class CharacterRenderer {
     }
 
     // Phân phối vẽ phụ kiện vector cho từng biến thể nhân vật
-    drawAccessories(ctx, variant, nearKitchen) {
+    drawAccessories(ctx, variant, nearKitchen, colorVariation = 0) {
         switch (variant) {
             case 'player':
                 if (nearKitchen) {
@@ -265,21 +272,60 @@ export class CharacterRenderer {
                 }
                 break;
             case 'student':
-                this.drawStudentAccessories(ctx);
+                this.drawStudentAccessories(ctx, colorVariation);
                 break;
             case 'office':
-                this.drawOfficeAccessories(ctx);
+                this.drawOfficeAccessories(ctx, colorVariation);
                 break;
             case 'market':
                 this.drawMarketAccessories(ctx);
                 break;
             case 'vip':
-                this.drawVipAccessories(ctx);
+                this.drawVipAccessories(ctx, colorVariation);
                 break;
             case 'staff':
                 this.drawStaffAccessories(ctx);
                 break;
         }
+    }
+
+    // Vẽ nắm cơm nhỏ Onigiri chuẩn ISO cầm trên tay khi khách mua xong
+    drawHandheldOnigiri(ctx) {
+        ctx.save();
+        const ox = 12;
+        const oy = 8;
+
+        // Bóng đổ nhỏ dưới nắm cơm
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 7, 6, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Nắm cơm tam giác trắng ngần thơm dẻo
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ox, oy - 7);
+        ctx.lineTo(ox + 8, oy + 5);
+        ctx.lineTo(ox - 8, oy + 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Lá rong biển đen giòn rụm bọc ngang đáy
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        this.roundRect(ctx, ox - 4, oy + 1, 8, 4.5, 1);
+        ctx.fill();
+
+        // Đốm sáng lấp lánh biểu trưng độ tươi chuẩn ISO
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(ox - 2, oy - 2, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
     }
 
     // Vẽ hình chữ nhật bo góc an toàn trên mọi phiên bản trình duyệt
@@ -335,7 +381,7 @@ export class CharacterRenderer {
     }
 
     // 2. Phụ kiện: Mũ lưỡi trai + Khăn quàng đỏ (Student)
-    drawStudentAccessories(ctx) {
+    drawStudentAccessories(ctx, colorVariation = 0) {
         ctx.save();
 
         // --- Khăn quàng đỏ (Red Scarf) ---
@@ -368,13 +414,17 @@ export class CharacterRenderer {
         ctx.arc(scarfX - 1, scarfY + 3, 2.5, 0, Math.PI * 2);
         ctx.fill();
 
-        // --- Mũ lưỡi trai (Baseball Cap) ---
+        // --- Mũ lưỡi trai (Baseball Cap - Đa dạng màu sắc) ---
         const capX = 0;
         const capY = -21;
 
+        const capColors = ['#1d4ed8', '#ea580c', '#16a34a', '#8b5cf6'];
+        const capDarkColors = ['#1e3a8a', '#c2410c', '#15803d', '#7c3aed'];
+        const cIdx = Math.abs(colorVariation) % capColors.length;
+
         // Chóp mũ vòm tròn
-        ctx.fillStyle = '#1d4ed8'; // Xanh dương thể thao
-        ctx.strokeStyle = '#1e3a8a';
+        ctx.fillStyle = capColors[cIdx];
+        ctx.strokeStyle = capDarkColors[cIdx];
         ctx.lineWidth = 1.2;
         ctx.beginPath();
         ctx.arc(capX, capY, 13, Math.PI, 0, false);
@@ -389,7 +439,7 @@ export class CharacterRenderer {
         ctx.fill();
 
         // Vành lưỡi trai chìa ra phía trước (hướng theo facing dương)
-        ctx.fillStyle = '#1e40af';
+        ctx.fillStyle = capDarkColors[cIdx];
         ctx.beginPath();
         ctx.moveTo(capX + 4, capY);
         ctx.quadraticCurveTo(capX + 18, capY - 1, capX + 19, capY + 4);
@@ -402,7 +452,7 @@ export class CharacterRenderer {
     }
 
     // 3. Phụ kiện: Kính cận + Cà vạt (Office)
-    drawOfficeAccessories(ctx) {
+    drawOfficeAccessories(ctx, colorVariation = 0) {
         ctx.save();
 
         // --- Kính cận trí thức (Glasses) ---
@@ -441,9 +491,12 @@ export class CharacterRenderer {
         ctx.lineTo(8.5, eyeY - 4.5);
         ctx.stroke();
 
-        // --- Cà vạt công sở (Necktie) ---
+        // --- Cà vạt công sở (Necktie - Đa dạng màu sắc) ---
         const tieX = 0;
         const tieY = 8;
+
+        const tieColors = ['#1e3a8a', '#dc2626', '#059669', '#d97706'];
+        const tIdx = Math.abs(colorVariation) % tieColors.length;
 
         // Cổ áo sơ mi trắng
         ctx.fillStyle = '#f8fafc';
@@ -456,7 +509,7 @@ export class CharacterRenderer {
         ctx.stroke();
 
         // Nút thắt cà vạt
-        ctx.fillStyle = '#1e3a8a'; // Xanh navy lịch lãm
+        ctx.fillStyle = tieColors[tIdx];
         ctx.beginPath();
         ctx.moveTo(-3, tieY + 1);
         ctx.lineTo(3, tieY + 1);
@@ -476,7 +529,7 @@ export class CharacterRenderer {
         ctx.fill();
 
         // Sọc trang trí chéo trên cà vạt
-        ctx.strokeStyle = '#38bdf8';
+        ctx.strokeStyle = '#fef08a';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(-2, tieY + 8);

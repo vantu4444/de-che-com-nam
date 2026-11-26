@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 20:37:45, 24/11/2026  
+**Thời điểm thực thi:** 11:08:59, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,11 +10,11 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **139** | $ge 20$ | ✅ Đạt |
+| **Tổng số bài kiểm thử** | **140** | $ge 20$ | ✅ Đạt |
 | **Số bài PASS (Thành công)** | **139** | 100% | ✅ Đạt |
-| **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
+| **Số bài FAIL (Thất bại)** | **1** | **0** | ❌ Cần khắc phục |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
-| **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
+| **Tỷ lệ vượt qua (Pass Rate)** | **99.3%** | **100.0%** | ❌ Không đạt |
 
 ---
 
@@ -137,6 +137,7 @@
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: One-Shot Trigger 100% trừ phạt đúng 1 lần, reset heat=0, đóng sạp, vòng lặp chạy mượt & nhân vật di chuyển bình thường`
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() chạy 100% ổn định mượt mà qua ngưỡng phạt 100%, canMove=true không bao giờ đơ game`
 - **[PASS]** `Mô phỏng Ô Vạch Xanh Trường Học: Đứng tâm (790, 625) bán 10s an toàn 100%, huy hiệu xanh sáng, 0 lần bị phạt, tiền tăng chuẩn giá 20.000đ`
+- **[FAIL]** `Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại` - *{"totalSpawned":4,"customerArrivedAtStall":true,"renderWithoutError":true,"sellSuccess":false,"inventoryDecreased":false,"moneyDiff":0,"happyCustomerOnigiri":false}*
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Cấu hình ban đầu chuẩn xác (TP.HCM mở sẵn Cấp 1, 3 tỉnh sẵn sàng mở rộng)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở Đắk Lắk khi chưa đạt Level 8 (dù có 20tr trong ví)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở chi nhánh khi không đủ 15.000.000đ (ví không bị trừ âm)`

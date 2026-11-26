@@ -5,6 +5,7 @@ import { audio } from './audio.js';
 import { characterRenderer } from './characterRenderer.js';
 import { seaweedGame } from './seaweedGame.js';
 import { LEGAL_SELLING_ZONES, isInsideLegalZone } from './world.js';
+import { city3D } from './city3D.js';
 
 export { LEGAL_SELLING_ZONES, isInsideLegalZone };
 
@@ -125,48 +126,51 @@ export class SellingManager {
         this.customers = [];
 
         const timeInfo = state.getTimePeriodInfo();
-        const isSchool = (spot.type === 'school' || spot.id.startsWith('school_') || spot.id === 'university_town');
-        const isOffice = (spot.id === 'office_q1' || spot.type === 'office');
-        const isWalking = (spot.id === 'walking_street');
+        const spotId = (spot.regionId || spot.id || '');
+        const isSchool = (spot.type === 'school' || spotId.startsWith('school_') || spotId.includes('school') || spotId === 'university_town');
+        const isOffice = (spot.type === 'office' || spotId.includes('office') || spot.type === 'market' || spotId.includes('ben_thanh'));
+        const isWalking = (spot.type === 'walking_street' || spotId.includes('walking'));
 
-        // Điều chỉnh công suất & nhịp độ theo địa bàn và khung giờ cao điểm
+        // Điều chỉnh công suất & nhịp độ sinh khách đều đặn (~0.8 - 1.2 giây một khách mới)
         if (isSchool) {
             if (timeInfo.isSchoolRush) {
                 this.maxCustomers = 5;
-                this.spawnInterval = 60; // Khách ùa ra đông
+                this.spawnInterval = 45; // Khách học sinh ùa ra đông đúc (~0.75s)
                 this.showToast(`🎒 GIỜ CAO ĐIỂM CỔNG TRƯỜNG (${timeInfo.timeStr})! Học sinh ùa ra đông, Tip cao!`);
             } else {
-                this.maxCustomers = 2;
-                this.spawnInterval = 1000; // Tốc độ khách tới giảm 85%
-                this.showToast('Cổng trường đang trong giờ học, vắng khách!');
+                this.maxCustomers = 4;
+                this.spawnInterval = 65; // Khách học sinh đi bộ nườm nượp (~1.1s)
+                this.showToast(`🎒 Cổng trường học: Học sinh ghé mua sắm cơm nắm 20k/22k!`);
             }
         } else if (isOffice) {
             if (timeInfo.isOfficeRush) {
-                this.maxCustomers = 4;
-                this.spawnInterval = 75;
+                this.maxCustomers = 5;
+                this.spawnInterval = 50;
                 this.showToast(`🏢 GIỜ CAO ĐIỂM VĂN PHÒNG (${timeInfo.timeStr})! Dân công sở chuộng vị 22k-25k!`);
             } else {
-                this.maxCustomers = 3;
-                this.spawnInterval = 160;
-                this.showToast(`🏪 Đã mở sạp bán hàng tại ${spot.name}!`);
+                this.maxCustomers = 4;
+                this.spawnInterval = 70;
+                this.showToast(`🏪 Đã mở sạp bán hàng tại ${spot.name}! Dân công sở ghé mua đều đặn.`);
             }
         } else if (isWalking) {
             if (timeInfo.isWalkingStreetRush) {
                 this.maxCustomers = 5;
-                this.spawnInterval = 70;
-                this.showToast(`✨ GIỜ CAO ĐIỂM PHỐ ĐI BỘ (${timeInfo.timeStr})! Tăng tỷ lệ Khách VIP!`);
+                this.spawnInterval = 55;
+                this.showToast(`✨ GIỜ CAO ĐIỂM PHỐ ĐI BỘ (${timeInfo.timeStr})! Tăng tỷ lệ Khách VIP 25k!`);
             } else {
-                this.maxCustomers = 3;
-                this.spawnInterval = 160;
+                this.maxCustomers = 4;
+                this.spawnInterval = 75;
                 this.showToast(`🏪 Đã mở sạp bán hàng tại ${spot.name}!`);
             }
         } else {
-            this.maxCustomers = 3;
-            this.spawnInterval = 150;
+            this.maxCustomers = 4;
+            this.spawnInterval = 65;
             this.showToast(`🏪 Đã mở sạp bán hàng tại ${spot.name}! Nhấn Space hoặc chạm vào khách để bán.`);
         }
 
-        this.spawnTimer = 25; // Sinh ngay khách đầu tiên sau ~0.4s
+        // Sinh ngay khách hàng đầu tiên ngay khi bấm Mở Sạp
+        this.trySpawnCustomer();
+        this.spawnTimer = 0;
         audio.playClick();
     }
 
@@ -415,31 +419,19 @@ export class SellingManager {
 
         if (!this.isOpen) return;
 
-        // Cập nhật nhịp khách theo giờ cao điểm khi sạp đang mở
+        // Cập nhật nhịp khách theo giờ cao điểm khi sạp đang mở (duy trì sinh khách đều đặn ~1 - 1.2s)
         if (isSchoolSpot) {
-            if (timeInfo.isSchoolRush) {
-                this.maxCustomers = 5;
-                this.spawnInterval = 60;
-            } else {
-                this.maxCustomers = 2;
-                this.spawnInterval = 1000;
-            }
-        } else if (this.currentSpot && (this.currentSpot.id === 'office_q1' || this.currentSpot.type === 'office')) {
-            if (timeInfo.isOfficeRush) {
-                this.maxCustomers = 4;
-                this.spawnInterval = 75;
-            } else {
-                this.maxCustomers = 3;
-                this.spawnInterval = 160;
-            }
-        } else if (this.currentSpot && this.currentSpot.id === 'walking_street') {
-            if (timeInfo.isWalkingStreetRush) {
-                this.maxCustomers = 5;
-                this.spawnInterval = 70;
-            } else {
-                this.maxCustomers = 3;
-                this.spawnInterval = 160;
-            }
+            this.maxCustomers = timeInfo.isSchoolRush ? 5 : 4;
+            this.spawnInterval = timeInfo.isSchoolRush ? 45 : 65;
+        } else if (this.currentSpot && (this.currentSpot.id === 'office_q1' || this.currentSpot.type === 'office' || this.currentSpot.type === 'market')) {
+            this.maxCustomers = timeInfo.isOfficeRush ? 5 : 4;
+            this.spawnInterval = timeInfo.isOfficeRush ? 50 : 70;
+        } else if (this.currentSpot && (this.currentSpot.id === 'walking_street' || this.currentSpot.type === 'walking_street')) {
+            this.maxCustomers = timeInfo.isWalkingStreetRush ? 5 : 4;
+            this.spawnInterval = timeInfo.isWalkingStreetRush ? 55 : 75;
+        } else {
+            this.maxCustomers = 4;
+            this.spawnInterval = 65;
         }
 
         // Kiểm tra nếu nhân vật bỏ chạy ra xa khu vực bán hàng (> 150px), tự động đóng sạp an toàn và reset mức chú ý
@@ -519,13 +511,13 @@ export class SellingManager {
     }
 
     // Tính toán tọa độ xếp hàng gọn gàng (Anti-Stacking Queue)
-    // Khách 1 đứng cách sạp 55px, các khách sau nối đuôi cách nhau 45px
+    // Khách 1 đứng cách sạp 50px, các khách sau nối đuôi cách nhau 40px
     getQueuePosition(index) {
-        const spacing = 46;
-        // Xếp hàng ngang hướng về phía sạp bán
+        const spacing = 40;
+        // Xếp hàng ngang hướng về phía trước sạp bán (khoảng cách tối ưu < 80px)
         return {
-            x: this.stallX + 55 + index * spacing,
-            y: this.stallY + 8
+            x: this.stallX + 50 + index * spacing,
+            y: this.stallY + 6
         };
     }
 
@@ -539,17 +531,21 @@ export class SellingManager {
         }
     }
 
-    // Sinh khách hàng dựa trên địa bàn khu vực TP.HCM
+    // Sinh khách hàng dựa trên địa bàn khu vực (TP.HCM, Đắk Lắk, Vinh, Hà Nội)
     trySpawnCustomer() {
         const activeCount = this.customers.filter(c => c.status === 'walking_in' || c.status === 'waiting').length;
         if (activeCount >= this.maxCustomers) return;
 
-        const spotId = this.currentSpot ? this.currentSpot.id : 'school_hoamai';
+        const spotId = this.currentSpot ? (this.currentSpot.regionId || this.currentSpot.id || '') : 'school_hoamai';
+        const spotType = this.currentSpot ? (this.currentSpot.type || 'school') : 'school';
         const timeInfo = state.getTimePeriodInfo();
 
-        let isVip = Math.random() < 0.15; // Mặc định 15% khách VIP
-        if (spotId === 'walking_street') {
-            // Phố Đi Bộ / Quảng Trường: Giờ cao điểm vào 18:30–22:00 tăng tỷ lệ xuất hiện Khách VIP lên 70%
+        const isSchoolSpot = spotType === 'school' || spotId.includes('school') || spotId.includes('university') || spotType === 'park';
+        const isOfficeSpot = spotType === 'office' || spotId.includes('office') || spotType === 'market' || spotId.includes('ben_thanh');
+        const isWalkingSpot = spotType === 'walking_street' || spotId.includes('walking');
+
+        let isVip = Math.random() < 0.15; // 15% khách VIP
+        if (isWalkingSpot) {
             isVip = timeInfo.isWalkingStreetRush ? (Math.random() < 0.70) : (Math.random() < 0.35);
         }
 
@@ -558,113 +554,88 @@ export class SellingManager {
 
         if (isVip) {
             variant = 'vip';
-            if (spotId === 'walking_street') {
-                // Khách VIP Phố Đi Bộ đặc biệt ưa chuộng Bò phô mai tan chảy 25k (70%)
-                requestedFilling = Math.random() < 0.70 ? 'melting_beef_cheese' : (Math.random() < 0.5 ? 'beef_bbq' : 'salmon_mayo');
-            } else {
-                // Khách VIP thông thường chọn ngẫu nhiên các món cao cấp
-                const vipFillings = ['melting_beef_cheese', 'beef_bbq', 'salmon_mayo', 'cheese_chicken_roll', 'baked_cheese_shrimp'];
-                requestedFilling = vipFillings[Math.floor(Math.random() * vipFillings.length)];
-            }
-        } else if (spotId === 'school_hoamai' || spotId === 'school') {
+            const vipFillings = ['melting_beef_cheese', 'beef_bbq', 'salmon_mayo', 'cheese_chicken_roll', 'baked_cheese_shrimp'];
+            requestedFilling = vipFillings[Math.floor(Math.random() * vipFillings.length)];
+        } else if (isSchoolSpot) {
             variant = 'student';
-            // Trường Tiểu học Hoa Mai: Ưa chuộng các món nhóm 20k
-            const hoaMai20k = [
+            const schoolMenu = [
                 'crab_egg_mayo', 'super_cheese_sausage', 'egg_sausage_mayo', 
                 'cowboy_sausage', 'chicken_teriyaki', 'fish_cake', 'chicken_tomyum',
-                'pate_cheese', 'grilled_pork_kimchi'
+                'pate_cheese', 'grilled_pork_kimchi', 'salmon_mayo', 'cheese_chicken_roll'
             ];
-            requestedFilling = hoaMai20k[Math.floor(Math.random() * hoaMai20k.length)];
-        } else if (spotId === 'school_nguyendu') {
-            variant = 'student';
-            // Trường THCS Nguyễn Du: Ưa chuộng các món nhóm 20k - 22k
-            const nguyenDuMix = [
-                'crab_egg_mayo', 'chicken_teriyaki', 'salmon_mayo', 
-                'beef_bbq', 'cheese_chicken_roll', 'tuna_mayo', 'cowboy_sausage'
+            requestedFilling = schoolMenu[Math.floor(Math.random() * schoolMenu.length)];
+        } else if (isOfficeSpot) {
+            variant = 'office';
+            const officeMenu = [
+                'melting_beef_cheese', 'beef_bbq', 'salmon_mayo', 
+                'cheese_chicken_roll', 'tuna_mayo', 'baked_cheese_shrimp', 'crab_egg_mayo'
             ];
-            requestedFilling = nguyenDuMix[Math.floor(Math.random() * nguyenDuMix.length)];
-        } else if (spotId === 'school_lequydon') {
-            variant = 'student';
-            // Trường THPT Lê Quý Đôn: Ưa chuộng các món nhóm 22k
-            const leQuyDon22k = ['salmon_mayo', 'beef_bbq', 'cheese_chicken_roll'];
-            requestedFilling = leQuyDon22k[Math.floor(Math.random() * leQuyDon22k.length)];
-        } else if (spotId === 'university_town') {
-            variant = 'student';
-            // Làng Đại Học: Sinh viên đông đúc, mua đa dạng cả 3 mức giá
+            requestedFilling = officeMenu[Math.floor(Math.random() * officeMenu.length)];
+        } else if (isWalkingSpot) {
+            variant = Math.random() < 0.5 ? 'student' : 'office';
+            const walkMenu = ['melting_beef_cheese', 'beef_bbq', 'cheese_chicken_roll', 'salmon_mayo'];
+            requestedFilling = walkMenu[Math.floor(Math.random() * walkMenu.length)];
+        } else {
+            variant = Math.random() < 0.5 ? 'student' : 'office';
             const allFillings = Object.keys(FILLINGS);
             requestedFilling = allFillings[Math.floor(Math.random() * allFillings.length)];
-        } else if (spotId === 'office_q1' || spotId === 'office') {
-            variant = 'office';
-            // Khu Văn Phòng Quận 1: Giờ cao điểm (11:30–13:30) ưa chuộng các vị 22.000đ – 25.000đ (85%)
-            if (timeInfo.isOfficeRush && Math.random() < 0.85) {
-                const officeHighPrices = ['melting_beef_cheese', 'beef_bbq', 'salmon_mayo', 'cheese_chicken_roll', 'baked_cheese_shrimp'];
-                requestedFilling = officeHighPrices[Math.floor(Math.random() * officeHighPrices.length)];
-            } else {
-                const officeMix = [
-                    'melting_beef_cheese', 'beef_bbq', 'salmon_mayo', 
-                    'cheese_chicken_roll', 'tuna_mayo', 'baked_cheese_shrimp'
-                ];
-                requestedFilling = officeMix[Math.floor(Math.random() * officeMix.length)];
-            }
-        } else if (spotId === 'walking_street') {
-            variant = 'student';
-            // Phố Đi Bộ: Ưa chuộng vị 25k và các món bò/gà đậm đà
-            const walkMix = ['melting_beef_cheese', 'beef_bbq', 'cheese_chicken_roll', 'salmon_mayo'];
-            requestedFilling = walkMix[Math.floor(Math.random() * walkMix.length)];
         }
 
-        // Tọa độ sinh từ mép ngoài đường
+        // Tọa độ sinh từ vỉa hè cách sạp ~110 - 135px
         const queuePos = this.getQueuePosition(activeCount);
-        const spawnX = queuePos.x + 160 + Math.random() * 60;
-        const spawnY = queuePos.y + (Math.random() * 80 - 40);
+        const spawnX = queuePos.x + 110 + Math.random() * 25;
+        const spawnY = queuePos.y + (Math.random() * 20 - 10);
+        const colorVar = Math.floor(Math.random() * 4);
 
-        // Cạnh tranh thị phần với xe hàng đối thủ ngoài phố:
-        // Khách cân nhắc: Cấp xe người chơi, Độ tươi cơm trong kho và vị ưa chuộng
-        const veh = VEHICLES[state.currentVehicle];
-        const vehLvl = veh ? (veh.level || 1) : 1;
-        let avgFreshness = 100;
-        if (state.inventory && state.inventory.length > 0) {
-            const sumF = state.inventory.reduce((acc, it) => acc + (typeof it.freshness === 'number' ? it.freshness : 100), 0);
-            avgFreshness = sumF / state.inventory.length;
-        }
-        const hasRequestedFilling = state.getFillingCount(requestedFilling) > 0;
+        // Cạnh tranh thị phần với xe đối thủ: CHỈ KÍCH HOẠT KHI ĐÃ CÓ ÍT NHẤT 2 KHÁCH TRONG HÀNG
+        if (activeCount >= 2) {
+            const veh = VEHICLES[state.currentVehicle];
+            const vehLvl = veh ? (veh.level || 1) : 1;
+            let avgFreshness = 100;
+            if (state.inventory && state.inventory.length > 0) {
+                const sumF = state.inventory.reduce((acc, it) => acc + (typeof it.freshness === 'number' ? it.freshness : 100), 0);
+                avgFreshness = sumF / state.inventory.length;
+            }
+            const hasRequestedFilling = state.getFillingCount(requestedFilling) > 0;
 
-        let playerAttractScore = 40 + vehLvl * 6 + (state.level * 2);
-        if (avgFreshness >= 80) playerAttractScore += 25;
-        else if (avgFreshness < 40) playerAttractScore -= 35;
-        if (hasRequestedFilling) playerAttractScore += 25;
+            let playerAttractScore = 40 + vehLvl * 6 + (state.level * 2);
+            if (avgFreshness >= 80) playerAttractScore += 25;
+            else if (avgFreshness < 40) playerAttractScore -= 35;
+            if (hasRequestedFilling) playerAttractScore += 25;
 
-        // Điểm cạnh tranh của xe đối thủ vào giờ cao điểm
-        const competitorScore = 65 + (timeInfo.isSchoolRush || timeInfo.isOfficeRush ? 18 : 0);
-        if (playerAttractScore < competitorScore && Math.random() < 0.40) {
-            // Xe đối thủ hút mất khách
-            this.floatingTexts.push({
-                x: spawnX,
-                y: spawnY - 20,
-                text: '⚡ Xe đối thủ tranh mất khách!',
-                color: '#ec4899',
-                alpha: 1.0,
-                vy: 0.6
-            });
-            return;
+            const competitorScore = 65 + (timeInfo.isSchoolRush || timeInfo.isOfficeRush ? 18 : 0);
+            if (playerAttractScore < competitorScore && Math.random() < 0.25) {
+                this.floatingTexts.push({
+                    x: spawnX,
+                    y: spawnY - 20,
+                    text: '⚡ Xe đối thủ tranh mất khách!',
+                    color: '#ec4899',
+                    alpha: 1.0,
+                    vy: 0.6
+                });
+                return;
+            }
         }
 
         const newCustomer = {
             id: 'cust_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
             variant: variant,
+            colorVariation: colorVar,
             recipeId: requestedFilling,
             x: spawnX,
             y: spawnY,
             facing: -1,
-            speed: 1.8 + Math.random() * 0.4,
+            speed: 2.2 + Math.random() * 0.4,
             stepCycle: 0,
             status: 'walking_in', // walking_in -> waiting -> leaving_happy / leaving_angry
             queueIndex: activeCount,
             patience: 100, // 100% -> 0%
             maxPatience: 100,
-            decayRate: variant === 'office' ? 0.11 : 0.08, // Dân văn phòng vội hơn
-            leaveTargetX: spawnX,
-            leaveTargetY: spawnY
+            decayRate: variant === 'office' ? 0.09 : 0.07,
+            leaveTargetX: spawnX + 80,
+            leaveTargetY: spawnY + 20,
+            isHoldingOnigiri: false,
+            happyMessage: null
         };
 
         this.customers.push(newCustomer);
@@ -832,8 +803,11 @@ export class SellingManager {
             }
         }
 
-        // 5. m thanh & Hiệu ứng chữ số bay
-        audio.playCoinKeng();
+        // 5. Âm thanh & Hiệu ứng chữ số bay
+        try {
+            if (typeof audio.playCoin === 'function') audio.playCoin();
+            else if (typeof audio.playCoinKeng === 'function') audio.playCoinKeng();
+        } catch (eAudio) {}
 
         const tipText = tip > 0 ? ` (Tip +${tip.toLocaleString('vi-VN')}đ)` : '';
         this.floatingTexts.push({
@@ -845,8 +819,10 @@ export class SellingManager {
             vy: 0.9
         });
 
-        // 6. Khách hàng vui vẻ rời đi (Khách VIP có 35% cơ hội thách thức bóc rong biển)
+        // 6. Khách hàng vui vẻ cầm nắm cơm rời đi
         cust.status = 'leaving_happy';
+        cust.isHoldingOnigiri = true;
+        cust.happyMessage = Math.random() < 0.35 ? 'Ngon chuẩn ISO! ❤️' : (Math.random() < 0.6 ? 'Tươi nóng hổi! 🍙' : 'Tuyệt vời! ⭐');
         cust.leaveTargetX = cust.x + (cust.x > this.stallX ? 240 : -240);
         cust.leaveTargetY = cust.y + (Math.random() > 0.5 ? 160 : -160);
 
@@ -986,18 +962,20 @@ export class SellingManager {
             }
         }
 
-        // 2. VẼ TỪNG KHÁCH HÀNG NPC BẰNG CharacterRenderer
+        // 2. VẼ TỪNG KHÁCH HÀNG NPC BẰNG CharacterRenderer & City3D
         this.customers.forEach(cust => {
             const bounce = (cust.status === 'walking_in' || cust.status === 'leaving_happy' || cust.status === 'leaving_angry')
-                ? Math.abs(Math.sin(cust.stepCycle)) * 3 : 0;
+                ? Math.abs(Math.sin(cust.stepCycle || 0)) * 3 : 0;
 
-            // Vẽ sprite + phụ kiện vector chuẩn chỉ
+            // Vẽ sprite + phụ kiện vector chuẩn chỉ (nhiều màu áo, bước chân nảy, cầm nắm cơm)
             characterRenderer.render(ctx, {
                 x: cust.x,
                 y: cust.y,
                 facing: cust.facing,
                 bounce: bounce,
                 variant: cust.variant,
+                colorVariation: cust.colorVariation || 0,
+                isHoldingOnigiri: cust.isHoldingOnigiri || false,
                 nearKitchen: false
             });
 
@@ -1005,10 +983,28 @@ export class SellingManager {
             if (cust.status === 'waiting' || cust.status === 'walking_in') {
                 this.drawCustomerBubble(ctx, cust);
             } else if (cust.status === 'leaving_happy') {
-                // Biểu tượng trái tim / nụ cười vui sướng khi mua được cơm
-                ctx.font = '16px sans-serif';
+                // Hiệu ứng biểu cảm hài lòng: "Ngon chuẩn ISO!", "Tươi nóng hổi!", ❤️ 🍙
+                const happyText = cust.happyMessage || 'Ngon chuẩn ISO! ❤️';
+                const hbX = cust.x;
+                const hbY = cust.y - 46;
+                const hbW = 100;
+                const hbH = 22;
+
+                ctx.save();
+                ctx.fillStyle = 'rgba(236, 253, 245, 0.96)';
+                ctx.beginPath();
+                this.safeRoundRect(ctx, hbX - hbW / 2, hbY - hbH / 2, hbW, hbH, 6);
+                ctx.fill();
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                ctx.fillStyle = '#047857';
+                ctx.font = 'bold 9.5px "Be Vietnam Pro", sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('❤️ 🍙', cust.x, cust.y - 42);
+                ctx.textBaseline = 'middle';
+                ctx.fillText(happyText, hbX, hbY);
+                ctx.restore();
             } else if (cust.status === 'leaving_angry') {
                 // Biểu tượng bực mình khi chờ quá lâu
                 ctx.font = '16px sans-serif';
@@ -1033,25 +1029,27 @@ export class SellingManager {
         ctx.restore();
     }
 
-    // Vẽ bong bóng gọi món & Thanh kiên nhẫn trên đầu NPC
+    // Vẽ bong bóng gọi món & Thanh kiên nhẫn trên đầu NPC (Menu 15 vị + Giá bán lẻ niêm yết)
     drawCustomerBubble(ctx, cust) {
         const bubbleX = cust.x;
-        const bubbleY = cust.y - 46;
+        const bubbleY = cust.y - 50;
         const fillingConfig = FILLINGS[cust.recipeId] || FILLINGS.crab_egg_mayo;
+        const retailPrice = fillingConfig.price || 20000;
+        const fillingName = fillingConfig.name || 'Cơm nắm';
 
         const isVip = (cust.variant === 'vip');
-        const bubbleW = isVip ? 76 : 68;
-        const bubbleH = 26;
+        const bubbleW = isVip ? 122 : 114;
+        const bubbleH = 34;
 
         ctx.save();
 
-        // Khung bong bóng nền trắng bo góc
+        // Khung bong bóng nền trắng bo góc mềm mại
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         this.safeRoundRect(ctx, bubbleX - bubbleW / 2, bubbleY - bubbleH / 2, bubbleW, bubbleH, 8);
         ctx.fill();
-        ctx.strokeStyle = isVip ? '#eab308' : '#cbd5e1';
-        ctx.lineWidth = isVip ? 2.2 : 1.5;
+        ctx.strokeStyle = isVip ? '#eab308' : '#f97316';
+        ctx.lineWidth = isVip ? 2.2 : 1.6;
         ctx.stroke();
 
         // Mũi nhọn tam giác chỉ xuống đầu khách
@@ -1061,39 +1059,46 @@ export class SellingManager {
         ctx.lineTo(bubbleX + 4, bubbleY + bubbleH / 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
+        ctx.strokeStyle = isVip ? '#eab308' : '#f97316';
+        ctx.stroke();
 
-        // Nội dung bong bóng: Icon + Tên viết tắt
+        // Dòng 1: Icon nắm cơm + Tên vị cơm nắm chuẩn ISO & ATVSTP
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
 
-        const shortNames = {
-            crab_mayo: 'Cua Mayo',
-            chicken_teriyaki: 'Teriyaki',
-            beef_cheese: 'Bò Cheese'
-        };
-
         const iconX = bubbleX - bubbleW / 2 + 6;
-        ctx.fillText(fillingConfig.icon, iconX, bubbleY);
+        ctx.fillText(fillingConfig.icon || '🍙', iconX, bubbleY - 6);
 
-        ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif';
-        ctx.fillText(shortNames[cust.recipeId] || 'Cơm nắm', iconX + 16, bubbleY);
+        // Giới hạn độ dài tên vị để vừa vặn khung
+        const displayName = fillingName.length > 14 ? fillingName.substring(0, 13) + '…' : fillingName;
+        ctx.fillText(displayName, iconX + 16, bubbleY - 6);
 
         if (isVip) {
             ctx.fillStyle = '#ca8a04';
             ctx.font = 'bold 9px sans-serif';
-            ctx.fillText('⭐', bubbleX + bubbleW / 2 - 14, bubbleY);
+            ctx.fillText('⭐', bubbleX + bubbleW / 2 - 13, bubbleY - 6);
         }
 
+        // Dòng 2: Giá bán lẻ niêm yết (20.000đ / 22.000đ / 25.000đ)
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`🍙 ${retailPrice.toLocaleString('vi-VN')}đ`, iconX + 2, bubbleY + 7);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 8px "Be Vietnam Pro", sans-serif';
+        ctx.fillText('• ISO', iconX + 66, bubbleY + 7);
+
         // Thanh kiên nhẫn (Patience Bar)
-        const barW = 44;
-        const barH = 4;
+        const barW = 56;
+        const barH = 3.5;
         const barX = bubbleX - barW / 2;
-        const barY = bubbleY + bubbleH / 2 + 7;
+        const barY = bubbleY + bubbleH / 2 + 6;
 
         // Nền thanh
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.45)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
         ctx.beginPath();
         this.safeRoundRect(ctx, barX, barY, barW, barH, 2);
         ctx.fill();

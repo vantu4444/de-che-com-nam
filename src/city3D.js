@@ -577,6 +577,158 @@ export class City3DManager {
 
         ctx.restore();
     }
+
+    /**
+     * ĐỒNG BỘ HIỂN THỊ KHÁCH HÀNG NPC 3D TẠI SẠP CƠM NẮM
+     * Tạo hình 3D Stylized sinh động: nhiều màu áo, bước chân nảy isometric, bóng đổ mềm mại dưới chân
+     */
+    renderCustomer3D(ctx, cust, camera = { x: 0, y: 0 }) {
+        if (!ctx || !cust) return;
+
+        const pScreen = this.projectToScreen(cust.x, cust.y, camera);
+        const sx = pScreen.x;
+        const sy = pScreen.y;
+
+        const isMoving = (cust.status === 'walking_in' || cust.status === 'leaving_happy' || cust.status === 'leaving_angry');
+        const bounce = isMoving ? Math.abs(Math.sin(cust.stepCycle || 0)) * 4 : 0;
+        const facing = cust.facing || 1;
+
+        ctx.save();
+
+        // 1. Bóng đổ mềm mại dưới chân trên nền 3D
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.38)';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy + 18, 16, 7, -0.15, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Chuyển động bước chân Isometric
+        ctx.translate(sx, sy - bounce);
+
+        // 3. Hiệu ứng Hào quang lấp lánh dưới chân Khách VIP
+        if (cust.variant === 'vip') {
+            const auraPulse = Math.sin(Date.now() / 200) * 3;
+            ctx.fillStyle = 'rgba(234, 179, 8, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(0, 18, 22 + auraPulse, 9 + auraPulse * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 4. Vẽ Tạo hình Nhân vật 3D Phong Cách Hóa
+        ctx.scale(facing, 1);
+
+        // Chân bước đi 3D
+        const legSwing = isMoving ? Math.sin(cust.stepCycle * 2) * 4 : 0;
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(-6 + legSwing, 10, 4.5, 9);
+        ctx.fillRect(2 - legSwing, 10, 4.5, 9);
+
+        // Thân áo nhiều màu sắc đa dạng
+        const studentShirts = ['#f8fafc', '#fed7aa', '#bbf7d0', '#ddd6fe'];
+        const officeShirts = ['#bae6fd', '#f1f5f9', '#fde68a', '#e2e8f0'];
+        const shirtColor = cust.variant === 'vip' ? '#1e293b' :
+            (cust.variant === 'office' ? officeShirts[Math.abs(cust.colorVariation || 0) % officeShirts.length] :
+            studentShirts[Math.abs(cust.colorVariation || 0) % studentShirts.length]);
+
+        ctx.fillStyle = shirtColor;
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+            ctx.roundRect(-10, -4, 20, 16, 4);
+        } else {
+            ctx.rect(-10, -4, 20, 16);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Chi tiết riêng từng đối tượng
+        if (cust.variant === 'student') {
+            // Khăn quàng đỏ học sinh
+            ctx.fillStyle = '#dc2626';
+            ctx.beginPath();
+            ctx.moveTo(-5, -2);
+            ctx.lineTo(0, 4);
+            ctx.lineTo(5, -2);
+            ctx.closePath();
+            ctx.fill();
+
+            // Ba lô sau lưng
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(-14, -2, 4.5, 12);
+        } else if (cust.variant === 'office') {
+            // Cà vạt công sở
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(-1.5, -2, 3, 11);
+        } else if (cust.variant === 'vip') {
+            // Áo vest đen viền vàng kim
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(-10, -4, 20, 16);
+            // Nơ cổ vàng kim
+            ctx.fillStyle = '#facc15';
+            ctx.beginPath();
+            ctx.arc(0, -1, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Đầu linh vật Onigiri đội mũ / tạo hình tròn mềm mại
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(0, -14, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Mắt và nụ cười thân thiện
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(3, -15, 1.8, 0, Math.PI * 2);
+        ctx.arc(8, -15, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Mũ lưỡi trai cho học sinh
+        if (cust.variant === 'student') {
+            ctx.fillStyle = '#1d4ed8';
+            ctx.beginPath();
+            ctx.arc(0, -20, 10, Math.PI, 0, false);
+            ctx.fill();
+            ctx.fillRect(2, -20, 11, 2.5); // Vành mũ
+        } else if (cust.variant === 'vip') {
+            // Kính râm đen sành điệu
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(1, -17, 10, 4);
+        }
+
+        // 5. Cầm nắm cơm 3D trên tay khi mua xong
+        if (cust.isHoldingOnigiri) {
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(9, 2);
+            ctx.lineTo(15, 10);
+            ctx.lineTo(3, 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Rong biển đen
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(6, 7, 6, 3);
+            ctx.restore();
+        }
+
+        ctx.restore();
+    }
+
+    renderSellingCustomers(ctx, customers, camera) {
+        if (!ctx || !Array.isArray(customers) || customers.length === 0) return;
+        customers.forEach(cust => {
+            this.renderCustomer3D(ctx, cust, camera);
+        });
+    }
 }
 
 export const city3D = new City3DManager();

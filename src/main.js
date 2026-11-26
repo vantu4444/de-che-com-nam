@@ -477,8 +477,22 @@ class GameApp {
                             nearby = (this.world.regions && this.world.regions.find(r => r.id === spot.regionId || r.id === spot.id)) || spot;
                         }
                     }
+                    const isLegalSpot = Boolean(
+                        (this.world && typeof this.world.isInValidSellingSpot === 'function' && this.world.isInValidSellingSpot(this.player.x, this.player.y)) ||
+                        (sellingManager && typeof sellingManager.isInsideLegalZone === 'function' && sellingManager.isInsideLegalZone(this.player.x, this.player.y))
+                    );
+
                     if (nearby && (
+                        isLegalSpot ||
+                        nearby.type === 'stall' ||
+                        nearby.type === 'school' ||
+                        nearby.type === 'office' ||
+                        nearby.type === 'walking_street' ||
+                        nearby.type === 'park' ||
+                        nearby.type === 'market' ||
+                        nearby.type === 'green_zone' ||
                         nearby.id.startsWith('school_') ||
+                        nearby.id.startsWith('spot_') ||
                         nearby.id === 'university_town' ||
                         nearby.id === 'office_q1' ||
                         nearby.id === 'walking_street' ||
@@ -488,13 +502,17 @@ class GameApp {
                             nearby.regionId.startsWith('school_') ||
                             nearby.regionId === 'university_town' ||
                             nearby.regionId === 'office_q1' ||
-                            nearby.regionId === 'walking_street'
+                            nearby.regionId === 'walking_street' ||
+                            nearby.regionId.includes('school') ||
+                            nearby.regionId.includes('office') ||
+                            nearby.regionId.includes('walking') ||
+                            nearby.regionId.includes('university')
                         ))
                     )) {
                         sellingManager.toggleSelling(nearby, this.player);
                         this.updateHUD();
                     } else {
-                        sellingManager.showToast('📍 Hãy tới Cổng trường, Khu văn phòng hoặc Phố đi bộ để mở sạp!');
+                        sellingManager.showToast('📍 Hãy tới Cổng trường, Khu văn phòng, Công viên hoặc Phố đi bộ để mở sạp!');
                     }
                 }
             });
@@ -679,7 +697,15 @@ class GameApp {
             this.isMarketOpen = true;
             this.market.open({ x: this.player.x, y: this.player.y });
         } else if (
+            nearby.type === 'stall' ||
+            nearby.type === 'school' ||
+            nearby.type === 'office' ||
+            nearby.type === 'walking_street' ||
+            nearby.type === 'park' ||
+            nearby.type === 'market' ||
+            nearby.type === 'green_zone' ||
             nearby.id.startsWith('school_') ||
+            nearby.id.startsWith('spot_') ||
             nearby.id === 'university_town' ||
             nearby.id === 'office_q1' ||
             nearby.id === 'walking_street' ||
@@ -689,10 +715,15 @@ class GameApp {
                 nearby.regionId.startsWith('school_') ||
                 nearby.regionId === 'university_town' ||
                 nearby.regionId === 'office_q1' ||
-                nearby.regionId === 'walking_street'
-            ))
+                nearby.regionId === 'walking_street' ||
+                nearby.regionId.includes('school') ||
+                nearby.regionId.includes('office') ||
+                nearby.regionId.includes('walking') ||
+                nearby.regionId.includes('university')
+            )) ||
+            (this.world && typeof this.world.isInValidSellingSpot === 'function' && this.world.isInValidSellingSpot(this.player.x, this.player.y))
         ) {
-            // Mở hoặc Đóng sạp bán hàng tại Cổng Trường Học, Làng Đại Học, Khu Văn Phòng, Phố Đi Bộ
+            // Mở hoặc Đóng sạp bán hàng tại Cổng Trường Học, Làng Đại Học, Khu Văn Phòng, Phố Đi Bộ & Các Ô Vạch Xanh
             sellingManager.toggleSelling(nearby, this.player);
         }
     }
@@ -1052,7 +1083,17 @@ class GameApp {
                 return;
             }
 
-            const isSellingSpot = nearby.id.startsWith('school_') ||
+            const isSellingSpot = Boolean(
+                isLegal ||
+                nearby.type === 'stall' ||
+                nearby.type === 'school' ||
+                nearby.type === 'office' ||
+                nearby.type === 'walking_street' ||
+                nearby.type === 'park' ||
+                nearby.type === 'market' ||
+                nearby.type === 'green_zone' ||
+                nearby.id.startsWith('school_') ||
+                nearby.id.startsWith('spot_') ||
                 nearby.id === 'university_town' ||
                 nearby.id === 'office_q1' ||
                 nearby.id === 'walking_street' ||
@@ -1062,8 +1103,13 @@ class GameApp {
                     nearby.regionId.startsWith('school_') ||
                     nearby.regionId === 'university_town' ||
                     nearby.regionId === 'office_q1' ||
-                    nearby.regionId === 'walking_street'
-                ));
+                    nearby.regionId === 'walking_street' ||
+                    nearby.regionId.includes('school') ||
+                    nearby.regionId.includes('office') ||
+                    nearby.regionId.includes('walking') ||
+                    nearby.regionId.includes('university')
+                ))
+            );
 
             let promptKey = '';
             let promptHTML = '';

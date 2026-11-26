@@ -1951,6 +1951,69 @@ async function runInteractiveSimulationSuite() {
     }
 
     // -------------------------------------------------------------------------
+    // BƯỚC 5.8: Mô Phỏng Khôi Phục Hình Ảnh Khách Hàng Tới Mua Tại Sạp (5s)
+    // -------------------------------------------------------------------------
+    logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản Khôi Phục Hình Ảnh Khách Hàng NPC Tới Sạp (5 giây)...', COLORS.magenta);
+
+    gameApp.player.x = 790;
+    gameApp.player.y = 625;
+    state.inventory = [
+        { id: 'rice_test_1', filling: 'crab_egg_mayo', freshness: 100, stars: 5 },
+        { id: 'rice_test_2', filling: 'chicken_teriyaki', freshness: 100, stars: 5 }
+    ];
+
+    const prevMoney58 = state.money;
+    const prevInventoryCount58 = state.inventory.length;
+
+    // 1. Mở sạp
+    sellingManager.openSelling(schoolRegion, gameApp.player);
+
+    // 2. Chạy tự nhiên 300 frames (5 giây ở 60fps)
+    for (let f = 0; f < 300; f++) {
+        sellingManager.update(gameApp.player, testWorld);
+    }
+
+    // 3. Kiểm tra số lượng khách xuất hiện (ít nhất 2 khách)
+    const totalSpawned = sellingManager.customers.length;
+    const hasEnoughCustomers = totalSpawned >= 2;
+
+    // 4. Kiểm tra có khách đã di chuyển tới gần sạp (distance < 80px)
+    const closeCustomer = sellingManager.customers.find(c => {
+        const dist = Math.hypot(c.x - sellingManager.stallX, c.y - sellingManager.stallY);
+        return dist < 80;
+    });
+    const customerArrivedAtStall = Boolean(closeCustomer);
+
+    // 5. Kiểm tra render Canvas 2D & 3D không phát sinh lỗi
+    let renderWithoutError = true;
+    try {
+        const mockCtx = gameApp.canvas.getContext('2d');
+        sellingManager.render(mockCtx, { x: 0, y: 0 });
+    } catch (errRender) {
+        renderWithoutError = false;
+        console.error('Lỗi render khách hàng:', errRender);
+    }
+
+    // 6. Thực hiện bán nhanh cho khách và kiểm tra tiền + kho
+    let sellSuccess = false;
+    if (closeCustomer) {
+        closeCustomer.status = 'waiting';
+        sellSuccess = sellingManager.sellQuick();
+    }
+    const inventoryDecreased = state.inventory.length === prevInventoryCount58 - 1;
+    const moneyIncreasedProperly2 = state.money >= prevMoney58 + 20000;
+    const happyCustomerOnigiri = closeCustomer && closeCustomer.isHoldingOnigiri === true;
+
+    sellingManager.closeSelling();
+
+    if (hasEnoughCustomers && customerArrivedAtStall && renderWithoutError && sellSuccess && inventoryDecreased && moneyIncreasedProperly2 && happyCustomerOnigiri) {
+        logger.pass('Mô phỏng Khôi Phục Khách Hàng NPC: Mở sạp 5s có >= 2 khách xuất hiện, khách tới sát sạp (<80px) có bong bóng gọi món 20k/22k/25k, bán giảm kho đúng 1 nắm và tăng tiền chuẩn xác');
+    } else {
+        logger.fail('Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại',
+            JSON.stringify({ totalSpawned, customerArrivedAtStall, renderWithoutError, sellSuccess, inventoryDecreased, moneyDiff: state.money - prevMoney58, happyCustomerOnigiri }));
+    }
+
+    // -------------------------------------------------------------------------
     // BƯỚC 6: Mô Phỏng Mở 4 Chi Nhánh Thành Phố & Đô Thị Hóa (Level 1 -> 5)
     // -------------------------------------------------------------------------
     logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản mô phỏng 4 Chi Nhánh Thành Phố & Đô Thị Hóa...', COLORS.magenta);
