@@ -4,6 +4,29 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.3-PROD (CHÍNH THỨC XUẤT XƯỞNG: KHÔI PHỤC HÌNH ẢNH KHÁCH HÀNG NPC TỚI SẠP 3D & 2D, BONG BÓNG GỌI MÓN 15 VỊ NIÊM YẾT GIÁ BÁN LẺ & CẦM CƠM RỜI ĐI)
+- **Ngày ghi nhận:** 26/11/2026
+- **Trạng thái:** Nghiệm thu **100% PASS (139/139 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Khôi Phục Luồng Sinh Khách Tức Thì & Di Chuyển Xếp Hàng Sát Sạp (`src/selling.js`):**
+     - Sinh ngay lập tức khách hàng đầu tiên ngay khi bấm nút **"Mở Sạp"** hoặc nhấn phím `E`.
+     - Điều chỉnh nhịp độ sinh khách mới liên tục, nườm nượp: **45 - 65 frames** (~0.8s - 1.1s), sức chứa hàng 4 - 5 khách (xóa bỏ hoàn toàn mức nghẽn 1000 frames / 17s cũ).
+     - Khách hàng số 0 đứng mua hàng cách sạp chỉ **`50px`** ($< 80\text{px}$), các khách sau nối đuôi cách nhau 40px, bước đi nhịp nhàng từ vỉa hè tiến thẳng vào sạp và quay mặt về phía người bán (`facing = -1`).
+     - Tự động nhận diện chuẩn xác đối tượng khách theo từng chi nhánh & spot: Học sinh tại trường học/công viên, dân công sở tại khu văn phòng/chợ Bến Thành, khách VIP tại Phố Đi Bộ.
+  2. **Hiển Thị Hình Ảnh Khách Hàng Sống Động Trên Cả 3D và 2D (`src/city3D.js`, `src/characterRenderer.js`):**
+     - Đồng bộ danh sách khách hàng lên cảnh 3D Stylized Saigon (`city3D.js`) qua hàm `renderCustomer3D` và `renderSellingCustomers`: phép chiếu tọa độ 3D `projectToScreen`, bóng đổ mềm mại dưới chân, bước chân nảy 3D Isometric sống động (`bounce = Math.abs(Math.sin(stepCycle)) * 4`).
+     - Đa dạng màu sắc trang phục (`characterRenderer.js`): Bổ sung `colorVariation` giúp học sinh đổi màu mũ thể thao (xanh dương, cam, xanh lá, tím), dân công sở luân phiên màu áo và cà vạt (đỏ đô, xanh navy, xanh mint, hổ phách), mang lại không khí đường phố rực rỡ, đông vui.
+  3. **Bong Bóng Gọi Món Chuẩn Thương Hiệu 100% Cơm Nắm & Biểu Cảm Hài Lòng (`src/selling.js`):**
+     - Bong bóng gọi món nổi bật **`114px x 34px`** viền cam sang trọng: Dòng 1 hiển thị Icon `🍙` + Tên vị viết hoa chuẩn mực trong Menu 15 vị; Dòng 2 niêm yết rõ ràng giá bán lẻ **`20.000đ`** / **`22.000đ`** / **`25.000đ`** kèm chứng nhận `• ISO 22000` (tuyệt đối không lộ giá vốn/công thức, không có chữ bánh mì).
+     - Hiệu ứng sau giao dịch thành công: Khách cầm trên tay nắm cơm tam giác Onigiri nhỏ xinh `🍙` (`isHoldingOnigiri = true`), bong bóng biểu cảm hài lòng màu xanh mint phát sáng (*"Ngon chuẩn ISO! ❤️"*, *"Tươi nóng hổi! 🍙"*, *"Tuyệt vời! ⭐"*), chữ bay **`+20.000đ`** / **`+22.000đ`** / **`+25.000đ`** và âm thanh nhận tiền leng keng vui tai.
+  4. **Nhận Diện Mở Sạp Thông Minh Trên 100% Mọi Ô Vạch Xanh (`src/main.js`):**
+     - Cả nút cảm ứng `btnTouchStall` và phím tắt `E` đều kiểm tra liên thông `getNearbyRegion`, `isInValidSellingSpot` và `isInsideLegalZone`, đảm bảo đứng trong bất kỳ Ô Vạch Xanh nào trên cả 4 chi nhánh (TP.HCM, Đắk Lắk, Vinh, Hà Nội) đều mở sạp thành công 100%.
+  5. **Kiểm Toán Kịch Bản E2E 5 Giây Thực Tế (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Bổ sung kịch bản 5.8: Mở sạp 5s tại Ô Vạch Xanh Trường Học Hoa Mai có $\ge 2$ khách xuất hiện, khách tới sát sạp ($50.35\text{px} < 80\text{px}$), bán hàng giảm kho đúng 1 nắm và tăng tiền chuẩn xác, **`100% PASS`**, **`0 Console Errors`**.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.2-PROD (CHÍNH THỨC XUẤT XƯỞNG: BỘ BA TƯƠNG TÁC ONLINE TOÀN DIỆN – CHAT 1 CHẠM, KẾT BẠN XÁC NHẬN & THÁCH ĐẤU 1V1 REAL-TIME)
 - **Ngày ghi nhận:** 24/11/2026
 - **Trạng thái:** Nghiệm thu **100% PASS (138/138 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
