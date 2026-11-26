@@ -400,6 +400,90 @@ export const SKINS_CONFIG = {
     }
 };
 
+// =============================================================================
+// LIÊN MINH KHU VỰC 4 CHI NHÁNH & ĐẠI TIỆC LIÊN MINH
+// =============================================================================
+export const ALLIANCE_CONFIGS = {
+    alli_hcm: {
+        id: 'alli_hcm',
+        name: 'Liên Minh Cơm Nắm Sài Gòn',
+        branchId: 'branch_hcm',
+        branchName: 'TP. Hồ Chí Minh',
+        motto: 'Chuẩn Vị Phương Nam – An Toàn ISO 22000',
+        icon: '🏙️',
+        baseScore: 125000000
+    },
+    alli_daklak: {
+        id: 'alli_daklak',
+        name: 'Tập Đoàn Cao Nguyên Đại Ngàn',
+        branchId: 'branch_daklak',
+        branchName: 'Đắk Lắk',
+        motto: 'Nông Trại Hữu Cơ – Đậm Vị Ban Mê',
+        icon: '☕',
+        baseScore: 89000000
+    },
+    alli_vinh: {
+        id: 'alli_vinh',
+        name: 'Tổng Hội Cơm Nắm Xứ Nghệ',
+        branchId: 'branch_vinh',
+        branchName: 'TP. Vinh',
+        motto: 'Chắc Tay Chắc Lòng – Đậm Tình Miền Trung',
+        icon: '🌾',
+        baseScore: 78000000
+    },
+    alli_hanoi: {
+        id: 'alli_hanoi',
+        name: 'Đại Liên Minh Thủ Đô Hà Nội',
+        branchId: 'branch_hanoi',
+        branchName: 'Hà Nội',
+        motto: 'Tinh Hoa Ẩm Thực – Đẳng Cấp Thăng Long',
+        icon: '🏛️',
+        baseScore: 96000000
+    }
+};
+
+// =============================================================================
+// CẦU NỐI ĐỔI QUÀ THỰC TẾ TẠI 4 CHI NHÁNH (O2O REWARDS)
+// =============================================================================
+export const O2O_REWARDS_CONFIG = {
+    o2o_voucher_10k: {
+        id: 'o2o_voucher_10k',
+        title: 'Voucher Giảm 10.000đ Trực Tiếp',
+        desc: 'Áp dụng cho mọi vị Cơm Nắm 20k/22k/25k tại 4 chi nhánh toàn quốc.',
+        requiredRep: 50,
+        discountValue: 10000,
+        discountText: '10.000đ',
+        icon: '🎫'
+    },
+    o2o_voucher_buy1get1: {
+        id: 'o2o_voucher_buy1get1',
+        title: 'Voucher Mua 1 Tặng 1 Cơm Nắm Nóng Hổi',
+        desc: 'Tặng ngay 1 nắm cơm truyền thống nóng hổi khi mua bất kỳ vị cơm nắm nào.',
+        requiredRep: 100,
+        discountValue: 20000,
+        discountText: 'Mua 1 Tặng 1',
+        icon: '🍙'
+    },
+    o2o_combo_vip_4: {
+        id: 'o2o_combo_vip_4',
+        title: 'Combo VIP 4 Vị Thượng Hạng Miễn Phí',
+        desc: 'Thưởng thức trọn vẹn set 4 vị cơm nắm ISO cao cấp nhất trị giá 100.000đ.',
+        requiredRep: 250,
+        discountValue: 100000,
+        discountText: 'Set 4 Vị 100.000đ',
+        icon: '👑'
+    },
+    o2o_card_vip_gold: {
+        id: 'o2o_card_vip_gold',
+        title: 'Thẻ Vàng Khách Hàng Thân Thiết (-15%)',
+        desc: 'Giảm 15% vĩnh viễn trên mọi hóa đơn tại tất cả chi nhánh toàn quốc.',
+        requiredRep: 500,
+        discountValue: 0,
+        discountText: 'Giảm 15% Trọn Đời',
+        icon: '💳'
+    }
+};
+
 export const VEHICLES = {
     walk: {
         id: 'walk',
@@ -1184,6 +1268,41 @@ class GameState {
         // [TIẾN HÓA SỰ NGHIỆP 4 BẬC & TỦ ĐỒ BIẾN HÓA LINH VẬT]
         this.unlockedSkins = ['skin_default'];
         this.equippedSkin = 'skin_default';
+
+        // [LIÊN MINH KHU VỰC 4 CHI NHÁNH & ĐẠI TIỆC LIÊN MINH]
+        this.alliance = {
+            joinedAllianceId: 'alli_hcm',
+            role: 'member',
+            contributions: 0,
+            hasClaimedBanquet: false
+        };
+        this.allianceBuffExpiry = 0; // Giảm 25% thời gian nấu khi hoàn tất đại tiệc
+
+        // [HỆ THỐNG HẬU CẦN B2B & ĐỘI XE TẢI LẠNH CHUẨN ISO]
+        this.logistics = {
+            unlocked: false, // Tự động mở khi kitchenTier >= 3
+            autoDispatch: true,
+            trucks: [
+                {
+                    id: 'truck_1',
+                    name: 'Xe Tải Lạnh ISO #1 (Chi Nhánh Chính)',
+                    capacity: 50,
+                    cargoCount: 0,
+                    route: 'school_canteen',
+                    routeName: 'Tuyến Căn-tin Trường Học',
+                    status: 'idle', // 'idle' | 'delivering'
+                    progress: 0,
+                    durationSec: 60,
+                    lastTripRevenue: 0,
+                    totalTrips: 0,
+                    totalRevenue: 0
+                }
+            ],
+            lastUpdateTimestamp: Date.now()
+        };
+
+        // [CẦU NỐI ĐỔI QUÀ THỰC TẾ O2O]
+        this.o2oVouchers = [];
     }
 
     onUpdate(fn) {
@@ -3171,7 +3290,11 @@ class GameState {
                 tutorialCompleted: Boolean(this.tutorialCompleted),
                 tutorialStep: typeof this.tutorialStep === 'number' ? this.tutorialStep : 1,
                 unlockedSkins: Array.isArray(this.unlockedSkins) ? this.unlockedSkins : ['skin_default'],
-                equippedSkin: this.equippedSkin || 'skin_default'
+                equippedSkin: this.equippedSkin || 'skin_default',
+                alliance: this.alliance,
+                allianceBuffExpiry: this.allianceBuffExpiry || 0,
+                logistics: this.logistics,
+                o2oVouchers: Array.isArray(this.o2oVouchers) ? this.o2oVouchers : []
             };
             localStorage.setItem(this.saveKey, JSON.stringify(data));
         } catch (e) {
@@ -3342,6 +3465,18 @@ class GameState {
             }
             if (data.equippedSkin) {
                 this.equippedSkin = data.equippedSkin;
+            }
+            if (data.alliance && typeof data.alliance === 'object') {
+                this.alliance = data.alliance;
+            }
+            if (typeof data.allianceBuffExpiry === 'number') {
+                this.allianceBuffExpiry = data.allianceBuffExpiry;
+            }
+            if (data.logistics && typeof data.logistics === 'object') {
+                this.logistics = data.logistics;
+            }
+            if (Array.isArray(data.o2oVouchers)) {
+                this.o2oVouchers = data.o2oVouchers;
             }
             if (data.lastActiveTimestamp) {
                 this.lastActiveTimestamp = data.lastActiveTimestamp;
@@ -3705,6 +3840,68 @@ class GameState {
         }
         this.updateKitchenSlots();
         this.kitchenPressUpgrade = Boolean(this.kitchenPressUpgrade);
+
+        if (!this.alliance || typeof this.alliance !== 'object') {
+            this.alliance = {
+                joinedAllianceId: 'alli_hcm',
+                role: 'member',
+                contributions: 0,
+                hasClaimedBanquet: false
+            };
+        }
+        if (typeof this.allianceBuffExpiry !== 'number') {
+            this.allianceBuffExpiry = 0;
+        }
+
+        if (!this.logistics || typeof this.logistics !== 'object') {
+            this.logistics = {
+                unlocked: this.kitchenTier >= 3,
+                autoDispatch: true,
+                trucks: [
+                    {
+                        id: 'truck_1',
+                        name: 'Xe Tải Lạnh ISO #1 (Chi Nhánh Chính)',
+                        capacity: 50,
+                        cargoCount: 0,
+                        route: 'school_canteen',
+                        routeName: 'Tuyến Căn-tin Trường Học',
+                        status: 'idle',
+                        progress: 0,
+                        durationSec: 60,
+                        lastTripRevenue: 0,
+                        totalTrips: 0,
+                        totalRevenue: 0
+                    }
+                ],
+                lastUpdateTimestamp: Date.now()
+            };
+        } else {
+            if (this.kitchenTier >= 3) {
+                this.logistics.unlocked = true;
+            }
+            if (!Array.isArray(this.logistics.trucks) || this.logistics.trucks.length === 0) {
+                this.logistics.trucks = [
+                    {
+                        id: 'truck_1',
+                        name: 'Xe Tải Lạnh ISO #1 (Chi Nhánh Chính)',
+                        capacity: 50,
+                        cargoCount: 0,
+                        route: 'school_canteen',
+                        routeName: 'Tuyến Căn-tin Trường Học',
+                        status: 'idle',
+                        progress: 0,
+                        durationSec: 60,
+                        lastTripRevenue: 0,
+                        totalTrips: 0,
+                        totalRevenue: 0
+                    }
+                ];
+            }
+        }
+
+        if (!Array.isArray(this.o2oVouchers)) {
+            this.o2oVouchers = [];
+        }
     }
 
     // [HỆ THỐNG HƯỚNG DẪN TÂN THỦ 6 BƯỚC "CẦM TAY CHỈ VIỆC"]
@@ -3828,6 +4025,272 @@ class GameState {
             this.notify({ blindBoxOpened: true, skin, isNew: false, isDuplicate: true, convertedRep, convertedExp });
             return { success: true, skin, isNew: false, isDuplicate: true, convertedRep, convertedExp };
         }
+    }
+
+    // =========================================================================
+    // 1. LIÊN MINH 4 KHU VỰC & ĐẠI TIỆC LIÊN MINH
+    // =========================================================================
+    joinAlliance(allianceId) {
+        if (!ALLIANCE_CONFIGS[allianceId]) return { success: false, reason: 'invalid_alliance' };
+        this.alliance.joinedAllianceId = allianceId;
+        this.alliance.role = 'member';
+        this.save();
+        this.notify({ allianceJoined: true, allianceId });
+        return { success: true, allianceId, config: ALLIANCE_CONFIGS[allianceId] };
+    }
+
+    leaveAlliance() {
+        this.alliance.joinedAllianceId = null;
+        this.alliance.role = 'none';
+        this.save();
+        this.notify({ allianceLeft: true });
+        return { success: true };
+    }
+
+    // Góp cơm vào Đơn Hàng Xuất Khẩu & Đại Tiệc Liên Minh (trừ cơm đúng priceGroup trong kho xe)
+    contributeToBanquet(priceGroup = '20k', count = 5) {
+        if (!this.alliance.joinedAllianceId) {
+            return { success: false, reason: 'not_in_alliance' };
+        }
+        if (!Array.isArray(this.inventory)) return { success: false, reason: 'empty_inventory' };
+
+        // Tìm các nắm cơm trong kho xe thuộc nhóm giá này
+        const matchingIndices = [];
+        for (let i = 0; i < this.inventory.length; i++) {
+            const item = this.inventory[i];
+            if (item && item.filling) {
+                const cfg = FILLINGS[item.filling];
+                if (cfg && cfg.priceGroup === priceGroup) {
+                    matchingIndices.push(i);
+                    if (matchingIndices.length >= count) break;
+                }
+            }
+        }
+
+        if (matchingIndices.length < count) {
+            return { success: false, reason: 'not_enough_rice', available: matchingIndices.length, required: count, priceGroup };
+        }
+
+        // Khấu trừ từ cuối về đầu để tránh lệch index
+        for (let j = matchingIndices.length - 1; j >= 0; j--) {
+            this.inventory.splice(matchingIndices[j], 1);
+        }
+
+        this.alliance.contributions = (this.alliance.contributions || 0) + count;
+        this.addReputation(Math.max(1, Math.round(count * 0.5)));
+        this.addExp(count * 15);
+        this.save();
+        this.notify({ banquetContributed: true, priceGroup, count });
+        return { success: true, added: count, priceGroup, count, totalContributed: this.alliance.contributions };
+    }
+
+    claimAllianceBanquetReward() {
+        if (this.alliance.hasClaimedBanquet) {
+            return { success: false, reason: 'already_claimed' };
+        }
+        this.alliance.hasClaimedBanquet = true;
+        this.addMoney(500000);
+        this.addReputation(100);
+        this.addExp(1000);
+        // Buff -25% thời gian nấu trong 24 giờ
+        this.allianceBuffExpiry = Date.now() + 86400000;
+        this.save();
+        this.notify({ allianceBanquetRewardClaimed: true });
+        return { success: true, rewardMoney: 500000, rewardRep: 100, rewardExp: 1000 };
+    }
+
+    // =========================================================================
+    // 2. HỆ THỐNG HẬU CẦN B2B & ĐỘI XE TẢI LẠNH CHUẨN ISO
+    // =========================================================================
+    isLogisticsUnlocked() {
+        return (this.kitchenTier >= 3 || Boolean(this.logistics?.unlocked));
+    }
+
+    updateLogistics(deltaMs = 1000) {
+        if (!this.isLogisticsUnlocked()) return;
+        if (!this.logistics || !Array.isArray(this.logistics.trucks)) return;
+
+        let stateChanged = false;
+        const deltaSec = deltaMs / 1000;
+
+        for (const truck of this.logistics.trucks) {
+            if (truck.status === 'idle') {
+                // Tự động nạp hàng nếu bật autoDispatch
+                if (this.logistics.autoDispatch) {
+                    // Cần 10 nắm cơm từ kho xưởng hoặc kho xe
+                    let loadedCount = 0;
+                    if (Array.isArray(this.kitchenStock) && this.kitchenStock.length > 0) {
+                        const takeCount = Math.min(this.kitchenStock.length, truck.capacity || 50);
+                        this.kitchenStock.splice(0, takeCount);
+                        loadedCount += takeCount;
+                    }
+                    if (loadedCount === 0 && Array.isArray(this.inventory) && this.inventory.length >= 5) {
+                        const takeCount = Math.min(this.inventory.length, 10);
+                        this.inventory.splice(0, takeCount);
+                        loadedCount += takeCount;
+                    }
+
+                    if (loadedCount > 0) {
+                        truck.status = 'delivering';
+                        truck.cargoCount = loadedCount;
+                        truck.progress = 0;
+                        stateChanged = true;
+                    }
+                }
+            } else if (truck.status === 'delivering') {
+                truck.progress = (truck.progress || 0) + deltaSec;
+                if (truck.progress >= (truck.durationSec || 60)) {
+                    // Giao hàng thành công: Sinh doanh thu bán sỉ B2B (+15% giá trị hợp đồng đối tác)
+                    const unitPrice = 22000;
+                    const revenue = Math.round(truck.cargoCount * unitPrice * 1.15);
+                    this.addMoney(revenue);
+                    this.addReputation(3);
+                    this.addExp(50);
+
+                    truck.lastTripRevenue = revenue;
+                    truck.totalTrips = (truck.totalTrips || 0) + 1;
+                    truck.totalRevenue = (truck.totalRevenue || 0) + revenue;
+                    truck.status = 'idle';
+                    truck.cargoCount = 0;
+                    truck.progress = 0;
+                    stateChanged = true;
+
+                    if (!this.stats) this.stats = {};
+                    this.stats.b2bRevenue = (this.stats.b2bRevenue || 0) + revenue;
+                    this.stats.totalRevenue = (this.stats.totalRevenue || 0) + revenue;
+                }
+            }
+        }
+
+        if (stateChanged) {
+            this.save();
+            this.notify({ logisticsUpdated: true });
+        }
+    }
+
+    buyLogisticsTruck() {
+        if (!this.isLogisticsUnlocked()) {
+            return { success: false, reason: 'logistics_locked' };
+        }
+        const maxTrucks = 3;
+        if (!Array.isArray(this.logistics.trucks)) this.logistics.trucks = [];
+        if (this.logistics.trucks.length >= maxTrucks) {
+            return { success: false, reason: 'max_trucks_reached' };
+        }
+
+        const cost = 500000;
+        if (this.money < cost) {
+            return { success: false, reason: 'not_enough_money', cost };
+        }
+
+        this.deductMoney(cost);
+        const newIndex = this.logistics.trucks.length + 1;
+        const newTruck = {
+            id: `truck_${newIndex}`,
+            name: `Xe Tải Lạnh ISO #${newIndex}`,
+            capacity: 50,
+            cargoCount: 0,
+            route: newIndex === 2 ? 'convenience_store' : 'office_hub',
+            routeName: newIndex === 2 ? 'Tuyến Chuỗi Tiện Lợi 24/7' : 'Tuyến Khu Văn Phòng Cao Cấp',
+            status: 'idle',
+            progress: 0,
+            durationSec: 60,
+            lastTripRevenue: 0,
+            totalTrips: 0,
+            totalRevenue: 0
+        };
+        this.logistics.trucks.push(newTruck);
+        this.save();
+        this.notify({ truckBought: true, truck: newTruck });
+        return { success: true, truck: newTruck };
+    }
+
+    dispatchTruck(truckId, route = 'school_canteen') {
+        const truck = this.logistics?.trucks?.find(t => t.id === truckId);
+        if (!truck) return { success: false, reason: 'truck_not_found' };
+        if (truck.status === 'delivering') return { success: false, reason: 'truck_busy' };
+
+        // Nạp cơm từ kho
+        let loaded = 0;
+        if (Array.isArray(this.kitchenStock) && this.kitchenStock.length > 0) {
+            const count = Math.min(this.kitchenStock.length, truck.capacity || 50);
+            this.kitchenStock.splice(0, count);
+            loaded += count;
+        } else if (Array.isArray(this.inventory) && this.inventory.length > 0) {
+            const count = Math.min(this.inventory.length, 10);
+            this.inventory.splice(0, count);
+            loaded += count;
+        }
+
+        if (loaded === 0) {
+            return { success: false, reason: 'out_of_stock' };
+        }
+
+        truck.status = 'delivering';
+        truck.route = route;
+        truck.cargoCount = loaded;
+        truck.progress = 0;
+        this.save();
+        this.notify({ truckDispatched: true, truckId, route, cargoCount: loaded });
+        return { success: true, truckId, cargoCount: loaded };
+    }
+
+    // =========================================================================
+    // 3. CẦU NỐI ĐỔI QUÀ THỰC TẾ O2O TẠI 4 CHI NHÁNH
+    // =========================================================================
+    redeemO2OReward(rewardId, branchKey = 'hcm') {
+        const rewardCfg = O2O_REWARDS_CONFIG[rewardId];
+        if (!rewardCfg) return { success: false, reason: 'invalid_reward' };
+
+        if ((this.reputation || 0) < rewardCfg.requiredRep) {
+            return { success: false, reason: 'not_enough_reputation', required: rewardCfg.requiredRep, current: this.reputation };
+        }
+
+        // Khấu trừ điểm Uy Tín
+        this.reputation = Math.max(0, (this.reputation || 0) - rewardCfg.requiredRep);
+
+        // Sinh mã Voucher độc nhất (Ví dụ: ONIGIRI-HCM-8823)
+        const branchCode = String(branchKey || 'hcm').toUpperCase().replace('BRANCH_', '');
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const voucherCode = `ONIGIRI-${branchCode}-${randomNum}`;
+
+        const branchNames = {
+            HCM: 'TP. Hồ Chí Minh (Tân Tạo, Bình Tân)',
+            DAKLAK: 'Đắk Lắk (Buôn Ma Thuột)',
+            VINH: 'TP. Vinh (Lê Ninh)',
+            HANOI: 'Hà Nội (Hà Đông)'
+        };
+
+        const voucher = {
+            code: voucherCode,
+            rewardId: rewardCfg.id,
+            title: rewardCfg.title,
+            discountValue: rewardCfg.discountValue,
+            discountText: rewardCfg.discountText,
+            branch: branchKey,
+            branchName: branchNames[branchCode] || 'Toàn Quốc',
+            playerBrand: this.brandName || 'Tiệm Cơm Nắm',
+            createdAt: new Date().toISOString(),
+            status: 'unused'
+        };
+
+        if (!Array.isArray(this.o2oVouchers)) this.o2oVouchers = [];
+        this.o2oVouchers.unshift(voucher);
+        this.save();
+        this.notify({ o2oRedeemed: true, voucher });
+
+        // Đồng bộ lên Server qua HTTP API ngầm nếu có fetch
+        try {
+            if (typeof fetch === 'function') {
+                fetch('/api/o2o/redeem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(voucher)
+                }).catch(() => {});
+            }
+        } catch (e) {}
+
+        return { success: true, voucher };
     }
 }
 

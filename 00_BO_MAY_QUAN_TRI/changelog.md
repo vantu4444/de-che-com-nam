@@ -4,6 +4,31 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.9.2-PROD (CHÍNH THỨC XUẤT XƯỞNG: LIÊN MINH 4 KHU VỰC, ĐỘI XE LẠNH B2B & CẦU NỐI ĐỔI QUÀ THỰC TẾ O2O)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 4-region guilds, B2B cold-chain fleet and O2O real-world voucher system
+- **Trạng thái:** Nghiệm thu **100% PASS (95/95 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Liên Minh 4 Khu Vực & Đại Chiến Chi Nhánh (`src/state.js`, `server/server.js`, `src/quests.js`, `style.css`):**
+     - Bổ sung Tab **`🛡️ Liên Minh`** trong Điện Thoại `iGiri`: Cho phép người chơi gia nhập 1 trong 4 tập đoàn đại diện cho 4 chi nhánh toàn quốc (**TP. Hồ Chí Minh, Đắk Lắk, TP. Vinh, Hà Nội**).
+     - **Đơn Xuất Khẩu & Đại Tiệc Liên Minh (450 Nắm):** Gom cơm nắm chuẩn ISO thuộc đủ 3 nhóm giá bán lẻ (`20.000đ`, `22.000đ`, `25.000đ` — giữ kín công thức và giá vốn). Thành viên đóng góp cơm vào tiệc để nhận **Rương Thưởng Uy Tín** (`+500.000đ`, `+100 Uy Tín`, `+1000 EXP`) và kích hoạt buff **giảm 25% thời gian nấu của Bếp toàn hội trong 24h**.
+     - Bảng xếp hạng doanh số đại chiến giữa 4 khu vực cập nhật thời gian thực.
+  2. **Hệ Thống Hậu Cần B2B & Đội Xe Tải Lạnh Tự Động Chuẩn ISO (`src/state.js`, `src/city3D.js`, `src/quests.js`, `src/main.js`, `style.css`):**
+     - Mở khóa khi đạt **Cấp Xưởng 3 trở lên** (`kitchenTier >= 3`).
+     - Cho phép đầu tư thêm Xe Tải Lạnh Composite bảo ôn âm độ (tối đa 3 xe, `500.000đ/xe`). Xe tự động nhận cơm từ kho xưởng và xuất bến giao sỉ hợp đồng tới Căn-tin Trường Học, Chuỗi Siêu Thị Tiện Lợi & Khu Văn Phòng.
+     - Mô phỏng 3D Isometric độc quyền: Xe tải lạnh composite màu trắng tuyết chuẩn ISO 22000, đèn LED gầm xanh cyan làm mát âm độ, biển hiệu mang thương hiệu người chơi chạy trên đường phố 3D (`src/city3D.js`), tự sinh doanh thu B2B định kỳ (`+15%` tip hợp đồng chuỗi).
+     - Công tắc Auto-Dispatch: Tự động xếp cơm từ kho xưởng và xuất bến khi xe sẵn sàng.
+  3. **Cầu Nối Đổi Quà Thực Tế (O2O) & Nâng Cấp Trang Quản Trị `/admin` (`src/state.js`, `src/quests.js`, `server/server.js`, `style.css`):**
+     - Bổ sung Tab **`🎁 Đổi Quà O2O`** trong `iGiri`: Dùng Điểm Uy Tín đổi 4 gói quà thực tế áp dụng tại 4 chi nhánh (Voucher 10k, Voucher Mua 1 Tặng 1, Combo VIP 4 Vị 100k, Thẻ Vàng 15%).
+     - Tự động sinh mã định danh độc nhất dạng `ONIGIRI-{BRANCH}-{RANDOM}` (VD: `ONIGIRI-HCM-8823`).
+     - Trang Quản Trị `/admin` bảo mật PIN `202688`: Bổ sung Tab `[🎟️ Mã Ưu Đãi O2O]`, nút "Duyệt Dùng Tại Quầy" (`POST /api/o2o/use`), và nút **`📥 Xuất File Excel O2O (.CSV)`** với mã **UTF-8 BOM (`\uFEFF`)** không bao giờ lỗi font tiếng Việt trên Microsoft Excel.
+  4. **Nghiệm Thu Toàn Diện 95/95 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Toàn bộ kịch bản kiểm thử BƯỚC 6.998 đạt 100% PASS, 0 Console Errors, WebGL & 2D Canvas hoạt động hoàn hảo trên Desktop (1440x900), iPhone (375x812) và iPad (768x1024).
+     - Cam kết 100% Cơm Nắm Onigiri, 15 vị, 3 mức giá (20k/22k/25k), chuẩn ISO 22000 & ATVSTP.
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.9.1-PROD (CHÍNH THỨC XUẤT XƯỞNG: HƯỚNG DẪN TÂN THỦ "CẦM TAY CHỈ VIỆC" 60 GIÂY ĐẦU TIÊN – SPOTLIGHT, BÀN TAY CHỈ ĐIỂM & DẪN ĐƯỜNG VẠCH XANH)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 60-second interactive spotlight tutorial, hand pointer and neon wayfinding

@@ -970,6 +970,9 @@ class GameApp {
             state.advanceTime(dt);
             state.updateFarm(now);
             state.updateKitchenSlots(now);
+            if (typeof state.updateLogistics === 'function') {
+                state.updateLogistics(dt * 1000);
+            }
             this.updateClockHUD();
 
             if (!this.isKitchenOpen && !this.isMarketOpen) {
@@ -1303,6 +1306,18 @@ class GameApp {
                 state.currentVehicle,
                 state.kitchenTier || state.kitchenManualTier || 1
             );
+            this.ctx.restore();
+        }
+
+        // 3.6. Vẽ Đội Xe Tải Lạnh Hậu Cần B2B Chuẩn ISO
+        if (typeof state.isLogisticsUnlocked === 'function' && state.isLogisticsUnlocked() && city3D && typeof city3D.renderLogisticsColdTruck === 'function') {
+            this.ctx.save();
+            this.ctx.translate(-this.camera.x, -this.camera.y);
+            const trucks = state.logistics?.trucks || [];
+            const nowTime = Date.now();
+            trucks.forEach(trk => {
+                city3D.renderLogisticsColdTruck(this.ctx, trk, nowTime, state.brandName);
+            });
             this.ctx.restore();
         }
 

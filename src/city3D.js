@@ -1152,6 +1152,160 @@ export class City3DManager {
 
         ctx.restore();
     }
+
+    /**
+     * DỰNG XE TẢI LẠNH HẬU CẦN B2B CHUẨN ISO TRÊN PHỐ 3D
+     * @param {CanvasRenderingContext2D} ctx
+     * @param {Object} truck - Thông tin xe tải lạnh ({ id, name, cargoCount, progress, durationSec, status })
+     * @param {number} now - Timestamp thời gian thực
+     * @param {string} brandName - Tên thương hiệu người chơi
+     */
+    renderLogisticsColdTruck(ctx, truck, now = Date.now(), brandName = 'Đế Chế Cơm Nắm') {
+        if (!ctx || !truck) return;
+
+        // Quỹ đạo xe tải lạnh B2B: chạy tuần hoàn giữa Xưởng Trung Tâm (450, 1180) và Cổng Trường (790, 650)
+        const startX = 450;
+        const startY = 1180;
+        const endX = 790;
+        const endY = 650;
+
+        const dur = (truck.durationSec || 60) * 1000;
+        const cycleProgress = ((now % dur) / dur); // 0 -> 1
+        // Chạy đi rồi chạy về
+        const pingPong = cycleProgress < 0.5 ? (cycleProgress * 2) : ((1 - cycleProgress) * 2);
+        const tx = startX + (endX - startX) * pingPong;
+        const ty = startY + (endY - startY) * pingPong;
+        const isFacingRight = cycleProgress < 0.5;
+
+        ctx.save();
+        ctx.translate(tx, ty);
+        if (!isFacingRight) {
+            ctx.scale(-1, 1);
+        }
+
+        // Bóng xe tải trên mặt đường
+        ctx.beginPath();
+        ctx.ellipse(0, 16, 42, 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.fill();
+
+        // Đèn LED làm mát âm độ gầm xe (Cold Chain LED Cyan)
+        const ledPulse = Math.sin(now / 150) * 0.2 + 0.6;
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(0, 14, 38, 7, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(56, 189, 248, ${ledPulse})`;
+        ctx.shadowColor = '#38bdf8';
+        ctx.shadowBlur = 12;
+        ctx.fill();
+        ctx.restore();
+
+        // 1. Thùng Xe Lạnh Composite Trắng Tinh Khiết (Chuẩn ISO 22000)
+        ctx.fillStyle = '#f8fafc';
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.5;
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(-36, -26, 48, 32, 4);
+            ctx.fill();
+            ctx.stroke();
+        } else {
+            ctx.fillRect(-36, -26, 48, 32);
+            ctx.strokeRect(-36, -26, 48, 32);
+        }
+
+        // Cửa sau & bản lề inox
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-35, -24, 2, 28);
+
+        // Biểu tượng Bông Tuyết Lạnh & ISO trên thân thùng
+        ctx.fillStyle = '#0284c7';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('❄️ ISO 22000', -12, -14);
+
+        // Biển hiệu Thương Hiệu Người Chơi trên thành thùng xe
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 7.5px "Be Vietnam Pro", sans-serif';
+        const displayBrand = brandName.length > 14 ? brandName.slice(0, 13) + '…' : brandName;
+        ctx.fillText(displayBrand, -12, -4);
+
+        // 2. Cabin Lái Xe Tải Hiện Đại
+        ctx.fillStyle = '#0284c7';
+        ctx.strokeStyle = '#0369a1';
+        ctx.lineWidth = 1.5;
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(12, -18, 22, 24, [0, 6, 4, 0]);
+            ctx.fill();
+            ctx.stroke();
+        } else {
+            ctx.fillRect(12, -18, 22, 24);
+            ctx.strokeRect(12, -18, 22, 24);
+        }
+
+        // Kính chắn gió cabin
+        ctx.fillStyle = '#7dd3fc';
+        ctx.fillRect(20, -14, 11, 10);
+
+        // Đèn pha trước chiếu sáng
+        ctx.fillStyle = '#fef08a';
+        ctx.shadowColor = '#fef08a';
+        ctx.shadowBlur = 8;
+        ctx.fillRect(32, -4, 3, 5);
+        ctx.shadowBlur = 0;
+
+        // 3. 4 Bánh xe tải cao su đen & mâm bạc
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1;
+
+        // Bánh trước
+        ctx.beginPath();
+        ctx.arc(24, 8, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Bánh sau đôi
+        ctx.beginPath();
+        ctx.arc(-22, 8, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(-8, 8, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+
+        // 4. Bảng nhãn hiển thị trạng thái phía trên xe (không bị lật theo scale)
+        ctx.save();
+        ctx.translate(tx, ty - 38);
+        ctx.textAlign = 'center';
+
+        // Tag nền
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1;
+        if (typeof ctx.roundRect === 'function') {
+            ctx.beginPath();
+            ctx.roundRect(-50, -8, 100, 16, 6);
+            ctx.fill();
+            ctx.stroke();
+        } else {
+            ctx.fillRect(-50, -8, 100, 16);
+            ctx.strokeRect(-50, -8, 100, 16);
+        }
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 8.5px "Be Vietnam Pro", sans-serif';
+        const cargoText = truck.cargoCount > 0 ? `📦 ${truck.cargoCount} Nắm Cơm` : '🚚 Đang Vận Hành';
+        ctx.fillText(`🚚 B2B • ${cargoText}`, 0, 4);
+
+        ctx.restore();
+    }
 }
 
 export const city3D = new City3DManager();

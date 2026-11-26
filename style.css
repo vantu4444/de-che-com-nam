@@ -10203,3 +10203,1030 @@ body.tutorial-active .territory-overthrown-banner {
 
 
 
+
+/* ==========================================================================
+   HỆ THỐNG LIÊN MINH 4 KHU VỰC, HẬU CẦN B2B & CẦU NỐI ĐỔI QUÀ O2O
+   ========================================================================== */
+
+/* --- 1. LIÊN MINH 4 KHU VỰC & ĐẠI CHIẾN CHI NHÁNH --- */
+.alliance-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 24px;
+}
+
+.alliance-header-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.ahc-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ahc-emblem {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 6px rgba(251, 191, 36, 0.5));
+}
+
+.ahc-info h3 {
+    margin: 0 0 2px;
+    font-size: 15px;
+    color: #fbbf24;
+    font-weight: 800;
+}
+
+.ahc-branch {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.ahc-branch strong {
+    color: #38bdf8;
+}
+
+.ahc-motto {
+    margin: 4px 0 0;
+    font-size: 11px;
+    font-style: italic;
+    color: #cbd5e1;
+}
+
+.ahc-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ahc-stat-box {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+}
+
+.ahc-stat-box small {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.ahc-stat-box .val {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ahc-stat-box .buff-active {
+    color: #34d399;
+    text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+.alliance-section-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.asc-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: #f1f5f9;
+    margin-bottom: 10px;
+}
+
+.regional-war-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.rw-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rw-card.rank-1 {
+    border-color: rgba(251, 191, 36, 0.5);
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(15, 23, 42, 0.8));
+}
+
+.rw-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rw-rank {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fbbf24;
+}
+
+.rw-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.rw-score {
+    font-size: 13px;
+    font-weight: 800;
+    color: #38bdf8;
+}
+
+.rw-sub {
+    font-size: 9px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.banquet-card {
+    border-color: rgba(244, 63, 94, 0.3);
+}
+
+.banquet-badge {
+    font-size: 10px;
+    background: rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.banquet-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    margin: 0 0 10px;
+    line-height: 1.4;
+}
+
+.banquet-progress-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.b-prog-item {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.b-prog-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.b-prog-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.b-prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 3px;
+}
+
+.b-prog-fill.fill-22k {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.b-prog-fill.fill-25k {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.b-prog-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.b-prog-actions small {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.btn-contribute-banquet {
+    padding: 4px 10px;
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.btn-contribute-banquet:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.banquet-reward-box {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brb-info small {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.brb-info strong {
+    font-size: 11px;
+    color: #fbbf24;
+}
+
+.btn-claim-banquet {
+    padding: 8px 14px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+
+.btn-claim-banquet:disabled {
+    background: #475569;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.alliance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.alliance-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.alliance-item.current {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.06);
+}
+
+.ai-icon {
+    font-size: 22px;
+}
+
+.ai-info {
+    flex: 1;
+}
+
+.ai-info h4 {
+    margin: 0;
+    font-size: 12px;
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.ai-sub {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.ai-joined-badge {
+    font-size: 10px;
+    color: #38bdf8;
+    font-weight: 700;
+    background: rgba(56, 189, 248, 0.15);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.btn-join-alliance {
+    padding: 5px 12px;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* --- 2. HẬU CẦN B2B & ĐỘI XE TẢI LẠNH CHUẨN ISO --- */
+.logistics-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 24px;
+}
+
+.logistics-locked-card {
+    text-align: center;
+    padding: 24px 16px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+}
+
+.llc-icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.logistics-locked-card h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    color: #f8fafc;
+}
+
+.logistics-locked-card p {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.5;
+    margin: 0 0 14px;
+}
+
+.llc-req {
+    margin-bottom: 14px;
+}
+
+.llc-req span {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.1);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.btn-goto-kitchen {
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.logistics-header-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 16px;
+    padding: 14px 16px;
+}
+
+.lhc-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.lhc-icon {
+    font-size: 32px;
+}
+
+.lhc-info h3 {
+    margin: 0 0 2px;
+    font-size: 15px;
+    color: #38bdf8;
+    font-weight: 800;
+}
+
+.lhc-info p {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.lhc-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 10px;
+}
+
+.lhc-stat {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 6px 8px;
+    text-align: center;
+}
+
+.lhc-stat small {
+    display: block;
+    font-size: 9px;
+    color: #94a3b8;
+}
+
+.lhc-stat .val {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.lhc-stat .val.text-gold {
+    color: #fbbf24;
+}
+
+.logistics-control-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+
+.lcc-switch-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lcc-switch-info strong {
+    display: block;
+    font-size: 12px;
+    color: #f8fafc;
+}
+
+.lcc-switch-info small {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.switch-ui {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch-ui input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider-ui {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #475569;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.slider-ui:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.switch-ui input:checked + .slider-ui {
+    background-color: #10b981;
+}
+
+.switch-ui input:checked + .slider-ui:before {
+    transform: translateX(20px);
+}
+
+.trucks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.truck-card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.truck-card.delivering {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.05), rgba(30, 41, 59, 0.9));
+}
+
+.truck-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.truck-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.truck-badge {
+    font-size: 9px;
+    font-weight: 800;
+    background: #0284c7;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.truck-title h4 {
+    margin: 0;
+    font-size: 13px;
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.truck-status-pill {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.pill-delivering {
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pill-idle {
+    background: rgba(52, 211, 153, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.truck-route {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+}
+
+.truck-route strong {
+    color: #e2e8f0;
+}
+
+.truck-progress-box {
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+}
+
+.tpb-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.tpb-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.tpb-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38bdf8, #818cf8);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.truck-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.truck-foot small {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.truck-foot small strong {
+    color: #fbbf24;
+}
+
+.btn-dispatch-truck {
+    padding: 6px 12px;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-dispatch-truck:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.buy-truck-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px dashed rgba(251, 191, 36, 0.4);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.btc-info h4 {
+    margin: 0 0 2px;
+    font-size: 12px;
+    color: #fbbf24;
+}
+
+.btc-info p {
+    margin: 0;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.btn-buy-truck {
+    padding: 8px 12px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* --- 3. CẦU NỐI ĐỔI QUÀ THỰC TẾ (O2O) --- */
+.rewards-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 24px;
+}
+
+.rewards-header-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 16px;
+    padding: 14px 16px;
+}
+
+.rhc-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.rhc-icon {
+    font-size: 32px;
+}
+
+.rhc-info h3 {
+    margin: 0 0 2px;
+    font-size: 15px;
+    color: #fda4af;
+    font-weight: 800;
+}
+
+.rhc-info p {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+.rhc-rep-badge {
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rhc-rep-badge span {
+    font-size: 11px;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.rhc-rep-badge strong {
+    font-size: 14px;
+    color: #fbbf24;
+}
+
+.rewards-branch-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 10px 12px;
+}
+
+.rbc-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+}
+
+.o2o-branch-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.o2o-branch-btn {
+    padding: 8px 10px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.o2o-branch-btn.active {
+    background: rgba(56, 189, 248, 0.2);
+    border-color: #38bdf8;
+    color: #38bdf8;
+}
+
+.rewards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.reward-item-card {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.reward-item-card.can-redeem {
+    border-color: rgba(251, 191, 36, 0.4);
+}
+
+.reward-item-card.locked {
+    opacity: 0.7;
+}
+
+.ric-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.ric-icon {
+    font-size: 20px;
+}
+
+.ric-discount {
+    font-size: 9px;
+    font-weight: 800;
+    background: rgba(244, 63, 94, 0.2);
+    color: #fda4af;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.ric-title {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.ric-desc {
+    margin: 0 0 8px;
+    font-size: 10px;
+    color: #94a3b8;
+    line-height: 1.3;
+}
+
+.ric-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ric-req {
+    font-size: 10px;
+    color: #cbd5e1;
+}
+
+.ric-req strong {
+    color: #fbbf24;
+}
+
+.btn-redeem-o2o {
+    width: 100%;
+    padding: 6px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-redeem-o2o:disabled {
+    background: #475569;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.my-vouchers-section {
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.mvs-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #f8fafc;
+    margin-bottom: 10px;
+}
+
+.mvs-empty {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.vouchers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.voucher-card {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.voucher-card.unused {
+    border-color: rgba(52, 211, 153, 0.4);
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.05), rgba(15, 23, 42, 0.8));
+}
+
+.voucher-card.used {
+    opacity: 0.5;
+}
+
+.vc-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.vc-code {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 800;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.vc-status {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.status-unused {
+    background: rgba(52, 211, 153, 0.2);
+    color: #34d399;
+}
+
+.status-used {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+}
+
+.vc-title {
+    margin: 0 0 2px;
+    font-size: 12px;
+    color: #f8fafc;
+}
+
+.vc-branch {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+}
+
+.vc-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.vc-foot small {
+    font-size: 9px;
+    color: #64748b;
+}
+
+.btn-copy-voucher-code {
+    padding: 4px 8px;
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.o2o-hint {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: rgba(56, 189, 248, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+.o2o-hint span {
+    font-size: 10px;
+    color: #93c5fd;
+    line-height: 1.4;
+}

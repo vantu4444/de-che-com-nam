@@ -17,7 +17,9 @@ import {
     DAILY_ATTENDANCE_REWARDS,
     FILLING_MASTERY_THRESHOLDS,
     EVOLUTION_TIERS,
-    SKINS_CONFIG
+    SKINS_CONFIG,
+    ALLIANCE_CONFIGS,
+    O2O_REWARDS_CONFIG
 } from './state.js';
 import { audio } from './audio.js';
 import { sellingManager } from './selling.js';
@@ -726,6 +728,15 @@ export class QuestManager {
                             <button type="button" class="phone-tab-btn ${this.activeTab === 'wardrobe' ? 'active' : ''}" data-tab="wardrobe">
                                 🎭 Biến Hóa
                             </button>
+                            <button type="button" class="phone-tab-btn ${this.activeTab === 'alliance' ? 'active' : ''}" data-tab="alliance">
+                                🛡️ Liên Minh
+                            </button>
+                            <button type="button" class="phone-tab-btn ${this.activeTab === 'logistics' ? 'active' : ''}" data-tab="logistics">
+                                🚚 Hậu Cần B2B
+                            </button>
+                            <button type="button" class="phone-tab-btn ${this.activeTab === 'rewards' ? 'active' : ''}" data-tab="rewards">
+                                🎁 Đổi Quà O2O
+                            </button>
                         </div>
 
                         <!-- Nội dung tab đang chọn -->
@@ -769,6 +780,12 @@ export class QuestManager {
                 return onlineUI.renderOnlineTab();
             case 'wardrobe':
                 return this.renderWardrobeTab();
+            case 'alliance':
+                return this.renderAllianceTab();
+            case 'logistics':
+                return this.renderLogisticsTab();
+            case 'rewards':
+                return this.renderRewardsTab();
             default:
                 return '';
         }
@@ -1691,6 +1708,435 @@ export class QuestManager {
         `;
     }
 
+    // =========================================================================
+    // TAB 1: LIÊN MINH 4 KHU VỰC & ĐẠI TIỆC LIÊN MINH
+    // =========================================================================
+    renderAllianceTab() {
+        const joinedId = state.alliance?.joinedAllianceId || 'alli_hcm';
+        const currentAlli = ALLIANCE_CONFIGS[joinedId] || ALLIANCE_CONFIGS.alli_hcm;
+        const myContrib = state.alliance?.contributions || 0;
+        const hasClaimed = Boolean(state.alliance?.hasClaimedBanquet);
+
+        // Đếm cơm nắm theo 3 nhóm giá trong kho xe
+        let count20k = 0;
+        let count22k = 0;
+        let count25k = 0;
+        (state.inventory || []).forEach(item => {
+            if (item && item.filling) {
+                const cfg = FILLINGS[item.filling];
+                if (cfg) {
+                    if (cfg.priceGroup === '20k') count20k++;
+                    else if (cfg.priceGroup === '22k') count22k++;
+                    else if (cfg.priceGroup === '25k') count25k++;
+                }
+            }
+        });
+
+        const isBuffActive = state.allianceBuffExpiry && Date.now() < state.allianceBuffExpiry;
+
+        return `
+            <div class="tab-content alliance-view">
+                <!-- Header Liên Minh -->
+                <div class="alliance-header-card">
+                    <div class="ahc-top">
+                        <span class="ahc-emblem">${currentAlli.icon}</span>
+                        <div class="ahc-info">
+                            <h3 class="ahc-name">${currentAlli.name}</h3>
+                            <div class="ahc-branch">📍 Chi Nhánh Đại Diện: <strong>${currentAlli.branchName}</strong></div>
+                            <p class="ahc-motto">"${currentAlli.motto}"</p>
+                        </div>
+                    </div>
+                    <div class="ahc-stats">
+                        <div class="ahc-stat-box">
+                            <small>Đóng Góp Cá Nhân</small>
+                            <span class="val">🍙 ${myContrib} Nắm</span>
+                        </div>
+                        <div class="ahc-stat-box">
+                            <small>Buff Dây Chuyền Bếp</small>
+                            <span class="val ${isBuffActive ? 'buff-active' : ''}">
+                                ${isBuffActive ? '⚡ Giảm 25% Nấu' : 'Chưa Kích Hoạt'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Xếp Hạng Đại Chiến 4 Khu Vực (Realtime War) -->
+                <div class="alliance-section-card">
+                    <div class="asc-title">
+                        <span>⚔️ ĐẠI CHIẾN DOANH SỐ 4 KHU VỰC (ISO & ATVSTP)</span>
+                    </div>
+                    <div class="regional-war-grid">
+                        <div class="rw-card rank-1">
+                            <div class="rw-head">
+                                <span class="rw-rank">👑 TOP 1</span>
+                                <span class="rw-name">TP. Hồ Chí Minh</span>
+                            </div>
+                            <div class="rw-score">125.000.000đ</div>
+                            <div class="rw-sub">Phố Đi Bộ, Chợ Bến Thành, ĐH Quốc Gia</div>
+                        </div>
+                        <div class="rw-card">
+                            <div class="rw-head">
+                                <span class="rw-rank">TOP 2</span>
+                                <span class="rw-name">Thủ Đô Hà Nội</span>
+                            </div>
+                            <div class="rw-score">96.000.000đ</div>
+                            <div class="rw-sub">Hồ Gươm 36 Phố, Chợ Đồng Xuân</div>
+                        </div>
+                        <div class="rw-card">
+                            <div class="rw-head">
+                                <span class="rw-rank">TOP 3</span>
+                                <span class="rw-name">Đắk Lắk (Cao Nguyên)</span>
+                            </div>
+                            <div class="rw-score">89.000.000đ</div>
+                            <div class="rw-sub">Ngã Sáu BMT, Quảng Trường 10/3</div>
+                        </div>
+                        <div class="rw-card">
+                            <div class="rw-head">
+                                <span class="rw-rank">TOP 4</span>
+                                <span class="rw-name">TP. Vinh (Xứ Nghệ)</span>
+                            </div>
+                            <div class="rw-score">78.000.000đ</div>
+                            <div class="rw-sub">Quảng Trường Sông Lam, Đại Lộ Lê Nin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Đơn Xuất Khẩu & Đại Tiệc Liên Minh (Gom 450 nắm) -->
+                <div class="alliance-section-card banquet-card">
+                    <div class="asc-title">
+                        <span>🍙 ĐƠN XUẤT KHẨU & ĐẠI TIỆC LIÊN MINH TOÀN CẦU</span>
+                        <span class="banquet-badge">Mục tiêu: 450 Nắm</span>
+                    </div>
+                    <p class="banquet-desc">Các thành viên cùng góp cơm nắm đủ 3 phân khúc để hoàn thành đơn tiệc lớn, mở Rương Thưởng Uy Tín & Tăng tốc xưởng toàn hội!</p>
+                    
+                    <div class="banquet-progress-list">
+                        <!-- Nhóm 20k -->
+                        <div class="b-prog-item">
+                            <div class="b-prog-head">
+                                <span>Cơm Nắm Phổ Thông (20k)</span>
+                                <strong>120 / 200 Nắm</strong>
+                            </div>
+                            <div class="b-prog-bar"><div class="b-prog-fill" style="width: 60%;"></div></div>
+                            <div class="b-prog-actions">
+                                <small>Trong túi xe có: <strong>${count20k} nắm 20k</strong></small>
+                                <button type="button" class="btn-contribute-banquet" data-price-group="20k" ${count20k < 5 ? 'disabled' : ''}>
+                                    Góp 5 Nắm 20k
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm 22k -->
+                        <div class="b-prog-item">
+                            <div class="b-prog-head">
+                                <span>Cơm Nắm Cao Cấp (22k)</span>
+                                <strong>90 / 150 Nắm</strong>
+                            </div>
+                            <div class="b-prog-bar"><div class="b-prog-fill fill-22k" style="width: 60%;"></div></div>
+                            <div class="b-prog-actions">
+                                <small>Trong túi xe có: <strong>${count22k} nắm 22k</strong></small>
+                                <button type="button" class="btn-contribute-banquet" data-price-group="22k" ${count22k < 5 ? 'disabled' : ''}>
+                                    Góp 5 Nắm 22k
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Nhóm 25k -->
+                        <div class="b-prog-item">
+                            <div class="b-prog-head">
+                                <span>Cơm Nắm Thượng Hạng (25k)</span>
+                                <strong>60 / 100 Nắm</strong>
+                            </div>
+                            <div class="b-prog-bar"><div class="b-prog-fill fill-25k" style="width: 60%;"></div></div>
+                            <div class="b-prog-actions">
+                                <small>Trong túi xe có: <strong>${count25k} nắm 25k</strong></small>
+                                <button type="button" class="btn-contribute-banquet" data-price-group="25k" ${count25k < 5 ? 'disabled' : ''}>
+                                    Góp 5 Nắm 25k
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="banquet-reward-box">
+                        <div class="brb-info">
+                            <strong>🎁 Phần Thưởng Rương Đại Tiệc:</strong>
+                            <span>+500.000đ Vốn • +100 Uy Tín ⭐ • +1.000 EXP • Buff Giảm 25% Thời Gian Nấu (24h)</span>
+                        </div>
+                        <button type="button" class="btn-claim-banquet" id="btnClaimBanquetReward" ${hasClaimed ? 'disabled' : ''}>
+                            ${hasClaimed ? '✓ Đã Nhận Rương' : '🎁 Mở Rương Thưởng Đại Tiệc'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danh sách 4 Liên Minh Khu Vực -->
+                <div class="alliance-section-card">
+                    <div class="asc-title">
+                        <span>🛡️ DANH SÁCH TẬP ĐOÀN 4 CHI NHÁNH</span>
+                    </div>
+                    <div class="alliance-list">
+                        ${Object.values(ALLIANCE_CONFIGS).map(alli => {
+                            const isCurrent = alli.id === joinedId;
+                            return `
+                                <div class="alliance-item ${isCurrent ? 'current' : ''}">
+                                    <span class="ai-icon">${alli.icon}</span>
+                                    <div class="ai-info">
+                                        <h4>${alli.name}</h4>
+                                        <div class="ai-sub">📍 ${alli.branchName} • Doanh số: ${(alli.baseScore || 0).toLocaleString('vi-VN')}đ</div>
+                                    </div>
+                                    <div class="ai-action">
+                                        ${isCurrent ? `
+                                            <span class="ai-joined-badge">✓ Đang Ở Đây</span>
+                                        ` : `
+                                            <button type="button" class="btn-join-alliance" data-alliance-id="${alli.id}">
+                                                Gia Nhập
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // =========================================================================
+    // TAB 2: HỆ THỐNG HẬU CẦN B2B & ĐỘI XE TẢI LẠNH CHUẨN ISO
+    // =========================================================================
+    renderLogisticsTab() {
+        const isUnlocked = state.isLogisticsUnlocked();
+        if (!isUnlocked) {
+            return `
+                <div class="tab-content logistics-view">
+                    <div class="logistics-locked-card">
+                        <div class="llc-icon">🚚🔒</div>
+                        <h3>HẬU CẦN B2B & ĐỘI XE TẢI LẠNH ĐANG KHÓA</h3>
+                        <p>Yêu cầu đạt <strong>Cấp Xưởng 3 trở lên</strong> để mở khóa Đội Xe Tải Lạnh Chuẩn ISO, tự động xuất bến giao sỉ tới các Căn-tin Trường Học, Chuỗi Cửa Hàng Tiện Lợi & Khu Văn Phòng.</p>
+                        <div class="llc-req">
+                            <span>Điều kiện hiện tại: Xưởng Cấp ${state.kitchenTier || 1}/3</span>
+                        </div>
+                        <button type="button" class="btn-goto-kitchen" id="btnGoUpgradeKitchen">
+                            🍳 Nâng Cấp Xưởng Bếp Ngay
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        const trucks = state.logistics?.trucks || [];
+        const autoDispatch = Boolean(state.logistics?.autoDispatch);
+        const b2bRev = (state.stats?.b2bRevenue || 0).toLocaleString('vi-VN');
+        const totalCargoInStock = Array.isArray(state.kitchenStock) ? state.kitchenStock.length : 0;
+
+        return `
+            <div class="tab-content logistics-view">
+                <!-- Header Hậu Cần B2B -->
+                <div class="logistics-header-card">
+                    <div class="lhc-top">
+                        <span class="lhc-icon">🚚❄️</span>
+                        <div class="lhc-info">
+                            <h3>HỆ THỐNG HẬU CẦN B2B CHUẨN ISO</h3>
+                            <p>Đội xe tải lạnh bảo quản cơm nắm nóng hổi 100% tươi, tự động giao sỉ hợp đồng chuỗi.</p>
+                        </div>
+                    </div>
+                    <div class="lhc-stats-grid">
+                        <div class="lhc-stat">
+                            <small>Doanh Thu Giao Sỉ</small>
+                            <span class="val text-gold">${b2bRev}đ</span>
+                        </div>
+                        <div class="lhc-stat">
+                            <small>Cơm Tồn Trong Xưởng</small>
+                            <span class="val">${totalCargoInStock} Nắm</span>
+                        </div>
+                        <div class="lhc-stat">
+                            <small>Quy Mô Đội Xe</small>
+                            <span class="val">${trucks.length}/3 Xe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Điều Phối & Tự Động Xuất Bến -->
+                <div class="logistics-control-card">
+                    <div class="lcc-switch-row">
+                        <div class="lcc-switch-info">
+                            <strong>⚡ Tự Động Nạp Cơm & Xuất Bến (Auto-Dispatch)</strong>
+                            <small>Xe tự bốc cơm từ Xưởng và xuất bến định kỳ khi sẵn sàng.</small>
+                        </div>
+                        <label class="switch-ui">
+                            <input type="checkbox" id="toggleAutoDispatch" ${autoDispatch ? 'checked' : ''} />
+                            <span class="slider-ui"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Danh sách Đội Xe Tải Lạnh -->
+                <div class="trucks-list">
+                    ${trucks.map((trk, idx) => {
+                        const isDelivering = trk.status === 'delivering';
+                        const pct = Math.min(100, Math.round(((trk.progress || 0) / (trk.durationSec || 60)) * 100));
+                        return `
+                            <div class="truck-card ${isDelivering ? 'delivering' : 'idle'}">
+                                <div class="truck-head">
+                                    <div class="truck-title">
+                                        <span class="truck-badge">XE #${idx + 1}</span>
+                                        <h4>${trk.name}</h4>
+                                    </div>
+                                    <span class="truck-status-pill ${isDelivering ? 'pill-delivering' : 'pill-idle'}">
+                                        ${isDelivering ? '🚚 Đang Giao Sỉ' : '🟢 Sẵn Sàng'}
+                                    </span>
+                                </div>
+                                <div class="truck-route">
+                                    <span>📍 Tuyến đường: <strong>${trk.routeName || 'Căn-tin Trường Học'}</strong></span>
+                                </div>
+                                <div class="truck-progress-box">
+                                    <div class="tpb-info">
+                                        <span>Tiến độ hành trình: ${pct}%</span>
+                                        <span>${isDelivering ? `📦 Đang chở: ${trk.cargoCount} Nắm` : 'Chờ nạp hàng'}</span>
+                                    </div>
+                                    <div class="tpb-bar"><div class="tpb-fill" style="width: ${pct}%;"></div></div>
+                                </div>
+                                <div class="truck-foot">
+                                    <small>Doanh thu chuyến trước: <strong>+${(trk.lastTripRevenue || 0).toLocaleString('vi-VN')}đ</strong></small>
+                                    ${!isDelivering ? `
+                                        <button type="button" class="btn-dispatch-truck" data-truck-id="${trk.id}">
+                                            Xuất Bến Ngay
+                                        </button>
+                                    ` : `
+                                        <button type="button" class="btn-dispatch-truck" disabled>
+                                            Đang Vận Hành...
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- Đầu tư thêm xe tải mới -->
+                ${trucks.length < 3 ? `
+                    <div class="buy-truck-card">
+                        <div class="btc-info">
+                            <h4>Đầu Tư Thêm Xe Tải Lạnh Chuẩn ISO #${trucks.length + 1}</h4>
+                            <p>Mở thêm tuyến giao sỉ mới tới Chuỗi Siêu Thị Tiện Lợi & Khu Văn Phòng (+15% tip B2B).</p>
+                        </div>
+                        <button type="button" class="btn-buy-truck" id="btnBuyLogisticsTruck">
+                            Mua Xe Mới (500.000đ)
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // =========================================================================
+    // TAB 3: CẦU NỐI ĐỔI QUÀ THỰC TẾ TẠI 4 CHI NHÁNH (O2O VOUCHERS)
+    // =========================================================================
+    renderRewardsTab() {
+        const myRep = state.reputation || 100;
+        const myVouchers = state.o2oVouchers || [];
+        const selectedBranch = this.selectedO2OBranch || 'hcm';
+
+        return `
+            <div class="tab-content rewards-view">
+                <!-- Header Đổi Quà O2O -->
+                <div class="rewards-header-card">
+                    <div class="rhc-top">
+                        <span class="rhc-icon">🎁🎟️</span>
+                        <div class="rhc-info">
+                            <h3>CẦU NỐI ĐỔI QUÀ THỰC TẾ (O2O)</h3>
+                            <p>Dùng Điểm Uy Tín Thương Hiệu đổi mã ưu đãi giảm giá & cơm nắm miễn phí ngoài đời thực!</p>
+                        </div>
+                    </div>
+                    <div class="rhc-rep-badge">
+                        <span>⭐ ĐIỂM UY TÍN CỦA BẠN:</span>
+                        <strong>${myRep} Điểm</strong>
+                    </div>
+                </div>
+
+                <!-- Chọn Chi Nhánh Áp Dụng Ngoài Đời -->
+                <div class="rewards-branch-card">
+                    <span class="rbc-label">📍 Chọn Chi Nhánh Áp Dụng Ngoài Đời:</span>
+                    <div class="o2o-branch-selector">
+                        <button type="button" class="o2o-branch-btn ${selectedBranch === 'hcm' ? 'active' : ''}" data-branch="hcm">
+                            TP.HCM (Tân Tạo)
+                        </button>
+                        <button type="button" class="o2o-branch-btn ${selectedBranch === 'daklak' ? 'active' : ''}" data-branch="daklak">
+                            Đắk Lắk (BMT)
+                        </button>
+                        <button type="button" class="o2o-branch-btn ${selectedBranch === 'vinh' ? 'active' : ''}" data-branch="vinh">
+                            TP. Vinh (Lê Ninh)
+                        </button>
+                        <button type="button" class="o2o-branch-btn ${selectedBranch === 'hanoi' ? 'active' : ''}" data-branch="hanoi">
+                            Hà Nội (Hà Đông)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lưới Quà Tặng Đổi Thực Tế -->
+                <div class="rewards-grid">
+                    ${Object.values(O2O_REWARDS_CONFIG).map(r => {
+                        const canRedeem = myRep >= r.requiredRep;
+                        return `
+                            <div class="reward-item-card ${canRedeem ? 'can-redeem' : 'locked'}">
+                                <div class="ric-head">
+                                    <span class="ric-icon">${r.icon}</span>
+                                    <span class="ric-discount">${r.discountText}</span>
+                                </div>
+                                <h4 class="ric-title">${r.title}</h4>
+                                <p class="ric-desc">${r.desc}</p>
+                                <div class="ric-foot">
+                                    <span class="ric-req">Yêu cầu: <strong>${r.requiredRep} ⭐</strong></span>
+                                    <button type="button" class="btn-redeem-o2o" data-reward-id="${r.id}" ${canRedeem ? '' : 'disabled'}>
+                                        ${canRedeem ? 'Đổi Mã Ngay' : 'Chưa Đủ Uy Tín'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- Danh sách Mã Ưu Đãi Đã Đổi -->
+                <div class="my-vouchers-section">
+                    <div class="mvs-title">
+                        <span>🎟️ MÃ ƯU ĐÃI ĐÃ ĐỔI CỦA BẠN (${myVouchers.length})</span>
+                    </div>
+                    ${myVouchers.length === 0 ? `
+                        <div class="mvs-empty">
+                            <span>Bạn chưa đổi mã ưu đãi nào. Hãy tích lũy Uy Tín để đổi quà thực tế!</span>
+                        </div>
+                    ` : `
+                        <div class="vouchers-list">
+                            ${myVouchers.map(v => {
+                                const isUsed = v.status === 'used';
+                                return `
+                                    <div class="voucher-card ${isUsed ? 'used' : 'unused'}">
+                                        <div class="vc-top">
+                                            <span class="vc-code">${v.code}</span>
+                                            <span class="vc-status ${isUsed ? 'status-used' : 'status-unused'}">
+                                                ${isUsed ? '✓ Đã Sử Dụng' : '🟢 Chưa Dùng'}
+                                            </span>
+                                        </div>
+                                        <h4 class="vc-title">${v.title}</h4>
+                                        <div class="vc-branch">📍 Áp dụng: <strong>${v.branchName || 'Toàn Quốc'}</strong></div>
+                                        <div class="vc-foot">
+                                            <small>Ngày đổi: ${new Date(v.createdAt).toLocaleDateString('vi-VN')}</small>
+                                            <button type="button" class="btn-copy-voucher-code" data-code="${v.code}">
+                                                📋 Sao Chép Mã
+                                            </button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+                    <div class="o2o-hint">
+                        <span>💡 <strong>Hướng dẫn sử dụng:</strong> Đưa mã ưu đãi cho nhân viên thu ngân tại 4 chi nhánh hoặc nhắn qua Fanpage để được áp dụng giảm trừ trực tiếp!</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     bindEvents() {
         const btnClose = document.getElementById('btnClosePhone');
         if (btnClose) btnClose.onclick = () => this.close();
@@ -2045,6 +2491,173 @@ export class QuestManager {
                         } else {
                             sellingManager.showToast('⚠️ Không đủ tiền mặt hoặc Uy Tín để mở Túi Mù!');
                         }
+                    }
+                };
+            });
+        }
+
+        // Gắn sự kiện Tab Liên Minh 4 Khu Vực
+        if (this.activeTab === 'alliance') {
+            const joinBtns = this.container.querySelectorAll('.btn-join-alliance');
+            joinBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const alliId = btn.dataset.allianceId;
+                    if (state.joinAlliance(alliId)) {
+                        audio.playLevelUp();
+                        sellingManager.showToast('🛡️ Chào mừng bạn gia nhập Tập Đoàn Liên Minh!');
+                        this.render();
+                    }
+                };
+            });
+
+            const contribBtns = this.container.querySelectorAll('.btn-contribute-banquet');
+            contribBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const priceGroup = btn.dataset.priceGroup;
+                    const res = state.contributeToBanquet(priceGroup, 5);
+                    if (res.success) {
+                        audio.playClick();
+                        sellingManager.showToast(`🍱 Góp thành công +${res.added} nắm cơm vào tiệc liên minh!`);
+                        this.render();
+                    } else {
+                        audio.playError();
+                        if (res.reason === 'not_enough_rice') {
+                            sellingManager.showToast('⚠️ Kho xe không đủ 5 nắm cơm thuộc nhóm giá này!');
+                        } else {
+                            sellingManager.showToast('⚠️ Đã đủ chỉ tiêu hoặc lỗi góp cơm!');
+                        }
+                    }
+                };
+            });
+
+            const btnClaimBanquet = document.getElementById('btnClaimBanquetReward');
+            if (btnClaimBanquet && !btnClaimBanquet.disabled) {
+                btnClaimBanquet.onclick = () => {
+                    const res = state.claimAllianceBanquetReward();
+                    if (res.success) {
+                        audio.playLevelUp();
+                        audio.playTingComplete();
+                        sellingManager.showToast('🎉 Nhận Rương Thưởng Đại Tiệc: +500.000đ, +100 Uy Tín & Buff Bếp Nấu -25% Tốc Độ (24h)!');
+                        this.render();
+                    } else {
+                        audio.playError();
+                    }
+                };
+            }
+        }
+
+        // Gắn sự kiện Tab Hậu Cần B2B
+        if (this.activeTab === 'logistics') {
+            const btnGoUpgradeKitchen = document.getElementById('btnGoUpgradeKitchen');
+            if (btnGoUpgradeKitchen) {
+                btnGoUpgradeKitchen.onclick = () => {
+                    this.close();
+                    if (window.game && window.game.kitchenASMR) {
+                        window.game.kitchenASMR.open();
+                    }
+                };
+            }
+
+            const toggleAuto = document.getElementById('toggleAutoDispatch');
+            if (toggleAuto) {
+                toggleAuto.onchange = (e) => {
+                    if (state.logistics) {
+                        state.logistics.autoDispatch = e.target.checked;
+                        state.save();
+                        audio.playClick();
+                        sellingManager.showToast(e.target.checked ? '⚡ Bật tự động điều phối xe lạnh B2B' : '🛑 Tắt tự động điều phối xe lạnh');
+                    }
+                };
+            }
+
+            const btnBuyTruck = document.getElementById('btnBuyLogisticsTruck');
+            if (btnBuyTruck) {
+                btnBuyTruck.onclick = () => {
+                    const res = state.buyLogisticsTruck();
+                    if (res.success) {
+                        audio.playLevelUp();
+                        audio.playTingComplete();
+                        sellingManager.showToast(`🚚 Chúc mừng! Đầu tư thành công Xe Tải Lạnh #${res.truck.id}!`);
+                        this.render();
+                    } else {
+                        audio.playError();
+                        if (res.reason === 'max_trucks') {
+                            sellingManager.showToast('⚠️ Bạn đã sở hữu tối đa 3 xe tải lạnh!');
+                        } else {
+                            sellingManager.showToast('⚠️ Cần 500.000đ để đầu tư xe tải mới!');
+                        }
+                    }
+                };
+            }
+
+            const dispatchBtns = this.container.querySelectorAll('.btn-dispatch-truck');
+            dispatchBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const tid = btn.dataset.truckId;
+                    if (!tid) return;
+                    const res = state.dispatchTruck(tid);
+                    if (res.success) {
+                        audio.playClick();
+                        sellingManager.showToast(`🚚 Xe tải đã xuất bến chở ${res.truck.capacity} nắm cơm đi giao sỉ B2B!`);
+                        this.render();
+                    } else {
+                        audio.playError();
+                        if (res.reason === 'out_of_stock') {
+                            sellingManager.showToast('⚠️ Kho xưởng không còn cơm để xếp lên xe!');
+                        } else {
+                            sellingManager.showToast('⚠️ Xe đang trên tuyến hành trình vận chuyển!');
+                        }
+                    }
+                };
+            });
+        }
+
+        // Gắn sự kiện Tab Cầu Nối Đổi Quà O2O
+        if (this.activeTab === 'rewards') {
+            const branchBtns = this.container.querySelectorAll('.o2o-branch-btn');
+            branchBtns.forEach(btn => {
+                btn.onclick = () => {
+                    this.selectedO2OBranch = btn.dataset.branch;
+                    audio.playClick();
+                    this.render();
+                };
+            });
+
+            const redeemBtns = this.container.querySelectorAll('.btn-redeem-o2o');
+            redeemBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const rid = btn.dataset.rewardId;
+                    const branch = this.selectedO2OBranch || 'hcm';
+                    const res = state.redeemO2OReward(rid, branch);
+                    if (res.success) {
+                        audio.playLevelUp();
+                        audio.playTingComplete();
+                        sellingManager.showToast(`🎟️ Đổi thành công mã quà tặng: ${res.voucher.code}!`);
+                        this.render();
+                    } else {
+                        audio.playError();
+                        if (res.reason === 'not_enough_reputation') {
+                            sellingManager.showToast('⚠️ Bạn chưa đủ Điểm Uy Tín để đổi mã này!');
+                        } else {
+                            sellingManager.showToast('⚠️ Không thể đổi quà tặng này!');
+                        }
+                    }
+                };
+            });
+
+            const copyBtns = this.container.querySelectorAll('.btn-copy-voucher-code');
+            copyBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const code = btn.dataset.code;
+                    if (code && navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(code).then(() => {
+                            audio.playClick();
+                            sellingManager.showToast(`📋 Đã sao chép mã ưu đãi: ${code}`);
+                        }).catch(() => {
+                            sellingManager.showToast(`Mã ưu đãi: ${code}`);
+                        });
+                    } else {
+                        sellingManager.showToast(`Mã ưu đãi: ${code}`);
                     }
                 };
             });

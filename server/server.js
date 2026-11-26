@@ -171,6 +171,176 @@ export class OnigiriServer {
             winner: null,
             status: 'ACTIVE'
         };
+
+        // [LIÊN MINH 4 KHU VỰC & ĐẠI CHIẾN CHI NHÁNH]
+        this.alliances = new Map([
+            ['alli_hcm', {
+                id: 'alli_hcm',
+                name: 'Liên Minh Cơm Nắm Sài Gòn',
+                branchId: 'branch_hcm',
+                branchName: 'TP. Hồ Chí Minh',
+                motto: 'Chuẩn Vị Phương Nam – An Toàn ISO 22000',
+                icon: '🏙️',
+                level: 3,
+                members: [
+                    { id: 'bot_1', name: 'Tập Đoàn Cơm Nắm Sài Gòn', role: 'leader', contributed: 150 },
+                    { id: 'bot_hcm_1', name: 'Cơm Nắm Bến Thành Q.1', role: 'officer', contributed: 80 }
+                ],
+                totalScore: 125000000,
+                dailyBanquetOrder: {
+                    id: 'banquet_hcm',
+                    title: 'Đơn Hàng Xuất Khẩu & Đại Tiệc Sài Gòn 🍙🎉',
+                    totalRequired: 450,
+                    progress20k: 120,
+                    required20k: 200,
+                    progress22k: 90,
+                    required22k: 150,
+                    progress25k: 60,
+                    required25k: 100,
+                    isCompleted: false,
+                    rewardClaimed: {}
+                },
+                chat: [
+                    { sender: 'Hệ Thống', text: 'Chào mừng các thành viên đến với Liên Minh Cơm Nắm Sài Gòn!', time: '08:00' }
+                ]
+            }],
+            ['alli_daklak', {
+                id: 'alli_daklak',
+                name: 'Tập Đoàn Cao Nguyên Đại Ngàn',
+                branchId: 'branch_daklak',
+                branchName: 'Đắk Lắk',
+                motto: 'Nông Trại Hữu Cơ – Đậm Vị Ban Mê',
+                icon: '☕',
+                level: 2,
+                members: [
+                    { id: 'bot_2', name: 'Bếp Cơm Nắm BMT Cao Nguyên', role: 'leader', contributed: 120 }
+                ],
+                totalScore: 89000000,
+                dailyBanquetOrder: {
+                    id: 'banquet_daklak',
+                    title: 'Đơn Hàng Xuất Khẩu Nông Sản Đại Ngàn 🍙☕',
+                    totalRequired: 450,
+                    progress20k: 100,
+                    required20k: 200,
+                    progress22k: 70,
+                    required22k: 150,
+                    progress25k: 40,
+                    required25k: 100,
+                    isCompleted: false,
+                    rewardClaimed: {}
+                },
+                chat: [
+                    { sender: 'Hệ Thống', text: 'Chào mừng các thành viên Cao Nguyên Đắk Lắk!', time: '08:00' }
+                ]
+            }],
+            ['alli_vinh', {
+                id: 'alli_vinh',
+                name: 'Tổng Hội Cơm Nắm Xứ Nghệ',
+                branchId: 'branch_vinh',
+                branchName: 'TP. Vinh',
+                motto: 'Chắc Tay Chắc Lòng – Đậm Tình Miền Trung',
+                icon: '🌾',
+                level: 2,
+                members: [
+                    { id: 'bot_4', name: 'Cơm Nắm Xứ Nghệ - TP. Vinh', role: 'leader', contributed: 110 }
+                ],
+                totalScore: 78000000,
+                dailyBanquetOrder: {
+                    id: 'banquet_vinh',
+                    title: 'Đơn Hàng Cung Ứng Chuỗi Sông Lam 🍙🌾',
+                    totalRequired: 450,
+                    progress20k: 90,
+                    required20k: 200,
+                    progress22k: 60,
+                    required22k: 150,
+                    progress25k: 30,
+                    required25k: 100,
+                    isCompleted: false,
+                    rewardClaimed: {}
+                },
+                chat: [
+                    { sender: 'Hệ Thống', text: 'Chào mừng anh em Xứ Nghệ - TP. Vinh!', time: '08:00' }
+                ]
+            }],
+            ['alli_hanoi', {
+                id: 'alli_hanoi',
+                name: 'Đại Liên Minh Thủ Đô Hà Nội',
+                branchId: 'branch_hanoi',
+                branchName: 'Hà Nội',
+                motto: 'Tinh Hoa Ẩm Thực – Đẳng Cấp Thăng Long',
+                icon: '🏛️',
+                level: 3,
+                members: [
+                    { id: 'bot_3', name: 'Onigiri Hoàng Gia Hà Nội', role: 'leader', contributed: 140 }
+                ],
+                totalScore: 96000000,
+                dailyBanquetOrder: {
+                    id: 'banquet_hanoi',
+                    title: 'Đơn Hàng Xuất Khẩu Đại Tiệc Thăng Long 🍙🏛️',
+                    totalRequired: 450,
+                    progress20k: 110,
+                    required20k: 200,
+                    progress22k: 80,
+                    required22k: 150,
+                    progress25k: 50,
+                    required25k: 100,
+                    isCompleted: false,
+                    rewardClaimed: {}
+                },
+                chat: [
+                    { sender: 'Hệ Thống', text: 'Chào mừng các thành viên Thủ Đô Hà Nội!', time: '08:00' }
+                ]
+            }]
+        ]);
+
+        // Bảng xếp hạng tổng doanh số chuẩn ISO & ATVSTP giữa 4 khu vực
+        this.regionalWarScores = {
+            hcm: 125000000,
+            daklak: 89000000,
+            vinh: 78000000,
+            hanoi: 96000000
+        };
+
+        // [CẦU NỐI ĐỔI QUÀ THỰC TẾ O2O VOUCHERS]
+        this.o2oVouchers = [
+            {
+                code: 'ONIGIRI-HCM-8823',
+                rewardId: 'o2o_voucher_10k',
+                title: 'Voucher Giảm 10.000đ Trực Tiếp',
+                discountValue: 10000,
+                discountText: '10.000đ',
+                branch: 'hcm',
+                branchName: 'TP. Hồ Chí Minh (Tân Tạo, Bình Tân)',
+                playerBrand: 'Tập Đoàn Cơm Nắm Sài Gòn',
+                createdAt: new Date(Date.now() - 3600000).toISOString(),
+                status: 'unused'
+            },
+            {
+                code: 'ONIGIRI-DAKLAK-4912',
+                rewardId: 'o2o_voucher_buy1get1',
+                title: 'Voucher Mua 1 Tặng 1 Cơm Nắm Nóng Hổi',
+                discountValue: 20000,
+                discountText: 'Mua 1 Tặng 1',
+                branch: 'daklak',
+                branchName: 'Đắk Lắk (Buôn Ma Thuột)',
+                playerBrand: 'Bếp Cơm Nắm BMT Cao Nguyên',
+                createdAt: new Date(Date.now() - 7200000).toISOString(),
+                status: 'used',
+                usedAt: new Date(Date.now() - 1800000).toISOString()
+            },
+            {
+                code: 'ONIGIRI-HANOI-9915',
+                rewardId: 'o2o_combo_vip_4',
+                title: 'Combo VIP 4 Vị Thượng Hạng Miễn Phí',
+                discountValue: 100000,
+                discountText: 'Set 4 Vị 100.000đ',
+                branch: 'hanoi',
+                branchName: 'Hà Nội (Hà Đông)',
+                playerBrand: 'Onigiri Hoàng Gia Hà Nội',
+                createdAt: new Date(Date.now() - 14400000).toISOString(),
+                status: 'unused'
+            }
+        ];
     }
 
     async start() {
@@ -320,6 +490,116 @@ export class OnigiriServer {
             });
 
             const fileName = `leads_onigiri_${cityFilter}_${Date.now()}.csv`;
+            res.writeHead(200, {
+                'Content-Type': 'text/csv; charset=utf-8',
+                'Content-Disposition': `attachment; filename="${fileName}"`
+            });
+            res.end(csv);
+            return;
+        }
+
+        // 4.6. Endpoint Quản Lý Mã Ưu Đãi Đổi Quà Thực Tế (O2O Vouchers)
+        if (pathname === '/api/o2o/redeem' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+                try {
+                    const voucher = JSON.parse(body || '{}');
+                    if (voucher && voucher.code) {
+                        voucher.createdAt = voucher.createdAt || new Date().toISOString();
+                        voucher.status = voucher.status || 'unused';
+                        if (!Array.isArray(this.o2oVouchers)) this.o2oVouchers = [];
+                        // Tránh trùng mã
+                        const exists = this.o2oVouchers.find(v => v.code === voucher.code);
+                        if (!exists) {
+                            this.o2oVouchers.unshift(voucher);
+                        }
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ success: true, voucher }));
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ success: false, error: 'Dữ liệu không hợp lệ' }));
+                }
+            });
+            return;
+        }
+
+        if (pathname === '/api/o2o/vouchers' && req.method === 'GET') {
+            const pin = parsedUrl.searchParams.get('pin');
+            if (pin !== '202688') {
+                res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: false, error: 'Mã PIN Quản Trị không chính xác (Yêu cầu PIN 202688)' }));
+                return;
+            }
+            const branchFilter = (parsedUrl.searchParams.get('branch') || 'all').toLowerCase().replace('branch_', '');
+            let list = this.o2oVouchers || [];
+            if (branchFilter !== 'all') {
+                list = list.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === branchFilter);
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+            res.end(JSON.stringify({ success: true, count: list.length, vouchers: list }));
+            return;
+        }
+
+        if (pathname === '/api/o2o/use' && req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+                try {
+                    const data = JSON.parse(body || '{}');
+                    if (data.pin !== '202688') {
+                        res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({ success: false, error: 'Mã PIN Quản Trị không chính xác (Yêu cầu PIN 202688)' }));
+                        return;
+                    }
+                    const code = String(data.code || '').trim();
+                    const voucher = (this.o2oVouchers || []).find(v => v.code === code);
+                    if (!voucher) {
+                        res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+                        res.end(JSON.stringify({ success: false, error: 'Không tìm thấy mã ưu đãi' }));
+                        return;
+                    }
+                    voucher.status = 'used';
+                    voucher.usedAt = new Date().toISOString();
+                    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ success: true, message: 'Đã xác nhận sử dụng mã ưu đãi thành công tại quầy!', voucher }));
+                } catch (e) {
+                    res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+                    res.end(JSON.stringify({ success: false, error: 'Dữ liệu không hợp lệ' }));
+                }
+            });
+            return;
+        }
+
+        // 4.7. Endpoint Xuất File Excel (.CSV) Mã Ưu Đãi O2O UTF-8 BOM
+        if (pathname === '/admin/export-o2o-csv') {
+            const pin = parsedUrl.searchParams.get('pin');
+            if (pin !== '202688') {
+                res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: false, error: 'Mã PIN Quản Trị không chính xác (Yêu cầu PIN 202688)' }));
+                return;
+            }
+            const branchFilter = (parsedUrl.searchParams.get('branch') || 'all').toLowerCase().replace('branch_', '');
+            let list = this.o2oVouchers || [];
+            if (branchFilter !== 'all') {
+                list = list.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === branchFilter);
+            }
+
+            const BOM = '\uFEFF';
+            let csv = BOM + 'STT,Mã Ưu Đãi,Tên Chương Trình,Chi Nhánh Áp Dụng,Thương Hiệu Người Dùng,Thời Gian Đổi,Trạng Thái,Thời Gian Dùng\r\n';
+            list.forEach((v, idx) => {
+                const safeCode = String(v.code || '').replace(/"/g, '""');
+                const safeTitle = String(v.title || '').replace(/"/g, '""');
+                const branchName = this.formatCityName(v.branch);
+                const safeBrand = String(v.playerBrand || 'Tiệm Cơm Nắm').replace(/"/g, '""');
+                const safeTime = new Date(v.createdAt).toLocaleString('vi-VN');
+                const safeStatus = v.status === 'used' ? 'Đã Sử Dụng' : 'Chưa Dùng';
+                const safeUsedTime = v.usedAt ? new Date(v.usedAt).toLocaleString('vi-VN') : '---';
+                csv += `"${idx + 1}","${safeCode}","${safeTitle}","${branchName}","${safeBrand}","${safeTime}","${safeStatus}","${safeUsedTime}"\r\n`;
+            });
+
+            const fileName = `vouchers_o2o_${branchFilter}_${Date.now()}.csv`;
             res.writeHead(200, {
                 'Content-Type': 'text/csv; charset=utf-8',
                 'Content-Disposition': `attachment; filename="${fileName}"`
@@ -569,6 +849,26 @@ export class OnigiriServer {
             });
             socket.on('contract:deliver', (data) => {
                 this.handleContractDelivery(socket.id, data);
+            });
+
+            // [LIÊN MINH 4 KHU VỰC & ĐẠI CHIẾN CHI NHÁNH]
+            socket.on('alliance:query', () => {
+                socket.emit('alliance:state', this.getAlliancesState(socket.id));
+            });
+            socket.on('alliance:join', (data) => {
+                this.handleAllianceJoin(socket.id, data);
+            });
+            socket.on('alliance:leave', () => {
+                this.handleAllianceLeave(socket.id);
+            });
+            socket.on('alliance:contribute', (data) => {
+                this.handleAllianceContribute(socket.id, data);
+            });
+            socket.on('alliance:chat', (data) => {
+                this.handleAllianceChat(socket.id, data);
+            });
+            socket.on('alliance:claim_banquet', (data) => {
+                this.handleAllianceClaimBanquet(socket.id, data);
             });
 
             // Sự kiện 5: Ngắt kết nối
@@ -827,6 +1127,18 @@ export class OnigiriServer {
             this.sendToClient(sid, 'contract:state', this.getExclusiveContractState());
         } else if (event === 'contract:deliver' || event === 'contract_deliver') {
             this.handleContractDelivery(sid, data);
+        } else if (event === 'alliance:query' || event === 'alliance_query') {
+            this.sendToClient(sid, 'alliance:state', this.getAlliancesState(sid));
+        } else if (event === 'alliance:join' || event === 'alliance_join') {
+            this.handleAllianceJoin(sid, data);
+        } else if (event === 'alliance:leave' || event === 'alliance_leave') {
+            this.handleAllianceLeave(sid);
+        } else if (event === 'alliance:contribute' || event === 'alliance_contribute') {
+            this.handleAllianceContribute(sid, data);
+        } else if (event === 'alliance:chat' || event === 'alliance_chat') {
+            this.handleAllianceChat(sid, data);
+        } else if (event === 'alliance:claim_banquet' || event === 'alliance_claim_banquet') {
+            this.handleAllianceClaimBanquet(sid, data);
         }
     }
 
@@ -1592,6 +1904,167 @@ export class OnigiriServer {
         };
     }
 
+    getAlliancesState(socketId) {
+        const p = this.players.get(socketId);
+        const playerId = p?.playerId || this.socketToPlayerId.get(socketId) || socketId;
+        const list = [];
+        let playerAlliance = null;
+
+        for (const [id, alli] of this.alliances.entries()) {
+            const item = {
+                id: alli.id,
+                name: alli.name,
+                branchId: alli.branchId,
+                branchName: alli.branchName,
+                motto: alli.motto,
+                icon: alli.icon,
+                level: alli.level || 1,
+                memberCount: alli.members ? alli.members.length : 0,
+                totalScore: alli.totalScore || 0,
+                dailyBanquetOrder: alli.dailyBanquetOrder,
+                chat: (alli.chat || []).slice(-20)
+            };
+            list.push(item);
+
+            if (alli.members && alli.members.some(m => m.id === playerId || m.id === socketId)) {
+                playerAlliance = item;
+            }
+        }
+
+        return {
+            alliances: list,
+            playerAlliance,
+            regionalWarScores: this.regionalWarScores
+        };
+    }
+
+    handleAllianceJoin(socketId, data) {
+        const p = this.players.get(socketId);
+        const playerId = p?.playerId || this.socketToPlayerId.get(socketId) || socketId;
+        const playerName = p?.brandName || data?.brandName || 'Thành Viên Mới';
+        const allianceId = data?.allianceId;
+        const alli = this.alliances.get(allianceId);
+        if (!alli) return;
+
+        for (const [id, a] of this.alliances.entries()) {
+            if (a.members) {
+                a.members = a.members.filter(m => m.id !== playerId && m.id !== socketId);
+            }
+        }
+
+        alli.members.push({ id: playerId, name: playerName, role: 'member', contributed: 0 });
+        alli.chat.push({
+            sender: 'Hệ Thống',
+            text: `Chào mừng ${playerName} đã gia nhập Liên Minh!`,
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        this.broadcastAllianceUpdate();
+    }
+
+    handleAllianceLeave(socketId) {
+        const p = this.players.get(socketId);
+        const playerId = p?.playerId || this.socketToPlayerId.get(socketId) || socketId;
+        for (const [id, a] of this.alliances.entries()) {
+            if (a.members) {
+                a.members = a.members.filter(m => m.id !== playerId && m.id !== socketId);
+            }
+        }
+        this.broadcastAllianceUpdate();
+    }
+
+    handleAllianceContribute(socketId, data) {
+        const p = this.players.get(socketId);
+        const playerId = p?.playerId || this.socketToPlayerId.get(socketId) || socketId;
+        const playerName = p?.brandName || 'Thành Viên';
+        const allianceId = data?.allianceId;
+        const priceGroup = data?.priceGroup || '20k';
+        const count = Number(data?.count) || 5;
+
+        const alli = this.alliances.get(allianceId);
+        if (!alli || !alli.dailyBanquetOrder) return;
+
+        const b = alli.dailyBanquetOrder;
+        if (priceGroup === '20k') {
+            b.progress20k = Math.min(b.required20k, (b.progress20k || 0) + count);
+        } else if (priceGroup === '22k') {
+            b.progress22k = Math.min(b.required22k, (b.progress22k || 0) + count);
+        } else if (priceGroup === '25k') {
+            b.progress25k = Math.min(b.required25k, (b.progress25k || 0) + count);
+        }
+
+        const totalProgress = (b.progress20k || 0) + (b.progress22k || 0) + (b.progress25k || 0);
+        if (totalProgress >= (b.totalRequired || 450)) {
+            b.isCompleted = true;
+        }
+
+        const addedScore = count * (priceGroup === '25k' ? 25000 : priceGroup === '22k' ? 22000 : 20000);
+        alli.totalScore = (alli.totalScore || 0) + addedScore;
+        const branchKey = (alli.branchId || 'hcm').replace('branch_', '');
+        if (typeof this.regionalWarScores[branchKey] === 'number') {
+            this.regionalWarScores[branchKey] += addedScore;
+        }
+
+        alli.chat.push({
+            sender: playerName,
+            text: `Đã góp +${count} nắm cơm [${priceGroup}] vào Đại Tiệc!`,
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+        });
+
+        this.broadcastAllianceUpdate();
+    }
+
+    handleAllianceChat(socketId, data) {
+        const p = this.players.get(socketId);
+        const playerName = p?.brandName || data?.sender || 'Thành Viên';
+        const allianceId = data?.allianceId;
+        const text = String(data?.text || '').trim();
+        if (!text) return;
+
+        const alli = this.alliances.get(allianceId);
+        if (!alli) return;
+
+        alli.chat.push({
+            sender: playerName,
+            text: text.slice(0, 100),
+            time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+        });
+        if (alli.chat.length > 30) alli.chat.shift();
+
+        this.broadcastAllianceUpdate();
+    }
+
+    handleAllianceClaimBanquet(socketId, data) {
+        const p = this.players.get(socketId);
+        const playerId = p?.playerId || this.socketToPlayerId.get(socketId) || socketId;
+        const allianceId = data?.allianceId;
+        const alli = this.alliances.get(allianceId);
+        if (!alli || !alli.dailyBanquetOrder || !alli.dailyBanquetOrder.isCompleted) return;
+
+        if (!alli.dailyBanquetOrder.rewardClaimed) alli.dailyBanquetOrder.rewardClaimed = {};
+        alli.dailyBanquetOrder.rewardClaimed[playerId] = true;
+
+        this.sendToClient(socketId, 'alliance:reward_granted', {
+            money: 500000,
+            reputation: 100,
+            exp: 1000,
+            buffExpiry: Date.now() + 86400000
+        });
+    }
+
+    broadcastAllianceUpdate() {
+        const payload = {
+            alliances: Array.from(this.alliances.values()),
+            regionalWarScores: this.regionalWarScores
+        };
+        if (this.io) {
+            this.io.emit('alliance:update', payload);
+        }
+        for (const [sid] of this.pollingQueues.entries()) {
+            this.sendToClient(sid, 'alliance:update', payload);
+        }
+    }
+
     getClientSocketIoScript() {
         return `
 /**
@@ -1694,6 +2167,7 @@ export class OnigiriServer {
 
     renderAdminDashboard() {
         const rawLeadsJson = JSON.stringify(this.leads || []);
+        const rawVouchersJson = JSON.stringify(this.o2oVouchers || []);
 
         return `<!DOCTYPE html>
 <html lang="vi">
@@ -1714,7 +2188,7 @@ export class OnigiriServer {
             align-items: center;
             justify-content: center;
         }
-        .admin-wrapper { width: 100%; max-width: 1060px; margin: 0 auto; }
+        .admin-wrapper { width: 100%; max-width: 1140px; margin: 0 auto; }
         
         /* 1. Màn hình Khóa PIN */
         .pin-lock-card {
@@ -1779,7 +2253,7 @@ export class OnigiriServer {
             justify-content: space-between;
             border-bottom: 2px solid #334155;
             padding-bottom: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 16px;
         }
@@ -1809,12 +2283,38 @@ export class OnigiriServer {
         .btn-lock { background: #334155; color: #cbd5e1; }
         .btn-lock:hover { background: #475569; color: #ffffff; }
 
+        /* Thanh Chuyển Tab Quản Trị */
+        .admin-nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 12px;
+        }
+        .admin-nav-btn {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-nav-btn.active {
+            background: #f97316;
+            color: #ffffff;
+            border-color: #f97316;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
         /* Thống kê 4 chi nhánh */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         .stat-card {
             background: #0f172a;
@@ -1857,8 +2357,8 @@ export class OnigiriServer {
         /* Bảng dữ liệu */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; text-align: left; background: #0f172a; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #1e293b; font-size: 13.5px; }
-        th { background: #0b1120; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #1e293b; font-size: 13px; }
+        th { background: #0b1120; color: #94a3b8; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; }
         tr:hover { background: rgba(249, 115, 22, 0.05); }
         .phone-link { color: #f97316; font-weight: 700; text-decoration: none; }
         .phone-link:hover { text-decoration: underline; }
@@ -1872,6 +2372,51 @@ export class OnigiriServer {
             color: #cbd5e1;
             border: 1px solid #334155;
         }
+        .code-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: 700;
+            background: #1e1b4b;
+            color: #a5b4fc;
+            border: 1px solid #4338ca;
+            letter-spacing: 1px;
+        }
+        .status-unused {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #059669;
+        }
+        .status-used {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #334155;
+            color: #94a3b8;
+            border: 1px solid #475569;
+        }
+        .btn-use-voucher {
+            padding: 5px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            border-radius: 6px;
+            border: none;
+            background: #f97316;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-use-voucher:hover { background: #ea580c; }
+        .btn-use-voucher:disabled { background: #475569; cursor: not-allowed; opacity: 0.6; }
 
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -1896,8 +2441,8 @@ export class OnigiriServer {
         <div id="dashboardView" class="dashboard-card hidden">
             <div class="header">
                 <div class="header-title">
-                    <h1>🍙 Quản Trị Khách Hàng / Leads</h1>
-                    <p>Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ 4 chi nhánh toàn quốc</p>
+                    <h1 id="dashboardMainTitle">🍙 Quản Trị Khách Hàng / Leads</h1>
+                    <p id="dashboardMainDesc">Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ 4 chi nhánh toàn quốc</p>
                 </div>
                 <div class="header-actions">
                     <button type="button" id="btnExportCsv" class="btn-action btn-export">
@@ -1910,10 +2455,16 @@ export class OnigiriServer {
                 </div>
             </div>
 
+            <!-- Thanh Chuyển Tab Quản Trị -->
+            <div class="admin-nav-tabs">
+                <button type="button" class="admin-nav-btn active" id="tabBtnLeads">📋 Danh Sách Khách Hàng (Leads)</button>
+                <button type="button" class="admin-nav-btn" id="tabBtnVouchers">🎟️ Mã Ưu Đãi O2O (Vouchers)</button>
+            </div>
+
             <!-- Thống kê nhanh -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <small>Tổng Số Khách</small>
+                    <small id="statLabelTotal">Tổng Số Khách</small>
                     <div class="val" id="statTotal">0</div>
                 </div>
                 <div class="stat-card hcm">
@@ -1934,7 +2485,7 @@ export class OnigiriServer {
                 </div>
             </div>
 
-            <!-- Thanh lọc chi nhánh -->
+            <!-- Bộ lọc chi nhánh -->
             <div class="filter-bar">
                 <span style="font-size: 13px; color: #94a3b8; font-weight: 600; margin-right: 4px;">Lọc Chi Nhánh:</span>
                 <button type="button" class="filter-btn active" data-city="all">Tất Cả</button>
@@ -1944,12 +2495,12 @@ export class OnigiriServer {
                 <button type="button" class="filter-btn" data-city="hanoi">Hà Nội</button>
             </div>
 
-            <!-- Bảng dữ liệu -->
-            <div class="table-responsive">
+            <!-- Bảng dữ liệu Khách Hàng / Leads -->
+            <div class="table-responsive" id="leadsTableWrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 60px;">STT</th>
+                            <th style="width: 50px;">STT</th>
                             <th>Tên Thương Hiệu</th>
                             <th>Số Điện Thoại</th>
                             <th>Chi Nhánh</th>
@@ -1961,6 +2512,27 @@ export class OnigiriServer {
                     </tbody>
                 </table>
             </div>
+
+            <!-- Bảng dữ liệu Mã Ưu Đãi O2O -->
+            <div class="table-responsive hidden" id="vouchersTableWrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">STT</th>
+                            <th>Mã Ưu Đãi</th>
+                            <th>Chương Trình</th>
+                            <th>Chi Nhánh Áp Dụng</th>
+                            <th>Thương Hiệu</th>
+                            <th>Thời Gian Đổi</th>
+                            <th>Trạng Thái</th>
+                            <th style="width: 140px;">Hành Động Tại Quầy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vouchersTableBody">
+                        <!-- Render động qua JavaScript -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -1968,6 +2540,10 @@ export class OnigiriServer {
         (function() {
             const CORRECT_PIN = '202688';
             const allLeads = ${rawLeadsJson};
+            const allVouchers = ${rawVouchersJson};
+
+            let currentTab = 'leads'; // 'leads' | 'vouchers'
+            let currentFilter = 'all';
 
             const pinLockView = document.getElementById('pinLockView');
             const dashboardView = document.getElementById('dashboardView');
@@ -1976,10 +2552,14 @@ export class OnigiriServer {
             const pinErrorMsg = document.getElementById('pinErrorMsg');
             const btnExportCsv = document.getElementById('btnExportCsv');
             const btnLockAdmin = document.getElementById('btnLockAdmin');
-            const leadsTableBody = document.getElementById('leadsTableBody');
-            const filterBtns = document.querySelectorAll('.filter-btn');
 
-            let currentFilter = 'all';
+            const tabBtnLeads = document.getElementById('tabBtnLeads');
+            const tabBtnVouchers = document.getElementById('tabBtnVouchers');
+            const leadsTableWrapper = document.getElementById('leadsTableWrapper');
+            const vouchersTableWrapper = document.getElementById('vouchersTableWrapper');
+            const leadsTableBody = document.getElementById('leadsTableBody');
+            const vouchersTableBody = document.getElementById('vouchersTableBody');
+            const filterBtns = document.querySelectorAll('.filter-btn');
 
             function getCityName(cityKey) {
                 const c = String(cityKey || '').toLowerCase().replace('branch_', '');
@@ -1991,14 +2571,24 @@ export class OnigiriServer {
             }
 
             function updateStats() {
-                document.getElementById('statTotal').textContent = allLeads.length;
-                document.getElementById('statHcm').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hcm').length;
-                document.getElementById('statDakLak').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'daklak').length;
-                document.getElementById('statVinh').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'vinh').length;
-                document.getElementById('statHanoi').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hanoi').length;
+                if (currentTab === 'leads') {
+                    document.getElementById('statLabelTotal').textContent = 'Tổng Số Khách';
+                    document.getElementById('statTotal').textContent = allLeads.length;
+                    document.getElementById('statHcm').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hcm').length;
+                    document.getElementById('statDakLak').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'daklak').length;
+                    document.getElementById('statVinh').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'vinh').length;
+                    document.getElementById('statHanoi').textContent = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === 'hanoi').length;
+                } else {
+                    document.getElementById('statLabelTotal').textContent = 'Tổng Mã Ưu Đãi';
+                    document.getElementById('statTotal').textContent = allVouchers.length;
+                    document.getElementById('statHcm').textContent = allVouchers.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === 'hcm').length;
+                    document.getElementById('statDakLak').textContent = allVouchers.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === 'daklak').length;
+                    document.getElementById('statVinh').textContent = allVouchers.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === 'vinh').length;
+                    document.getElementById('statHanoi').textContent = allVouchers.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === 'hanoi').length;
+                }
             }
 
-            function renderTable() {
+            function renderLeadsTable() {
                 let filtered = allLeads;
                 if (currentFilter !== 'all') {
                     filtered = allLeads.filter(l => (l.city || '').toLowerCase().replace('branch_', '') === currentFilter);
@@ -2024,20 +2614,114 @@ export class OnigiriServer {
                 }).join('');
             }
 
+            function renderVouchersTable() {
+                let filtered = allVouchers;
+                if (currentFilter !== 'all') {
+                    filtered = allVouchers.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === currentFilter);
+                }
+
+                if (filtered.length === 0) {
+                    vouchersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 32px;">Chưa có mã ưu đãi O2O nào được đổi tại chi nhánh này.</td></tr>';
+                    return;
+                }
+
+                vouchersTableBody.innerHTML = filtered.map((v, idx) => {
+                    const branchName = getCityName(v.branch);
+                    const formattedTime = new Date(v.createdAt).toLocaleString('vi-VN');
+                    const isUsed = v.status === 'used';
+                    return \`
+                        <tr>
+                            <td>\${idx + 1}</td>
+                            <td><span class="code-badge">\${escapeHtml(v.code)}</span></td>
+                            <td><strong>\${escapeHtml(v.title || 'Ưu Đãi Cơm Nắm')}</strong></td>
+                            <td><span class="city-badge">📍 \${branchName}</span></td>
+                            <td>\${escapeHtml(v.playerBrand || 'Khách Hàng')}</td>
+                            <td style="color: #94a3b8;">\${formattedTime}</td>
+                            <td>
+                                <span class="\${isUsed ? 'status-used' : 'status-unused'}">
+                                    \${isUsed ? '✓ Đã Sử Dụng' : '🟢 Chưa Dùng'}
+                                </span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn-use-voucher" data-code="\${escapeHtml(v.code)}" \${isUsed ? 'disabled' : ''}>
+                                    \${isUsed ? 'Đã Nhận Quà' : '✓ Duyệt Dùng'}
+                                </button>
+                            </td>
+                        </tr>
+                    \`;
+                }).join('');
+
+                // Gắn sự kiện cho các nút xác nhận dùng tại quầy
+                vouchersTableBody.querySelectorAll('.btn-use-voucher').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const code = btn.dataset.code;
+                        if (!code) return;
+                        if (!confirm('Xác nhận khách hàng đã đưa mã ' + code + ' và nhận cơm nắm tại quầy?')) return;
+
+                        fetch('/api/o2o/use', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ pin: CORRECT_PIN, code })
+                        }).then(r => r.json()).then(res => {
+                            if (res.success) {
+                                const target = allVouchers.find(v => v.code === code);
+                                if (target) {
+                                    target.status = 'used';
+                                    target.usedAt = new Date().toISOString();
+                                }
+                                renderVouchersTable();
+                                updateStats();
+                                alert('✅ Đã xác nhận sử dụng mã ' + code + ' thành công!');
+                            } else {
+                                alert('❌ Thất bại: ' + (res.error || 'Lỗi không xác định'));
+                            }
+                        }).catch(err => {
+                            alert('❌ Lỗi kết nối máy chủ');
+                        });
+                    });
+                });
+            }
+
             function escapeHtml(str) {
                 return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             }
 
-            // Xuất file CSV chuẩn UTF-8 BOM
             function exportCsv() {
-                window.location.href = '/admin/export-csv?pin=' + encodeURIComponent(CORRECT_PIN) + '&city=' + encodeURIComponent(currentFilter);
+                if (currentTab === 'leads') {
+                    window.location.href = '/admin/export-csv?pin=' + encodeURIComponent(CORRECT_PIN) + '&city=' + encodeURIComponent(currentFilter);
+                } else {
+                    window.location.href = '/admin/export-o2o-csv?pin=' + encodeURIComponent(CORRECT_PIN) + '&branch=' + encodeURIComponent(currentFilter);
+                }
+            }
+
+            function switchTab(tab) {
+                currentTab = tab;
+                if (tab === 'leads') {
+                    tabBtnLeads.classList.add('active');
+                    tabBtnVouchers.classList.remove('active');
+                    leadsTableWrapper.classList.remove('hidden');
+                    vouchersTableWrapper.classList.add('hidden');
+                    document.getElementById('dashboardMainTitle').textContent = '🍙 Quản Trị Khách Hàng / Leads';
+                    document.getElementById('dashboardMainDesc').textContent = 'Dữ liệu đăng ký nhận thưởng +200.000đ vốn khởi nghiệp từ 4 chi nhánh toàn quốc';
+                    btnExportCsv.textContent = '📥 Xuất File Excel Leads (.CSV)';
+                    renderLeadsTable();
+                } else {
+                    tabBtnLeads.classList.remove('active');
+                    tabBtnVouchers.classList.add('active');
+                    leadsTableWrapper.classList.add('hidden');
+                    vouchersTableWrapper.classList.remove('hidden');
+                    document.getElementById('dashboardMainTitle').textContent = '🎟️ Quản Trị Mã Ưu Đãi O2O';
+                    document.getElementById('dashboardMainDesc').textContent = 'Đối soát và xác nhận mã ưu đãi giảm giá / cơm miễn phí đổi từ điểm Uy Tín ngoài đời';
+                    btnExportCsv.textContent = '📥 Xuất File Excel Vouchers (.CSV)';
+                    renderVouchersTable();
+                }
+                updateStats();
             }
 
             function unlockDashboard() {
                 pinLockView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
-                updateStats();
-                renderTable();
+                switchTab('leads');
             }
 
             function checkPin() {
@@ -2052,6 +2736,9 @@ export class OnigiriServer {
                     inputPin.focus();
                 }
             }
+
+            tabBtnLeads.addEventListener('click', () => switchTab('leads'));
+            tabBtnVouchers.addEventListener('click', () => switchTab('vouchers'));
 
             btnSubmitPin.addEventListener('click', checkPin);
             inputPin.addEventListener('keydown', (e) => {
@@ -2074,7 +2761,11 @@ export class OnigiriServer {
                     filterBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     currentFilter = btn.dataset.city;
-                    renderTable();
+                    if (currentTab === 'leads') {
+                        renderLeadsTable();
+                    } else {
+                        renderVouchersTable();
+                    }
                 });
             });
 
@@ -2290,6 +2981,58 @@ export class OnigiriServer {
             if (room.timer) clearInterval(room.timer);
         }
         this.arenaRooms.clear();
+    }
+
+    verifyAdminPin(pin) {
+        return pin === '202688';
+    }
+
+    addO2OVoucher(voucher) {
+        if (!voucher) return null;
+        if (!this.o2oVouchers) this.o2oVouchers = [];
+        this.o2oVouchers.push(voucher);
+        return voucher;
+    }
+
+    getO2OVouchers(pin, branch = 'all') {
+        if (pin !== '202688') return [];
+        const branchFilter = (branch || 'all').toLowerCase().replace('branch_', '');
+        let list = this.o2oVouchers || [];
+        if (branchFilter !== 'all') {
+            list = list.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === branchFilter);
+        }
+        return list;
+    }
+
+    useO2OVoucher(code, pin) {
+        if (pin !== '202688') return { success: false, error: 'Mã PIN không chính xác' };
+        const voucher = (this.o2oVouchers || []).find(v => v.code === code);
+        if (!voucher) return { success: false, error: 'Không tìm thấy voucher' };
+        voucher.status = 'used';
+        voucher.usedAt = new Date().toISOString();
+        return { success: true, voucher };
+    }
+
+    exportO2OCsv(pin, branch = 'all') {
+        if (pin !== '202688') return '';
+        const branchFilter = (branch || 'all').toLowerCase().replace('branch_', '');
+        let list = this.o2oVouchers || [];
+        if (branchFilter !== 'all') {
+            list = list.filter(v => (v.branch || '').toLowerCase().replace('branch_', '') === branchFilter);
+        }
+        const BOM = '\uFEFF';
+        let csv = BOM + 'STT,Mã Ưu Đãi,Tên Chương Trình,Chi Nhánh Áp Dụng,Thương Hiệu Người Dùng,Thời Gian Đổi,Trạng Thái,Thời Gian Dùng\r\n';
+        list.forEach((v, idx) => {
+            const safeCode = String(v.code || '').replace(/"/g, '""');
+            const safeTitle = String(v.title || '').replace(/"/g, '""');
+            const branchName = this.formatCityName(v.branch);
+            const safeBrand = String(v.playerBrand || 'Tiệm Cơm Nắm').replace(/"/g, '""');
+            const safeTime = new Date(v.createdAt).toLocaleString('vi-VN');
+            const safeStatus = v.status === 'used' ? 'Đã Sử Dụng' : 'Chưa Dùng';
+            const safeUsedTime = v.usedAt ? new Date(v.usedAt).toLocaleString('vi-VN') : '---';
+            csv += `"${idx + 1}","${safeCode}","${safeTitle}","${branchName}","${safeBrand}","${safeTime}","${safeStatus}","${safeUsedTime}"\r\n`;
+        });
+        return csv;
     }
 }
 
