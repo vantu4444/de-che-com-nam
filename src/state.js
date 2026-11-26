@@ -583,6 +583,7 @@ export const BRANCH_CONFIGS = {
         id: 'branch_hcm',
         name: 'Chi nhánh TP.HCM',
         subtitle: 'Trụ sở chính Miền Nam',
+        address: 'Số 6i Đường 3B, Tân Tạo, Bình Tân',
         icon: '🏙️',
         unlockPrice: 0,
         minLevel: 1,
@@ -603,6 +604,7 @@ export const BRANCH_CONFIGS = {
         id: 'branch_daklak',
         name: 'Chi nhánh Đắk Lắk',
         subtitle: 'Thủ phủ Tây Nguyên',
+        address: '02 Nguyễn Trác, Buôn Ma Thuột',
         icon: '☕',
         unlockPrice: 15000000,
         minLevel: 8,
@@ -623,6 +625,7 @@ export const BRANCH_CONFIGS = {
         id: 'branch_vinh',
         name: 'Chi nhánh TP. Vinh',
         subtitle: 'Cửa ngõ Miền Trung',
+        address: '57 Lê Ninh, Vinh Hưng, Nghệ An',
         icon: '🌊',
         unlockPrice: 40000000,
         minLevel: 15,
@@ -643,6 +646,7 @@ export const BRANCH_CONFIGS = {
         id: 'branch_hanoi',
         name: 'Chi nhánh Hà Nội',
         subtitle: 'Thủ đô Nghìn Năm Văn Hiến',
+        address: 'Yên Nghĩa, Hà Đông, Hà Nội',
         icon: '🏛️',
         unlockPrice: 100000000,
         minLevel: 25,
@@ -662,6 +666,22 @@ export const BRANCH_CONFIGS = {
 };
 
 export const BRANCH_ORDER = ['branch_hcm', 'branch_daklak', 'branch_vinh', 'branch_hanoi'];
+
+export const DAILY_ATTENDANCE_REWARDS = [
+    { day: 1, title: 'Vốn Khởi Nghiệp', rewardText: '+50.000đ', money: 50000, rep: 5, icon: '💵' },
+    { day: 2, title: 'Nguyên Liệu Nông Trại', rewardText: '+20 Gạo + 20 Rong Biển', ingredients: { rice_seaweed: 20 }, rep: 10, icon: '🌾' },
+    { day: 3, title: 'Quỹ Mở Rộng Sạp', rewardText: '+100.000đ', money: 100000, rep: 15, icon: '💰' },
+    { day: 4, title: 'Kho Thịt Thượng Hạng', rewardText: '+20 Thịt Sạch Cao Cấp', ingredients: { meat_clean: 20 }, rep: 20, icon: '🥩' },
+    { day: 5, title: 'Quỹ Đầu Tư Chi Nhánh', rewardText: '+150.000đ', money: 150000, rep: 25, icon: '💎' },
+    { day: 6, title: 'Gia Vị Độc Quyền ISO', rewardText: '+20 Sốt Mayo & Nước Tương', ingredients: { sauces: 20 }, rep: 30, icon: '🧂' },
+    { day: 7, title: 'VIP Siêu Cấp Đế Chế', rewardText: '+300.000đ + Thẻ Tăng Tốc Dây Chuyền (1h)', money: 300000, rep: 50, speedBoostMs: 3600000, icon: '👑' }
+];
+
+export const FILLING_MASTERY_THRESHOLDS = [
+    { stars: 1, required: 10, label: 'Thành Thạo (1★)', buffDesc: '-5% thời gian nấu' },
+    { stars: 2, required: 50, label: 'Bậc Thầy (2★)', buffDesc: '-5% thời gian nấu, +10% tip khách VIP' },
+    { stars: 3, required: 200, label: 'Tinh Thông Tuyệt Đỉnh (3★)', buffDesc: '-10% thời gian nấu, +20% tip khách VIP' }
+];
 
 export const STAFF_CONFIG = {
     basePrice: 400000,
@@ -1048,6 +1068,19 @@ class GameState {
         this.friends = []; // [{ id, name, level, city, addedAt }]
         this.privateMessages = {}; // { [friendId]: [{ from, text, time, unread }] }
         this.unreadMessagesCount = 0;
+
+        // [NÂNG CẤP ĐẾ CHẾ - BƯỚC 2B] Thu nhập Offline, Điểm danh 7 ngày, Sổ tay tinh thông 15 vị, Hỗ trợ bạn bè
+        this.lastActiveTimestamp = Date.now();
+        this.pendingOfflineIncome = null;
+        this.dailyAttendance = {
+            streak: 1,
+            lastClaimDate: null,
+            claimedToday: false
+        };
+        this.fillingMastery = {};
+        this.lastHelpedFriends = {};
+        this.friendConsignments = [];
+        this.speedBoostExpiry = 0;
     }
 
     onUpdate(fn) {
@@ -1350,6 +1383,7 @@ class GameState {
         }
 
         this.recordCooked(countToAdd);
+        this.recordFillingCooked(slot.fillingId, countToAdd);
         this.addExp(50 * countToAdd);
 
         const harvestedInfo = {
@@ -1383,6 +1417,220 @@ class GameState {
         if (changed) {
             this.notify({ kitchenSlotsUpdated: true });
         }
+    }
+
+    // =========================================================================
+    // [NÂNG CẤP ĐẾ CHẾ - BƯỚC 2B] THU NHẬP OFFLINE, ĐIỂM DANH, TINH THÔNG & BẠN BÈ
+    // =========================================================================
+
+    // 1. Thu nhập Offline (tối đa 8 tiếng = 480 phút)
+    calculateOfflineIncome(lastSavedTime = this.lastActiveTimestamp) {
+        if (!lastSavedTime) return null;
+        const now = Date.now();
+        const diffMs = now - Number(lastSavedTime);
+        if (diffMs < 60000) return null; // Vắng mặt ít hơn 1 phút -> không tính
+
+        const maxOfflineMs = 8 * 3600 * 1000; // Tối đa 8 tiếng
+        const effectiveMs = Math.min(diffMs, maxOfflineMs);
+        const cycles = Math.floor(effectiveMs / 15000); // Mỗi chu kỳ 15 giây
+
+        const baseIncomePerCycle = this.getBranchTotalIncomePer10s();
+        if (baseIncomePerCycle <= 0 || cycles <= 0) return null;
+
+        const totalOfflineIncome = cycles * baseIncomePerCycle;
+        const elapsedMinutes = Math.floor(effectiveMs / 60000);
+
+        return {
+            amount: totalOfflineIncome,
+            durationMs: effectiveMs,
+            minutes: elapsedMinutes,
+            cycles: cycles
+        };
+    }
+
+    claimOfflineIncome() {
+        if (!this.pendingOfflineIncome || this.pendingOfflineIncome.amount <= 0) return null;
+        const reward = { ...this.pendingOfflineIncome };
+        this.addMoney(reward.amount);
+        this.recordRevenue(reward.amount);
+        this.pendingOfflineIncome = null;
+        this.save();
+        this.notify({ offlineIncomeClaimed: true, reward });
+        return reward;
+    }
+
+    // 2. Điểm Danh 7 Ngày
+    checkAttendanceStatus() {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (!this.dailyAttendance || typeof this.dailyAttendance !== 'object') {
+            this.dailyAttendance = { streak: 1, lastClaimDate: null, claimedToday: false };
+        }
+        if (this.dailyAttendance.lastClaimDate === todayStr) {
+            this.dailyAttendance.claimedToday = true;
+        } else {
+            if (this.dailyAttendance.lastClaimDate) {
+                const lastDate = new Date(this.dailyAttendance.lastClaimDate);
+                const currDate = new Date(todayStr);
+                const diffDays = Math.round((currDate - lastDate) / (1000 * 3600 * 24));
+                if (diffDays > 1) {
+                    this.dailyAttendance.streak = 1;
+                }
+            }
+            this.dailyAttendance.claimedToday = false;
+        }
+        return {
+            streak: this.dailyAttendance.streak || 1,
+            claimedToday: Boolean(this.dailyAttendance.claimedToday),
+            canClaim: !this.dailyAttendance.claimedToday
+        };
+    }
+
+    claimAttendanceReward() {
+        const status = this.checkAttendanceStatus();
+        if (!status.canClaim) {
+            return { success: false, reason: 'already_claimed_today' };
+        }
+        const dayIdx = Math.min(Math.max(1, this.dailyAttendance.streak || 1), 7);
+        const rewardConfig = DAILY_ATTENDANCE_REWARDS.find(r => r.day === dayIdx) || DAILY_ATTENDANCE_REWARDS[0];
+
+        if (rewardConfig.money) {
+            this.addMoney(rewardConfig.money);
+        }
+        if (rewardConfig.rep) {
+            this.addReputation(rewardConfig.rep);
+        }
+        if (rewardConfig.ingredients) {
+            if (!this.ingredients) this.ingredients = {};
+            for (const [k, v] of Object.entries(rewardConfig.ingredients)) {
+                this.ingredients[k] = (this.ingredients[k] || 0) + v;
+            }
+        }
+        if (rewardConfig.speedBoostMs) {
+            this.speedBoostExpiry = Math.max(Date.now(), this.speedBoostExpiry || 0) + rewardConfig.speedBoostMs;
+        }
+
+        const todayStr = new Date().toISOString().slice(0, 10);
+        this.dailyAttendance.lastClaimDate = todayStr;
+        this.dailyAttendance.claimedToday = true;
+        if (this.dailyAttendance.streak >= 7) {
+            this.dailyAttendance.streak = 1;
+        } else {
+            this.dailyAttendance.streak += 1;
+        }
+
+        this.save();
+        this.notify({ attendanceClaimed: true, reward: rewardConfig });
+        return { success: true, reward: rewardConfig };
+    }
+
+    // 3. Sổ Tay Tinh Thông 15 Vị
+    recordFillingCooked(fillingId, count = 1) {
+        if (!fillingId || count <= 0) return;
+        const resId = resolveFillingId(fillingId);
+        if (!this.fillingMastery) this.fillingMastery = {};
+        if (!this.fillingMastery[resId]) {
+            this.fillingMastery[resId] = { cooked: 0, sold: 0, stars: 0 };
+        }
+        this.fillingMastery[resId].cooked += count;
+        this.updateFillingMasteryStars(resId);
+    }
+
+    recordFillingSold(fillingId, count = 1) {
+        if (!fillingId || count <= 0) return;
+        const resId = resolveFillingId(fillingId);
+        if (!this.fillingMastery) this.fillingMastery = {};
+        if (!this.fillingMastery[resId]) {
+            this.fillingMastery[resId] = { cooked: 0, sold: 0, stars: 0 };
+        }
+        this.fillingMastery[resId].sold += count;
+        this.updateFillingMasteryStars(resId);
+    }
+
+    updateFillingMasteryStars(fillingId) {
+        const m = this.fillingMastery && this.fillingMastery[fillingId];
+        if (!m) return;
+        const totalScore = (m.cooked || 0) + (m.sold || 0);
+        let stars = 0;
+        if (totalScore >= 200) stars = 3;
+        else if (totalScore >= 50) stars = 2;
+        else if (totalScore >= 10) stars = 1;
+        m.stars = stars;
+    }
+
+    getFillingMastery(fillingId) {
+        const resId = resolveFillingId(fillingId);
+        if (!this.fillingMastery || !this.fillingMastery[resId]) {
+            return { cooked: 0, sold: 0, stars: 0 };
+        }
+        return this.fillingMastery[resId];
+    }
+
+    getMasteryCookingSpeedBuff(fillingId) {
+        const m = this.getFillingMastery(fillingId);
+        let buff = 0;
+        if (m.stars >= 3) buff = 0.10; // -10% thời gian nấu
+        else if (m.stars >= 1) buff = 0.05; // -5% thời gian nấu
+        if (this.speedBoostExpiry && Date.now() < this.speedBoostExpiry) {
+            buff += 0.50;
+        }
+        return Math.min(0.80, buff);
+    }
+
+    getMasteryVipTipBuff(fillingId) {
+        const m = this.getFillingMastery(fillingId);
+        if (m.stars >= 3) return 0.20; // +20% tiền tip VIP
+        if (m.stars >= 2) return 0.10; // +10% tiền tip VIP
+        return 0;
+    }
+
+    // 4. Hỗ Trợ Bạn Bè: Tiếp Lửa Dây Chuyền & Quầy Ký Gửi
+    canHelpFriend(friendId) {
+        if (!friendId) return { canHelp: false, remainingMs: 0 };
+        if (!this.lastHelpedFriends) this.lastHelpedFriends = {};
+        const lastTime = this.lastHelpedFriends[friendId] || 0;
+        const cooldownMs = 2 * 3600 * 1000; // 2 giờ
+        const elapsed = Date.now() - lastTime;
+        if (elapsed >= cooldownMs) {
+            return { canHelp: true, remainingMs: 0 };
+        }
+        return { canHelp: false, remainingMs: cooldownMs - elapsed };
+    }
+
+    helpFriendFactory(friendId, friendName = 'Bạn bè') {
+        const status = this.canHelpFriend(friendId);
+        if (!status.canHelp) {
+            return { success: false, reason: 'cooldown', remainingMs: status.remainingMs };
+        }
+        if (!this.lastHelpedFriends) this.lastHelpedFriends = {};
+        this.lastHelpedFriends[friendId] = Date.now();
+
+        // Người giúp nhận ngay +15.000đ tiền thưởng và +10 Điểm Uy Tín
+        this.addMoney(15000);
+        this.addReputation(10);
+        this.save();
+        this.notify({ helpedFriend: true, friendId, friendName });
+
+        return { success: true, rewardMoney: 15000, rewardRep: 10 };
+    }
+
+    applyFactoryBoostFromFriend(helperName = 'Bạn bè') {
+        if (!Array.isArray(this.kitchenSlots)) return 0;
+        const now = Date.now();
+        let boostedCount = 0;
+        for (const slot of this.kitchenSlots) {
+            if (slot.status === 'cooking' && slot.startTime && slot.durationMs) {
+                const remaining = Math.max(0, slot.durationMs - (now - slot.startTime));
+                if (remaining > 0) {
+                    // Rút ngắn 20% thời gian chờ còn lại
+                    slot.startTime -= Math.floor(remaining * 0.20);
+                    boostedCount++;
+                }
+            }
+        }
+        this.updateKitchenSlots(now);
+        this.save();
+        this.notify({ factoryBoostedByFriend: true, helperName, boostedCount });
+        return boostedCount;
     }
 
     // Tỷ lệ tăng giá bán theo Level (+10% mỗi cấp trên cấp 1)
@@ -1426,6 +1674,14 @@ class GameState {
     addMoney(amount) {
         if (amount <= 0) return;
         this.money += amount;
+        this.notify();
+        this.save();
+    }
+
+    addReputation(amount) {
+        if (typeof amount !== 'number' || isNaN(amount) || amount === 0) return;
+        const currentRep = typeof this.reputation === 'number' && !isNaN(this.reputation) ? this.reputation : 100;
+        this.reputation = Math.max(0, Math.min(1000, currentRep + amount));
         this.notify();
         this.save();
     }
@@ -2099,6 +2355,9 @@ class GameState {
         }
 
         const [removedItem] = this.inventory.splice(selectedIndex, 1);
+        if (removedItem && removedItem.filling) {
+            this.recordFillingSold(removedItem.filling, 1);
+        }
         this.notify();
         this.save();
         return removedItem;
@@ -2751,7 +3010,12 @@ class GameState {
                 gameDay: this.gameDay || 1,
                 playerId: this.playerId || this.initPlayerId(),
                 friends: Array.isArray(this.friends) ? this.friends : [],
-                privateMessages: this.privateMessages || {}
+                privateMessages: this.privateMessages || {},
+                lastActiveTimestamp: Date.now(),
+                dailyAttendance: this.dailyAttendance,
+                fillingMastery: this.fillingMastery,
+                lastHelpedFriends: this.lastHelpedFriends,
+                speedBoostExpiry: this.speedBoostExpiry || 0
             };
             localStorage.setItem(this.saveKey, JSON.stringify(data));
         } catch (e) {
@@ -2899,6 +3163,26 @@ class GameState {
                 this.privateMessages = data.privateMessages;
             }
 
+            if (data.dailyAttendance && typeof data.dailyAttendance === 'object') {
+                this.dailyAttendance = data.dailyAttendance;
+            }
+            if (data.fillingMastery && typeof data.fillingMastery === 'object') {
+                this.fillingMastery = data.fillingMastery;
+            }
+            if (data.lastHelpedFriends && typeof data.lastHelpedFriends === 'object') {
+                this.lastHelpedFriends = data.lastHelpedFriends;
+            }
+            if (typeof data.speedBoostExpiry === 'number') {
+                this.speedBoostExpiry = data.speedBoostExpiry;
+            }
+            if (data.lastActiveTimestamp) {
+                this.lastActiveTimestamp = data.lastActiveTimestamp;
+                const offline = this.calculateOfflineIncome(data.lastActiveTimestamp);
+                if (offline && offline.amount > 0) {
+                    this.pendingOfflineIncome = offline;
+                }
+            }
+
             this.ensureIntegrity();
             this.notify();
             return true;
@@ -3021,6 +3305,12 @@ class GameState {
             branch_vinh: { unlocked: false, level: 1 },
             branch_hanoi: { unlocked: false, level: 1 }
         };
+        this.lastActiveTimestamp = Date.now();
+        this.pendingOfflineIncome = null;
+        this.dailyAttendance = { streak: 1, lastClaimDate: null, claimedToday: false };
+        this.fillingMastery = {};
+        this.lastHelpedFriends = {};
+        this.speedBoostExpiry = 0;
 
         this.ensureIntegrity();
         this.save();

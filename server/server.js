@@ -426,6 +426,7 @@ export class OnigiriServer {
             socket.on('friend:accept', (data) => this.handleFriendAccept(socket.id, data));
             socket.on('friend:decline', (data) => this.handleFriendDecline(socket.id, data));
             socket.on('friend:query_status', (data) => this.handleFriendQueryStatus(socket.id, data));
+            socket.on('friend:boost_factory', (data) => this.handleFriendBoostFactory(socket.id, data));
 
             // [HỆ THỐNG TRÒ CHUYỆN ĐA KÊNH]
             socket.on('chat:message', (data) => this.handleChatMessage(socket.id, data));
@@ -1129,6 +1130,18 @@ export class OnigiriServer {
         });
 
         this.sendEventToUser(userId, 'friend:status_result', { friends: result });
+    }
+
+    handleFriendBoostFactory(senderId, data) {
+        const targetPlayerId = data?.targetPlayerId;
+        const helperName = data?.helperName || 'Người bạn thân thiết';
+        if (!targetPlayerId) return;
+
+        this.sendEventToUser(targetPlayerId, 'friend:boost_received', {
+            helperName,
+            boostedPercent: 20,
+            timestamp: Date.now()
+        });
     }
 
     // [HỆ THỐNG TRÒ CHUYỆN]

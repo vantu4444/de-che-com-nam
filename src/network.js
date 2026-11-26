@@ -382,6 +382,14 @@ export class NetworkManager {
             this.emitEvent('onFriendsStatus', data?.friends || []);
         });
 
+        // [TIẾP LỬA DÂY CHUYỀN BẠN BÈ]
+        this.socket.on('friend:boost_received', (data) => {
+            if (data?.helperName) {
+                state.applyFactoryBoostFromFriend(data.helperName);
+            }
+            this.emitEvent('onFriendBoostReceived', data);
+        });
+
         // [HỆ THỐNG TRÒ CHUYỆN]
         this.socket.on('chat:broadcast', (data) => {
             this.emitEvent('onChatBroadcast', data);
@@ -710,6 +718,18 @@ export class NetworkManager {
             });
             this.emitEvent('onFriendsStatus', res);
         }
+    }
+
+    sendFriendBoost(targetPlayerId, helperName) {
+        if (this.isOnline && this.socket && this.socket.connected) {
+            this.socket.emit('friend:boost_factory', {
+                targetPlayerId,
+                helperName: helperName || state.brandName || state.playerName,
+                fromPlayerId: state.getPlayerId()
+            });
+            return true;
+        }
+        return false;
     }
 
     // [HỆ THỐNG TRÒ CHUYỆN]

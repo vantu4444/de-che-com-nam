@@ -625,9 +625,14 @@ export class OnlineUIManager {
                             <strong>${selectedFriend.name}</strong>
                             <small>${network.otherPlayers.has(selectedFriend.id) ? '🟢 Đang trực tuyến' : '⚪ Ngoại tuyến'}</small>
                         </div>
-                        <button type="button" class="btn-challenge-friend" data-fid="${selectedFriend.id}" data-fname="${selectedFriend.name}">
-                            ⚔️ Thách Đấu
-                        </button>
+                        <div class="fcc-header-actions">
+                            <button type="button" class="btn-visit-friend-factory" data-fid="${selectedFriend.id}" data-fname="${selectedFriend.name}">
+                                🏭 Thăm Xưởng
+                            </button>
+                            <button type="button" class="btn-challenge-friend" data-fid="${selectedFriend.id}" data-fname="${selectedFriend.name}">
+                                ⚔️ Thách Đấu
+                            </button>
+                        </div>
                     </div>
 
                     <div class="chat-messages-box" id="privateChatBox">
@@ -817,6 +822,9 @@ export class OnlineUIManager {
                             ${isRequestSent ? '⏳ Đã gửi lời mời' : '➕ Thêm Bạn'}
                         </button>
                     `}
+                    <button type="button" class="btn-profile-action btn-profile-visit" id="btnProfileVisitFactory">
+                        🏭 Thăm Xưởng
+                    </button>
                     <button type="button" class="btn-profile-action btn-profile-challenge" id="btnProfileChallenge">
                         ⚔️ Thách Đấu 1v1
                     </button>
@@ -866,6 +874,15 @@ export class OnlineUIManager {
                     this.chatChannel = 'private';
                     window.game.questManager.render();
                 }
+            };
+        }
+
+        const btnVisitFactory = this.playerProfileElement.querySelector('#btnProfileVisitFactory');
+        if (btnVisitFactory) {
+            btnVisitFactory.onclick = () => {
+                audio.playClick();
+                this.closePlayerProfile();
+                this.openFriendFactoryModal(targetPlayerId, playerName);
             };
         }
 
@@ -1560,6 +1577,14 @@ export class OnlineUIManager {
             };
         });
 
+        const btnVisitFactory = container.querySelector('.btn-visit-friend-factory');
+        if (btnVisitFactory) {
+            btnVisitFactory.onclick = () => {
+                audio.playClick();
+                this.openFriendFactoryModal(btnVisitFactory.dataset.fid, btnVisitFactory.dataset.fname);
+            };
+        }
+
         const btnChallengeFriend = container.querySelector('.btn-challenge-friend');
         if (btnChallengeFriend) {
             btnChallengeFriend.onclick = () => {
@@ -1901,6 +1926,159 @@ export class OnlineUIManager {
                 this.brandModalElement.classList.add('hidden');
             };
         }
+    }
+
+    openFriendFactoryModal(friendId, friendName = 'Bạn Bè') {
+        let modal = document.getElementById('friendFactoryModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'friendFactoryModal';
+            modal.className = 'game-modal-backdrop hidden';
+            document.body.appendChild(modal);
+        }
+
+        const helpStatus = state.canHelpFriend ? state.canHelpFriend(friendId) : { canHelp: true, remainingMs: 0 };
+        const remainingMinutes = Math.ceil((helpStatus.remainingMs || 0) / 60000);
+
+        modal.innerHTML = `
+            <div class="game-modal-dialog friend-factory-modal-dialog">
+                <div class="game-modal-header">
+                    <div class="gmh-title">
+                        <span class="gmh-icon">🏭</span>
+                        <h3>Xưởng Bếp Cơm Nắm - ${friendName}</h3>
+                    </div>
+                    <button type="button" class="btn-modal-close" id="btnCloseFriendFactoryModal">✕</button>
+                </div>
+                <div class="friend-factory-modal-body">
+                    <div class="ffm-banner">
+                        <span class="ffm-stamp">🛡️ Chuẩn ISO 22000 & ATVSTP</span>
+                        <p>Bạn đang ghé thăm xưởng sản xuất của <strong>${friendName}</strong>. Hãy tương trợ lẫn nhau để cùng phát triển chuỗi cơm nắm toàn quốc!</p>
+                    </div>
+
+                    <!-- 1. TIẾP LỬA DÂY CHUYỀN -->
+                    <div class="ffm-section-card">
+                        <div class="ffm-sec-header">
+                            <span class="sec-icon">🔥</span>
+                            <div>
+                                <h4>Tiếp Lửa Dây Chuyền (Giúp Bạn)</h4>
+                                <small>Rút ngắn ngay <strong>20% thời gian nấu</strong> của mẻ cơm đang nấu cho bạn bè! (1 lần / 2 giờ)</small>
+                            </div>
+                        </div>
+                        <div class="ffm-boost-box">
+                            <div class="ffm-boost-reward-hint">
+                                🎁 Bạn nhận ngay: <strong style="color: #4ade80;">+15.000đ</strong> và <strong style="color: #facc15;">+10 Uy Tín</strong>
+                            </div>
+                            ${helpStatus.canHelp ? `
+                                <button type="button" class="btn-ffm-boost" id="btnHelpFriendFactory">
+                                    🔥 Tiếp Lửa Dây Chuyền Ngay
+                                </button>
+                            ` : `
+                                <button type="button" class="btn-ffm-boost disabled" disabled>
+                                    ⏳ Đang chờ hồi sức (${remainingMinutes} phút nữa)
+                                </button>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- 2. QUẦY KÝ GỬI BẠN BÈ -->
+                    <div class="ffm-section-card">
+                        <div class="ffm-sec-header">
+                            <span class="sec-icon">🛒</span>
+                            <div>
+                                <h4>Quầy Ký Gửi Nguyên Liệu Bạn Bè</h4>
+                                <small>Mua lại nguyên liệu sạch dư thừa với mức giá hữu nghị niêm yết</small>
+                            </div>
+                        </div>
+                        <div class="ffm-consignment-grid">
+                            <div class="consignment-item-card">
+                                <span class="cic-icon">🌾</span>
+                                <div class="cic-info">
+                                    <strong>Gạo Nhật Sạch (10 phần)</strong>
+                                    <small>Chuẩn giống Koshihikari</small>
+                                </div>
+                                <button type="button" class="btn-buy-consignment" data-crop="rice_seaweed" data-price="10000" data-amount="10">
+                                    10.000đ
+                                </button>
+                            </div>
+                            <div class="consignment-item-card">
+                                <span class="cic-icon">🌊</span>
+                                <div class="cic-info">
+                                    <strong>Rong Biển Nori (10 phần)</strong>
+                                    <small>Giòn tan, thơm chuẩn vị biển</small>
+                                </div>
+                                <button type="button" class="btn-buy-consignment" data-crop="rice_seaweed" data-price="10000" data-amount="10">
+                                    10.000đ
+                                </button>
+                            </div>
+                            <div class="consignment-item-card">
+                                <span class="cic-icon">🥩</span>
+                                <div class="cic-info">
+                                    <strong>Thịt Sạch Tươi (10 phần)</strong>
+                                    <small>Thịt bò / gà đạt chuẩn ATVSTP</small>
+                                </div>
+                                <button type="button" class="btn-buy-consignment" data-crop="meat_clean" data-price="20000" data-amount="10">
+                                    20.000đ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+
+        // Ẩn phím ảo
+        const vc = document.getElementById('virtualControls');
+        if (vc) vc.classList.add('hidden');
+
+        const btnClose = modal.querySelector('#btnCloseFriendFactoryModal');
+        if (btnClose) {
+            btnClose.onclick = () => {
+                modal.classList.add('hidden');
+                if (vc && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)) {
+                    vc.classList.remove('hidden');
+                }
+            };
+        }
+
+        const btnBoost = modal.querySelector('#btnHelpFriendFactory');
+        if (btnBoost) {
+            btnBoost.onclick = () => {
+                const res = state.helpFriendFactory ? state.helpFriendFactory(friendId, friendName) : { success: false };
+                if (res.success) {
+                    audio.playLevelUp();
+                    audio.playTingComplete();
+                    network.sendFriendBoost(friendId, state.brandName || state.playerName);
+                    this.showToastNotification(`🔥 Đã tiếp lửa thành công cho xưởng ${friendName}! Nhận +15.000đ & +10 Uy Tín!`);
+                    this.openFriendFactoryModal(friendId, friendName);
+                } else {
+                    audio.playError();
+                    this.showToastNotification(`⚠️ Chưa thể tiếp lửa: Còn phải chờ cooldown.`);
+                }
+            };
+        }
+
+        const buyBtns = modal.querySelectorAll('.btn-buy-consignment');
+        buyBtns.forEach(btn => {
+            btn.onclick = () => {
+                const price = Number(btn.dataset.price) || 10000;
+                const crop = btn.dataset.crop;
+                const amount = Number(btn.dataset.amount) || 10;
+                if (state.money < price) {
+                    audio.playError();
+                    this.showToastNotification(`⚠️ Không đủ tiền! Cần ${price.toLocaleString('vi-VN')}đ.`);
+                    return;
+                }
+                state.deductMoney(price);
+                if (!state.ingredients) state.ingredients = {};
+                state.ingredients[crop] = (state.ingredients[crop] || 0) + amount;
+                state.save();
+                state.notify();
+                audio.playClick();
+                this.showToastNotification(`🛒 Mua thành công +${amount} phần từ quầy ký gửi bạn bè!`);
+            };
+        });
     }
 }
 

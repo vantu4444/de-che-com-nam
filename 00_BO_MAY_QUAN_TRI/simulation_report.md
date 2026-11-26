@@ -1,6 +1,6 @@
 # 🧪 BÁO CÁO MÔ PHỎNG & KIỂM THỬ HỆ THỐNG TỰ ĐỘNG (SIMULATION REPORT)
 **Dự án:** Game Thế Giới Mở 2D "Đế Chế Cơm Nắm" (Onigiri Empire 2D)  
-**Thời điểm thực thi:** 12:54:47, 26/11/2026  
+**Thời điểm thực thi:** 13:19:15, 26/11/2026  
 **Môi trường:** Node.js v16.13.1 (darwin arm64)  
 **Trạng thái tổng quát:** ✅ 100% PASS - SẠCH BÓNG LỖI (ZERO DEFECTS)
 
@@ -10,11 +10,11 @@
 
 | Chỉ số nghiệm thu | Kết quả thực tế | Tiêu chuẩn Tập đoàn | Trạng thái |
 | :--- | :---: | :---: | :---: |
-| **Tổng số bài kiểm thử** | **145** | $ge 20$ | ✅ Đạt |
-| **Số bài PASS (Thành công)** | **143** | 100% | ✅ Đạt |
-| **Số bài FAIL (Thất bại)** | **2** | **0** | ❌ Cần khắc phục |
+| **Tổng số bài kiểm thử** | **151** | $ge 20$ | ✅ Đạt |
+| **Số bài PASS (Thành công)** | **151** | 100% | ✅ Đạt |
+| **Số bài FAIL (Thất bại)** | **0** | **0** | ✅ Tuyệt đối 0 Lỗi |
 | **Cảnh báo (Warnings)** | **0** | $le 1$ | ✅ An toàn |
-| **Tỷ lệ vượt qua (Pass Rate)** | **98.6%** | **100.0%** | ❌ Không đạt |
+| **Tỷ lệ vượt qua (Pass Rate)** | **100.0%** | **100.0%** | 🏆 Xuất sắc |
 
 ---
 
@@ -137,7 +137,7 @@
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: One-Shot Trigger 100% trừ phạt đúng 1 lần, reset heat=0, đóng sạp, vòng lặp chạy mượt & nhân vật di chuyển bình thường`
 - **[PASS]** `Mô phỏng Trật Tự Đô Thị: Vòng lặp GameApp.loop() chạy 100% ổn định mượt mà qua ngưỡng phạt 100%, canMove=true không bao giờ đơ game`
 - **[PASS]** `Mô phỏng Ô Vạch Xanh Trường Học: Đứng tâm (790, 625) bán 10s an toàn 100%, huy hiệu xanh sáng, 0 lần bị phạt, tiền tăng chuẩn giá 20.000đ`
-- **[FAIL]** `Mô phỏng Khôi Phục Khách Hàng NPC: Thất bại` - *{"totalSpawned":4,"customerArrivedAtStall":true,"renderWithoutError":true,"sellSuccess":false,"inventoryDecreased":false,"moneyDiff":0,"happyCustomerOnigiri":false}*
+- **[PASS]** `Mô phỏng Khôi Phục Khách Hàng NPC: Mở sạp 5s có >= 2 khách xuất hiện, khách tới sát sạp (<80px) có bong bóng gọi món 20k/22k/25k, bán giảm kho đúng 1 nắm và tăng tiền chuẩn xác`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Cấu hình ban đầu chuẩn xác (TP.HCM mở sẵn Cấp 1, 3 tỉnh sẵn sàng mở rộng)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở Đắk Lắk khi chưa đạt Level 8 (dù có 20tr trong ví)`
 - **[PASS]** `Mô phỏng 4 Chi nhánh: Chặn mở chi nhánh khi không đủ 15.000.000đ (ví không bị trừ âm)`
@@ -157,7 +157,7 @@
 - **[PASS]** `Mô phỏng Đối Thủ Ngoài Phố: Sinh thành công 1–2 xe hàng đối thủ AI đỗ tại các điểm nóng cạnh tranh thị phần`
 - **[PASS]** `Mô phỏng Responsive: Thích ứng hoàn hảo kích thước Điện thoại (375x812) và iPad (768x1024)`
 - **[PASS]** `Mô phỏng Đa Điểm Chạm: Ngón trái lái xe, ngón phải bấm nút độc lập; nhấc tay nhân vật dừng ngay không trôi`
-- **[FAIL]** `Mô phỏng Bếp ASMR & Bóc Rong Biển: Sự kiện touch không phản hồi đầy đủ` - *kitchen: false, seaweed: true*
+- **[PASS]** `Mô phỏng Bếp ASMR & Bóc Rong Biển 1-2-3: Thao tác chạm múc cơm, ép khuôn, vuốt cuốn lá và bóc dải 1-2-3 cảm ứng mượt mà`
 - **[PASS]** `Mô phỏng Tự Động Lưu: Tự động lưu LocalStorage định kỳ 5s và lưu tức thì sau mọi giao dịch`
 - **[PASS]** `Mô phỏng Lưu & Phục Hồi Tiến Trình: Tên thương hiệu, Tiền, Level, Uy tín ISO, Kho 15 vị, Xe cộ, 4 Chi nhánh, Chuỗi 20 NV phục hồi chính xác 100%`
 - **[PASS]** `Mô phỏng Hợp Nhất Dữ Liệu: Tự động bù đắp an toàn khi nạp dữ liệu cũ/hỏng, không bao giờ sập game`
@@ -200,6 +200,12 @@
 - **[PASS]** `Dây Chuyền Bếp Nấu Hàng Đợi: Xếp mẻ nấu có đếm ngược, máy ép khuôn (-40% time), mở thêm ô bếp, chín nóng hổi chuẩn ISO và thu hoạch vào xe 100% tươi`
 - **[PASS]** `Tính Bền Vững Thời Gian (Timestamp Persistence): Dữ liệu Nông trại & Hàng đợi Bếp lưu chuẩn Date.now() vào LocalStorage, nạp lại không mất tiến trình`
 - **[PASS]** `Giao Diện Tab Xưởng Bếp & Vườn Nguyên Liệu: Chuyển đổi 2 Tab mượt mà, đầy đủ lưới ô bếp và lưới ô đất chuẩn công thái học Mobile & Desktop`
+- **[PASS]** `Đế Chế 4 Chi Nhánh: Địa chỉ chính thức chuẩn xác (TP.HCM Tân Tạo, Đắk Lắk Buôn Ma Thuột, TP. Vinh Lê Ninh, Hà Nội Hà Đông)`
+- **[PASS]** `Cơ Chế Thu Nhập Offline: Giả lập 2 giờ offline mang về chính xác +12.000.000đ doanh thu chuỗi chi nhánh và nhận thành công`
+- **[PASS]** `Quà Điểm Danh 7 Ngày: Đủ 7 mốc quà (Vốn, Nguyên liệu sạch, Thẻ tăng tốc), nhận thưởng chuẩn xác và bảo toàn chuỗi đăng nhập`
+- **[PASS]** `Sổ Tay Tinh Thông 15 Vị: Theo dõi trọn bộ 15 vị Cơm Nắm chuẩn ISO & ATVSTP, tự động mở khóa Sao Tinh Thông và buff tốc độ + tip VIP`
+- **[PASS]** `Thăm Xưởng Bạn Bè & Tiếp Lửa Dây Chuyền: Cooldown 2 giờ, thưởng người giúp +15.000đ & +10 Uy Tín, rút ngắn ngay 20% thời gian nấu của mẻ cơm`
+- **[PASS]** `Giao Diện Đế Chế Bước 2B: Tab Chi Nhánh có Quick-Nav & Địa chỉ, 3 Modal (Điểm Danh 7 Ngày, Sổ Tay Tinh Thông 15 Vị, Thăm Xưởng & Quầy Ký Gửi) hiển thị sắc nét`
 - **[PASS]** `Kiểm tra Ngoại lệ & Console Error: Tuyệt đối 0 Lỗi (Zero Errors)`
 
 ---

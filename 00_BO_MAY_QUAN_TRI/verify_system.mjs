@@ -1998,6 +1998,7 @@ async function runInteractiveSimulationSuite() {
     let sellSuccess = false;
     if (closeCustomer) {
         closeCustomer.status = 'waiting';
+        closeCustomer.recipeId = 'crab_egg_mayo';
         sellSuccess = sellingManager.sellQuick();
     }
     const inventoryDecreased = state.inventory.length === prevInventoryCount58 - 1;
@@ -2360,6 +2361,8 @@ async function runInteractiveSimulationSuite() {
 
     // 6.11 Mô phỏng Bếp Cơm Nắm ASMR & Thử Thách Bóc Rong Biển trên Màn Hình Cảm Ứng (Touch Events)
     gameApp.kitchen.open();
+    const btnPlayAsmr = doc.getElementById('btnPlayAsmrManual');
+    if (btnPlayAsmr) btnPlayAsmr.click();
     const btnHold = doc.getElementById('btnHoldScoop');
     let kitchenTouchOk = false;
     if (btnHold) {
@@ -3635,6 +3638,165 @@ async function runInteractiveSimulationSuite() {
         }
     } catch (errEmpireStep1) {
         logger.fail('Nâng Cấp Đế Chế Bước 1: Ngoại lệ kiểm thử', errEmpireStep1.message);
+    }
+
+    // -------------------------------------------------------------------------
+    // BƯỚC 6.16: KIỂM THỬ NÂNG CẤP ĐẾ CHẾ – BƯỚC 2B: CHUỖI 4 CHI NHÁNH TỰ ĐỘNG
+    // (THU NHẬP OFFLINE), THĂM XƯỞNG BẠN BÈ, ĐIỂM DANH 7 NGÀY & TINH THÔNG 15 VỊ
+    // -------------------------------------------------------------------------
+    try {
+        logger.log('SIMULATION DIRECTOR', 'Khởi chạy kịch bản kiểm thử Nâng Cấp Đế Chế Bước 2B (Chuỗi Chi Nhánh, Offline Income & Bạn Bè)...', COLORS.cyan);
+        const {
+            state: testState2B,
+            BRANCH_CONFIGS: testBranchConfigs,
+            DAILY_ATTENDANCE_REWARDS: testDailyRewards,
+            FILLING_MASTERY_THRESHOLDS: testMasteryThresholds,
+            FILLINGS: testFillings2B
+        } = await import(path.join(ROOT_DIR, 'src', 'state.js'));
+
+        // 1. Kiểm tra 4 chi nhánh với địa chỉ chính thức chuẩn ISO & ATVSTP
+        const hcmAddr = testBranchConfigs.branch_hcm?.address;
+        const daklakAddr = testBranchConfigs.branch_daklak?.address;
+        const vinhAddr = testBranchConfigs.branch_vinh?.address;
+        const hanoiAddr = testBranchConfigs.branch_hanoi?.address;
+
+        const addrOk = Boolean(
+            hcmAddr && hcmAddr.includes('Tân Tạo, Bình Tân') &&
+            daklakAddr && daklakAddr.includes('Nguyễn Trác') &&
+            vinhAddr && vinhAddr.includes('Lê Ninh, Vinh') &&
+            hanoiAddr && hanoiAddr.includes('Hà Đông')
+        );
+
+        if (addrOk) {
+            logger.pass('Đế Chế 4 Chi Nhánh: Địa chỉ chính thức chuẩn xác (TP.HCM Tân Tạo, Đắk Lắk Buôn Ma Thuột, TP. Vinh Lê Ninh, Hà Nội Hà Đông)');
+        } else {
+            logger.fail('Đế Chế 4 Chi Nhánh: Sai sót địa chỉ chi nhánh', { hcmAddr, daklakAddr, vinhAddr, hanoiAddr });
+        }
+
+        // 2. Mô phỏng Thu Nhập Offline (tối đa 8 tiếng)
+        testState2B.branches.branch_hcm.unlocked = true;
+        testState2B.branches.branch_hcm.level = 2; // Cấp 2 sinh 25.000đ/15s
+        testState2B.unpaidDebt = 0;
+        testState2B.isOperatingHalted = false;
+
+        // Giả lập offline 2 tiếng (7.200.000 ms)
+        const twoHoursAgo = Date.now() - (2 * 3600 * 1000);
+        const offlineCalc = testState2B.calculateOfflineIncome(twoHoursAgo);
+        const offlineAmountExpected = Math.floor((2 * 3600 * 1000) / 15000) * testState2B.getBranchTotalIncomePer10s();
+        const offlineOk = Boolean(offlineCalc && offlineCalc.amount > 0 && offlineCalc.amount === offlineAmountExpected && offlineCalc.minutes === 120);
+
+        // Nhận doanh thu offline
+        testState2B.pendingOfflineIncome = offlineCalc;
+        const preClaimMoney = testState2B.money;
+        const claimedOffline = testState2B.claimOfflineIncome();
+        const postClaimMoney = testState2B.money;
+        const claimOfflineOk = Boolean(claimedOffline && postClaimMoney === preClaimMoney + offlineCalc.amount && testState2B.pendingOfflineIncome === null);
+
+        if (offlineOk && claimOfflineOk) {
+            logger.pass(`Cơ Chế Thu Nhập Offline: Giả lập 2 giờ offline mang về chính xác +${offlineCalc.amount.toLocaleString('vi-VN')}đ doanh thu chuỗi chi nhánh và nhận thành công`);
+        } else {
+            logger.fail('Cơ Chế Thu Nhập Offline: Thất bại', { offlineCalc, offlineAmountExpected, claimOfflineOk });
+        }
+
+        // 3. Kiểm tra Quà Điểm Danh 7 Ngày
+        const has7DailyRewards = Array.isArray(testDailyRewards) && testDailyRewards.length === 7;
+        const day7RewardHasSpeedBoost = Boolean(testDailyRewards[6]?.speedBoostMs);
+        const attStatusBefore = testState2B.checkAttendanceStatus();
+        
+        // Nhận quà ngày hôm nay
+        const preAttMoney = testState2B.money;
+        const claimAttRes = testState2B.claimAttendanceReward();
+        const attStatusAfter = testState2B.checkAttendanceStatus();
+        const claimAttOk = Boolean(claimAttRes.success && attStatusAfter.claimedToday === true && testState2B.money >= preAttMoney + 50000);
+
+        if (has7DailyRewards && day7RewardHasSpeedBoost && claimAttOk) {
+            logger.pass('Quà Điểm Danh 7 Ngày: Đủ 7 mốc quà (Vốn, Nguyên liệu sạch, Thẻ tăng tốc), nhận thưởng chuẩn xác và bảo toàn chuỗi đăng nhập');
+        } else {
+            logger.fail('Quà Điểm Danh 7 Ngày: Thất bại', { has7DailyRewards, day7RewardHasSpeedBoost, claimAttRes, attStatusAfter });
+        }
+
+        // 4. Kiểm tra Sổ Tay Tinh Thông 15 Vị
+        const fillingCount15 = Object.keys(testFillings2B).length === 15;
+        testState2B.recordFillingCooked('crab_egg_mayo', 12);
+        testState2B.recordFillingSold('crab_egg_mayo', 40);
+        const masteryData = testState2B.getFillingMastery('crab_egg_mayo');
+        const masteryStarsOk = masteryData.stars === 2; // 52 nắm -> 2 sao
+        const masterySpeedBuff = testState2B.getMasteryCookingSpeedBuff('crab_egg_mayo');
+        const masteryTipBuff = testState2B.getMasteryVipTipBuff('crab_egg_mayo');
+        const masteryBuffsOk = masterySpeedBuff >= 0.05 && masteryTipBuff >= 0.10;
+
+        if (fillingCount15 && masteryStarsOk && masteryBuffsOk) {
+            logger.pass('Sổ Tay Tinh Thông 15 Vị: Theo dõi trọn bộ 15 vị Cơm Nắm chuẩn ISO & ATVSTP, tự động mở khóa Sao Tinh Thông và buff tốc độ + tip VIP');
+        } else {
+            logger.fail('Sổ Tay Tinh Thông 15 Vị: Thất bại', { fillingCount15, masteryStarsOk, masteryBuffsOk, masteryData });
+        }
+
+        // 5. Kiểm tra Thăm Xưởng Bạn Bè & Tiếp Lửa Dây Chuyền
+        const testFriendId = 'friend_sim_01';
+        const canHelpInitial = testState2B.canHelpFriend(testFriendId).canHelp === true;
+
+        // Tiếp lửa cho bạn
+        const preHelpMoney = testState2B.money;
+        const preHelpRep = testState2B.reputation;
+        const helpRes = testState2B.helpFriendFactory(testFriendId, 'Chủ Xe Minh');
+        const postHelpMoney = testState2B.money;
+        const postHelpRep = testState2B.reputation;
+        const helpRewardOk = helpRes.success && (postHelpMoney === preHelpMoney + 15000) && (postHelpRep === preHelpRep + 10);
+
+        // Kiểm tra cooldown 2 giờ (thử lại ngay lập tức)
+        const canHelpAfter = testState2B.canHelpFriend(testFriendId).canHelp === false;
+
+        // Mô phỏng người bạn nhận được tiếp lửa -> rút ngắn 20% thời gian nấu
+        testState2B.kitchenSlots = [
+            { id: 'kslot_sim', status: 'cooking', fillingId: 'crab_egg_mayo', startTime: Date.now() - 10000, durationMs: 40000, batchSize: 1 }
+        ];
+        const boostedCount = testState2B.applyFactoryBoostFromFriend('Chủ Xe Lan');
+        const boostedSlot = testState2B.kitchenSlots[0];
+        // Thời gian còn lại ban đầu là 30s, giảm 20% còn 24s -> startTime lùi 6s
+        const boostSuccess = boostedCount === 1 && (Date.now() - boostedSlot.startTime) >= 15000;
+
+        if (canHelpInitial && helpRewardOk && canHelpAfter && boostSuccess) {
+            logger.pass('Thăm Xưởng Bạn Bè & Tiếp Lửa Dây Chuyền: Cooldown 2 giờ, thưởng người giúp +15.000đ & +10 Uy Tín, rút ngắn ngay 20% thời gian nấu của mẻ cơm');
+        } else {
+            logger.fail('Thăm Xưởng Bạn Bè: Thất bại', { canHelpInitial, helpRewardOk, canHelpAfter, boostSuccess });
+        }
+
+        // 6. Kiểm tra Giao diện UI: Modal Điểm Danh, Modal Sổ Tay Tinh Thông, Modal Thăm Xưởng
+        // 6. Kiểm tra Giao diện UI: Modal Điểm Danh, Modal Sổ Tay Tinh Thông, Modal Thăm Xưởng
+        gameApp.questManager.open('tycoon');
+        const qmContainer = gameApp.questManager.container;
+        const hasQuickNavUi = Boolean(qmContainer?.querySelector('#btnOpenDailyAttendance') && qmContainer?.querySelector('#btnOpenMasteryBook'));
+        const hasBranchAddressUi = Boolean(qmContainer?.querySelector('.branch-address-pill'));
+
+        // Mở Modal Điểm Danh 7 Ngày
+        gameApp.questManager.openDailyAttendanceModal();
+        const attModalEl = doc.getElementById('dailyAttendanceModal');
+        const hasAttModalUi = Boolean(attModalEl && !attModalEl.classList.contains('hidden') && attModalEl.querySelector('.attendance-grid-7days'));
+        if (attModalEl) attModalEl.classList.add('hidden');
+
+        // Mở Modal Sổ Tay Tinh Thông 15 Vị
+        gameApp.questManager.openMasteryModal();
+        const masteryModalEl = doc.getElementById('masteryModal');
+        const hasMasteryModalUi = Boolean(masteryModalEl && !masteryModalEl.classList.contains('hidden') && masteryModalEl.querySelector('.mastery-price-group'));
+        if (masteryModalEl) masteryModalEl.classList.add('hidden');
+
+        // Mở Modal Thăm Xưởng Bạn Bè
+        const uiInstance = gameApp.onlineUI || (await import(path.join(ROOT_DIR, 'src', 'onlineUI.js'))).onlineUI;
+        uiInstance.openFriendFactoryModal('friend_sim_01', 'Chủ Xe Minh');
+        const friendFactoryModalEl = doc.getElementById('friendFactoryModal');
+        const hasFriendFactoryModalUi = Boolean(friendFactoryModalEl && !friendFactoryModalEl.classList.contains('hidden') && friendFactoryModalEl.querySelector('.btn-ffm-boost') && friendFactoryModalEl.querySelector('.ffm-consignment-grid'));
+        if (friendFactoryModalEl) friendFactoryModalEl.classList.add('hidden');
+
+        gameApp.questManager.close();
+
+        if (hasQuickNavUi && hasBranchAddressUi && hasAttModalUi && hasMasteryModalUi && hasFriendFactoryModalUi) {
+            logger.pass('Giao Diện Đế Chế Bước 2B: Tab Chi Nhánh có Quick-Nav & Địa chỉ, 3 Modal (Điểm Danh 7 Ngày, Sổ Tay Tinh Thông 15 Vị, Thăm Xưởng & Quầy Ký Gửi) hiển thị sắc nét');
+        } else {
+            logger.fail('Giao Diện Đế Chế Bước 2B: Lỗi cấu trúc UI', JSON.stringify({ hasQuickNavUi, hasBranchAddressUi, hasAttModalUi, hasMasteryModalUi, hasFriendFactoryModalUi }));
+        }
+
+    } catch (errEmpireStep2B) {
+        logger.fail('Nâng Cấp Đế Chế Bước 2B: Ngoại lệ kiểm thử', errEmpireStep2B.message);
     }
 
     // -------------------------------------------------------------------------

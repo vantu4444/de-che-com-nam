@@ -4,6 +4,39 @@
 
 ---
 
+## 🏆 PHIÊN BẢN: v2.8.5-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP ĐẾ CHẾ – BƯỚC 2B: CHUỖI 4 CHI NHÁNH TỰ ĐỘNG, THU NHẬP OFFLINE 8 TIẾNG, THĂM XƯỞNG BẠN BÈ, ĐIỂM DANH 7 NGÀY & SỔ TAY TINH THÔNG 15 VỊ)
+- **Ngày ghi nhận:** 26/11/2026
+- **Thông điệp phát hành:** Add 4-branch automated franchise empire, offline earnings and friend workshop visits
+- **Trạng thái:** Nghiệm thu **100% PASS (151/151 Bài kiểm thử)** từ [SIMULATION DIRECTOR], [STATIC AUDITOR], [CHIEF ARCHITECT] & Đích thân Sếp phát lệnh duyệt chính thức: **"SẾP DUYỆT"**.
+- **Tính năng & Kiến trúc đột phá đã hoàn thiện:**
+  1. **Hệ Thống Mở Chuỗi 4 Chi Nhánh Tự Động & Địa Chỉ Chính Thức Chuẩn ISO (`src/state.js`, `src/quests.js`):**
+     - Cập nhật địa chỉ thực tế và chứng chỉ ISO 22000 & ATVSTP cho toàn bộ 4 chi nhánh:
+       + **Chi nhánh TP.HCM**: *Số 6i Đường 3B, Tân Tạo, Bình Tân* (Trụ sở chính)
+       + **Chi nhánh Đắk Lắk**: *02 Nguyễn Trác, Buôn Ma Thuột* (Thủ phủ Tây Nguyên)
+       + **Chi nhánh TP. Vinh**: *57 Lê Ninh, Vinh Hưng, Nghệ An* (Cửa ngõ Miền Trung)
+       + **Chi nhánh Hà Nội**: *Yên Nghĩa, Hà Đông, Hà Nội* (Thủ đô Nghìn Năm Văn Hiến)
+     - Mỗi chi nhánh tự động vận hành, sinh doanh thu mỗi phút theo cấp độ (Cấp 1 -> Cấp 5 hoặc 10), hiển thị trực quan cả doanh thu theo phút và theo chu kỳ 15 giây.
+  2. **Cơ Chế Thu Nhập Offline Bền Vững (Tối Đa 8 Tiếng) (`src/state.js`, `src/main.js`, `style.css`):**
+     - Lưu mốc `lastActiveTimestamp` tự động vào `localStorage`. Khi người chơi tắt trình duyệt hoặc đổi tab và mở lại game, hàm `calculateOfflineIncome()` tự động tính chính xác doanh thu tích lũy từ các chi nhánh đã mở trong thời gian vắng mặt (giới hạn an toàn tối đa 8 tiếng = 480 phút).
+     - Bật Modal sang trọng chào đón: *"Chào Mừng Vua Cơm Nắm Trở Lại! Trong lúc bạn vắng mặt, chuỗi chi nhánh tự động đã mang về +XXX.000đ"* kèm nút nhận doanh thu to rõ chuẩn ngón cái Mobile Safe Area.
+  3. **Tính Năng Thăm Xưởng Bạn Bè, Tiếp Lửa Dây Chuyền & Quầy Ký Gửi Hỗ Trợ (`src/onlineUI.js`, `server/server.js`, `src/network.js`):**
+     - Thêm nút **`🏭 Thăm Xưởng`** tiện ích trên cả **Thẻ Hồ Sơ Người Chơi** và trong **Danh Bạ Bạn Bè**.
+     - **`🔥 Tiếp Lửa Dây Chuyền (Giúp Bạn)`**: Cooldown 2 giờ, khi bấm giúp bạn mình rút ngắn ngay **20% thời gian chờ** của mẻ cơm đang nấu trên dây chuyền, người đi giúp nhận ngay **+15.000đ tiền mặt** và **+10 Điểm Uy Tín**.
+     - Đồng bộ tín hiệu thời gian thực hai chiều giữa Client và Server qua Socket.io: `friend:boost_factory` -> `friend:boost_received`.
+     - **`🛒 Quầy Ký Gửi Bạn Bè`**: Cho phép mua bán nguyên liệu sạch thừa (Gạo Koshihikari, Rong biển Nori, Thịt sạch đạt chuẩn ATVSTP) với mức giá hữu nghị niêm yết chuẩn.
+  4. **Quà Điểm Danh 7 Ngày Nhận Thưởng (`src/state.js`, `src/quests.js`):**
+     - Hệ thống 7 ngày điểm danh với phần thưởng giá trị tăng dần: Vốn khởi nghiệp, Nguyên liệu sạch, Quỹ đầu tư và Thẻ Tăng Tốc Dây Chuyền 1h (giảm 50% thời gian nấu).
+     - Tự động mở popup mời nhận thưởng khi vào game.
+  5. **Sổ Tay Tinh Thông 15 Vị Cơm Nắm (`src/state.js`, `src/quests.js`):**
+     - Theo dõi số lượng đã nấu và đã bán của trọn bộ 15 vị (chuẩn 3 mức giá bán lẻ 20.000đ, 22.000đ, 25.000đ chuẩn ISO & ATVSTP, tuyệt đối không lộ giá vốn hay công thức).
+     - Tự động mở khóa các cấp độ **Sao Tinh Thông (1 - 3 sao)**: Mốc 10 nắm (1★: -5% thời gian nấu), Mốc 50 nắm (2★: -5% thời gian nấu, +10% tip VIP), Mốc 200 nắm (3★: -10% thời gian nấu, +20% tip VIP).
+  6. **Nghiệm Thu Toàn Diện 151/151 Test (100% PASS) (`00_BO_MAY_QUAN_TRI/verify_system.mjs`):**
+     - Bảo toàn 100% Chat, Kết bạn, Thách đấu 1v1, Vườn nguyên liệu Bước 1 và Bếp nấu hàng đợi.
+     - 0 Console Error, 0 va chạm giao diện trên Desktop (1440x900), iPhone (375x812) và iPad (768x1024).
+- **Phê duyệt:** `👑 ĐÃ CÓ LỆNH SẾP DUYỆT`
+
+---
+
 ## 🏆 PHIÊN BẢN: v2.8.4-PROD (CHÍNH THỨC XUẤT XƯỞNG: NÂNG CẤP ĐẾ CHẾ – BƯỚC 1: KHỞI NGHIỆP TỪ NHỎ NHẶT, VƯỜN NGUYÊN LIỆU ĐẾM NGƯỢC & DÂY CHUYỀN BẾP HÀNG ĐỢI NÓNG HỔI CHUẨN ISO)
 - **Ngày ghi nhận:** 26/11/2026
 - **Thông điệp phát hành:** Add 4-tier factory evolution and automated farming/cooking robots

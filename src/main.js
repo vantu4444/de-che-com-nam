@@ -194,6 +194,19 @@ class GameApp {
                 startOverlay.classList.add('fade-out');
                 setTimeout(() => {
                     startOverlay.classList.add('hidden');
+                    // [BƯỚC 2B] Kiểm tra Thu Nhập Offline hoặc Quà Điểm Danh 7 Ngày
+                    if (state.pendingOfflineIncome && state.pendingOfflineIncome.amount > 0) {
+                        if (this.questManager && typeof this.questManager.openOfflineIncomeModal === 'function') {
+                            this.questManager.openOfflineIncomeModal(state.pendingOfflineIncome);
+                        }
+                    } else {
+                        const attStatus = state.checkAttendanceStatus ? state.checkAttendanceStatus() : null;
+                        if (attStatus && attStatus.canClaim) {
+                            if (this.questManager && typeof this.questManager.openDailyAttendanceModal === 'function') {
+                                this.questManager.openDailyAttendanceModal();
+                            }
+                        }
+                    }
                 }, 400);
             };
 

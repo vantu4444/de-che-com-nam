@@ -13,7 +13,9 @@ import {
     FILLINGS,
     ACHIEVEMENTS_CONFIG,
     ACHIEVEMENT_ORDER,
-    resolveFillingId
+    resolveFillingId,
+    DAILY_ATTENDANCE_REWARDS,
+    FILLING_MASTERY_THRESHOLDS
 } from './state.js';
 import { audio } from './audio.js';
 import { sellingManager } from './selling.js';
@@ -1353,14 +1355,24 @@ export class QuestManager {
                     </div>
                 </div>
 
+                <!-- TIỆN ÍCH ĐẾ CHẾ: ĐIỂM DANH & SỔ TAY TINH THÔNG -->
+                <div class="tycoon-quick-nav">
+                    <button type="button" class="btn-tycoon-quick" id="btnOpenDailyAttendance">
+                        🎁 Quà Điểm Danh 7 Ngày ${state.checkAttendanceStatus && state.checkAttendanceStatus().canClaim ? '<span class="quick-nav-badge">!</span>' : ''}
+                    </button>
+                    <button type="button" class="btn-tycoon-quick" id="btnOpenMasteryBook">
+                        📖 Sổ Tay Tinh Thông 15 Vị
+                    </button>
+                </div>
+
                 <!-- 2. HỆ THỐNG MỞ RỘNG 4 CHI NHÁNH LIÊN TỈNH TOÀN QUỐC -->
                 <div class="tycoon-section-card branches-section">
                     <div class="sec-header">
                         <span class="sec-icon">🏢</span>
                         <div>
-                            <h4>Quản Lý 4 Chi Nhánh Toàn Quốc</h4>
+                            <h4>🏢 Đế Chế 4 Chi Nhánh Toàn Quốc (Chuẩn ISO & ATVSTP)</h4>
                             <small>
-                                Doanh thu tự động mỗi 15 giây: <strong style="color: #4ade80;">+${branchIncome.toLocaleString('vi-VN')}đ</strong>
+                                Doanh thu tự động mỗi phút: <strong style="color: #4ade80;">+${(branchIncome * 4).toLocaleString('vi-VN')}đ/phút</strong> (+${branchIncome.toLocaleString('vi-VN')}đ/15s)
                                 ${typeof state.getBranchChainSynergy === 'function' && state.getBranchChainSynergy() > 0 ? `
                                     <span style="color: #facc15; margin-left: 8px;">(Thưởng chuỗi: +${state.getBranchChainSynergy()}%)</span>
                                 ` : ''}
@@ -1383,6 +1395,8 @@ export class QuestManager {
                             const canUnlock = meetsLevel && canAffordUnlock;
                             const canAffordUpgrade = nextLvlCfg && state.money >= nextLvlCfg.upgradeCost;
                             const unlockedSpots = typeof state.getUnlockedSellingSpotsCount === 'function' ? state.getUnlockedSellingSpotsCount(bId) : (curLvl >= 4 ? 6 : (curLvl >= 2 ? 4 : 2));
+                            const curIncome15s = (curLvlCfg && (curLvlCfg.incomePer15s || curLvlCfg.incomePer10s)) || 0;
+                            const nextIncome15s = (nextLvlCfg && (nextLvlCfg.incomePer15s || nextLvlCfg.incomePer10s)) || 0;
 
                             let statusTag = '';
                             if (bId === 'branch_hcm') {
@@ -1406,6 +1420,10 @@ export class QuestManager {
                                         ${statusTag}
                                     </div>
 
+                                    <div class="branch-address-pill">
+                                        📍 ${cfg.address || 'Toàn quốc'} • 🛡️ ISO 22000 & ATVSTP
+                                    </div>
+
                                     ${isUnlocked ? `
                                         <div class="branch-stats-grid">
                                             <div class="b-stat">
@@ -1414,7 +1432,7 @@ export class QuestManager {
                                             </div>
                                             <div class="b-stat">
                                                 <small>Doanh thu tự động:</small>
-                                                <strong class="income">+${((curLvlCfg && (curLvlCfg.incomePer15s || curLvlCfg.incomePer10s)) || 0).toLocaleString('vi-VN')}đ / 15s</strong>
+                                                <strong class="income">+${(curIncome15s * 4).toLocaleString('vi-VN')}đ / phút (+${curIncome15s.toLocaleString('vi-VN')}đ/15s)</strong>
                                             </div>
                                             <div class="b-stat">
                                                 <small>Điểm bán mở khóa:</small>
@@ -1436,10 +1454,10 @@ export class QuestManager {
                                             <div class="branch-action-row">
                                                 <div class="branch-next-hint">
                                                     <span>Lên Cấp ${nextLvl}:</span>
-                                                    <small>+${(nextLvlCfg.incomePer15s || nextLvlCfg.incomePer10s).toLocaleString('vi-VN')}đ/15s (Mở ${nextLvl >= 4 ? '6' : (nextLvl >= 2 ? '4' : '2')} điểm bán)</small>
+                                                    <small>+${(nextIncome15s * 4).toLocaleString('vi-VN')}đ/phút (Mở ${nextLvl >= 4 ? '6' : (nextLvl >= 2 ? '4' : '2')} điểm bán)</small>
                                                 </div>
                                                 <button type="button" class="btn-branch-action upgrade btn-upgrade-branch ${canAffordUpgrade ? '' : 'disabled'}" data-bid="${cfg.id}" ${canAffordUpgrade ? '' : 'disabled'}>
-                                                    ${canAffordUpgrade ? `Nâng cấp (${nextLvlCfg.upgradeCost.toLocaleString('vi-VN')}đ)` : `Thiếu ${(nextLvlCfg.upgradeCost - state.money).toLocaleString('vi-VN')}đ`}
+                                                    ${canAffordUpgrade ? `Nâng cấp Cấp ${nextLvl} (${nextLvlCfg.upgradeCost.toLocaleString('vi-VN')}đ)` : `Thiếu ${(nextLvlCfg.upgradeCost - state.money).toLocaleString('vi-VN')}đ`}
                                                 </button>
                                             </div>
                                         ` : `
@@ -1448,7 +1466,7 @@ export class QuestManager {
                                     ` : `
                                         <div class="branch-unlock-row">
                                             <div class="branch-unlock-info">
-                                                <span>Doanh thu Cấp 1: <strong>+${(cfg.levels[1].incomePer15s || cfg.levels[1].incomePer10s).toLocaleString('vi-VN')}đ / 15s</strong> (2 điểm bán)</span>
+                                                <span>Doanh thu Cấp 1: <strong>+${((cfg.levels[1].incomePer15s || cfg.levels[1].incomePer10s) * 4).toLocaleString('vi-VN')}đ / phút</strong> (2 điểm bán)</span>
                                                 <small>Chi phí mở: <strong>${cfg.unlockPrice.toLocaleString('vi-VN')}đ</strong> ${minLevel > 1 ? `(Yêu cầu: Level ${minLevel})` : ''}</small>
                                             </div>
                                             <button type="button" class="btn-branch-action unlock btn-unlock-branch ${canUnlock ? '' : 'disabled'}" data-bid="${cfg.id}" ${canUnlock ? '' : 'disabled'}>
@@ -1798,6 +1816,272 @@ export class QuestManager {
         // Gắn sự kiện Sub-tab Cộng Đồng Online
         if (this.activeTab === 'online') {
             onlineUI.bindTabEvents(this.container);
+        }
+
+        // Tiện ích Điểm Danh 7 Ngày & Sổ Tay Tinh Thông 15 Vị
+        const btnOpenAttendance = document.getElementById('btnOpenDailyAttendance');
+        if (btnOpenAttendance) {
+            btnOpenAttendance.onclick = () => {
+                audio.playClick();
+                this.openDailyAttendanceModal();
+            };
+        }
+
+        const btnOpenMastery = document.getElementById('btnOpenMasteryBook');
+        if (btnOpenMastery) {
+            btnOpenMastery.onclick = () => {
+                audio.playClick();
+                this.openMasteryModal();
+            };
+        }
+    }
+
+    openDailyAttendanceModal() {
+        let modal = document.getElementById('dailyAttendanceModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'dailyAttendanceModal';
+            modal.className = 'game-modal-backdrop hidden';
+            document.body.appendChild(modal);
+        }
+
+        const status = state.checkAttendanceStatus ? state.checkAttendanceStatus() : { streak: 1, claimedToday: false, canClaim: true };
+        const currentStreak = status.streak || 1;
+        const rewards = Array.isArray(DAILY_ATTENDANCE_REWARDS) ? DAILY_ATTENDANCE_REWARDS : [];
+
+        modal.innerHTML = `
+            <div class="game-modal-dialog attendance-modal-dialog">
+                <div class="game-modal-header">
+                    <div class="gmh-title">
+                        <span class="gmh-icon">🎁</span>
+                        <h3>Quà Điểm Danh 7 Ngày Nhận Thưởng</h3>
+                    </div>
+                    <button type="button" class="btn-modal-close" id="btnCloseAttendanceModal">✕</button>
+                </div>
+                <div class="attendance-modal-body">
+                    <p class="attendance-subtitle">Đăng nhập mỗi ngày để nhận vốn khởi nghiệp, nguyên liệu tươi sạch và Thẻ Tăng Tốc Dây Chuyền!</p>
+                    <div class="attendance-grid-7days">
+                        ${rewards.map((r, idx) => {
+                            const dayNum = r.day;
+                            const isPast = dayNum < currentStreak || (dayNum === currentStreak && status.claimedToday);
+                            const isToday = dayNum === currentStreak && !status.claimedToday;
+                            const isFuture = dayNum > currentStreak;
+
+                            return `
+                                <div class="attendance-day-card ${isPast ? 'claimed' : ''} ${isToday ? 'today active' : ''} ${isFuture ? 'locked' : ''}">
+                                    <div class="adc-day">Ngày ${dayNum}</div>
+                                    <div class="adc-icon">${r.icon || '🎁'}</div>
+                                    <div class="adc-title">${r.title}</div>
+                                    <div class="adc-reward">${r.rewardText}</div>
+                                    <div class="adc-status-tag">
+                                        ${isPast ? '✓ Đã nhận' : (isToday ? '🔥 Hôm nay' : '🔒 Khóa')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+
+                    <div class="attendance-action-box">
+                        ${status.canClaim ? `
+                            <button type="button" class="btn-claim-attendance-main" id="btnClaimAttendanceToday">
+                                🎁 Nhận Quà Ngày ${currentStreak}
+                            </button>
+                        ` : `
+                            <div class="attendance-claimed-banner">
+                                ✓ Bạn đã nhận quà hôm nay rồi! Hãy quay lại vào ngày mai nhé.
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+
+        // Ẩn phím ảo
+        const vc = document.getElementById('virtualControls');
+        if (vc) vc.classList.add('hidden');
+
+        const btnClose = modal.querySelector('#btnCloseAttendanceModal');
+        if (btnClose) {
+            btnClose.onclick = () => {
+                modal.classList.add('hidden');
+                if (vc && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)) {
+                    vc.classList.remove('hidden');
+                }
+            };
+        }
+
+        const btnClaim = modal.querySelector('#btnClaimAttendanceToday');
+        if (btnClaim) {
+            btnClaim.onclick = () => {
+                const res = state.claimAttendanceReward ? state.claimAttendanceReward() : { success: false };
+                if (res.success) {
+                    audio.playLevelUp();
+                    audio.playTingComplete();
+                    sellingManager.showToast(`🎉 Nhận thành công quà Ngày ${currentStreak}: ${res.reward.rewardText}!`);
+                    this.openDailyAttendanceModal(); // Render lại trạng thái đã nhận
+                    this.render();
+                } else {
+                    audio.playError();
+                }
+            };
+        }
+    }
+
+    openMasteryModal() {
+        let modal = document.getElementById('masteryModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'masteryModal';
+            modal.className = 'game-modal-backdrop hidden';
+            document.body.appendChild(modal);
+        }
+
+        const fillingEntries = Object.entries(FILLINGS || {});
+        // Sắp xếp theo nhóm giá 20k -> 22k -> 25k
+        const groups = {
+            '20.000đ': fillingEntries.filter(([k, v]) => v.price === 20000),
+            '22.000đ': fillingEntries.filter(([k, v]) => v.price === 22000),
+            '25.000đ': fillingEntries.filter(([k, v]) => v.price === 25000)
+        };
+
+        modal.innerHTML = `
+            <div class="game-modal-dialog mastery-modal-dialog">
+                <div class="game-modal-header">
+                    <div class="gmh-title">
+                        <span class="gmh-icon">📖</span>
+                        <h3>Sổ Tay Tinh Thông 15 Vị Cơm Nắm</h3>
+                    </div>
+                    <button type="button" class="btn-modal-close" id="btnCloseMasteryModal">✕</button>
+                </div>
+                <div class="mastery-modal-body">
+                    <div class="mastery-intro-bar">
+                        <span>🛡️ Chuẩn ISO 22000 & ATVSTP • Niêm yết chuẩn 3 mức giá bán lẻ</span>
+                        <small>Mốc Tinh Thông: <strong>10 nắm (1★)</strong>, <strong>50 nắm (2★)</strong>, <strong>200 nắm (3★)</strong> để kích hoạt vĩnh viễn buff tốc độ nấu và tiền tip khách VIP!</small>
+                    </div>
+
+                    ${Object.entries(groups).map(([priceLabel, list]) => `
+                        <div class="mastery-price-group">
+                            <h4 class="mpg-title">🍙 Nhóm Giá Niêm Yết: <span class="price-highlight">${priceLabel}</span></h4>
+                            <div class="mastery-cards-grid">
+                                ${list.map(([fKey, fData]) => {
+                                    const m = state.getFillingMastery ? state.getFillingMastery(fKey) : { cooked: 0, sold: 0, stars: 0 };
+                                    const stars = m.stars || 0;
+                                    const totalCount = (m.cooked || 0) + (m.sold || 0);
+
+                                    let starHtml = '☆☆☆';
+                                    if (stars === 1) starHtml = '⭐☆☆';
+                                    else if (stars === 2) starHtml = '⭐⭐☆';
+                                    else if (stars === 3) starHtml = '⭐⭐⭐';
+
+                                    let buffText = 'Chưa kích hoạt buff';
+                                    if (stars === 1) buffText = '⚡ Giảm 5% thời gian nấu';
+                                    else if (stars === 2) buffText = '⚡ Giảm 5% thời gian nấu, +10% tip VIP';
+                                    else if (stars === 3) buffText = '👑 Tinh thông tuyệt đỉnh: -10% thời gian nấu, +20% tip VIP';
+
+                                    return `
+                                        <div class="mastery-card ${stars > 0 ? 'mastered' : ''}">
+                                            <div class="mc-head">
+                                                <span class="mc-icon">${fData.icon || '🍙'}</span>
+                                                <div class="mc-info">
+                                                    <strong>${fData.name}</strong>
+                                                    <span class="mc-price">${priceLabel}</span>
+                                                </div>
+                                                <span class="mc-stars">${starHtml}</span>
+                                            </div>
+                                            <div class="mc-stats">
+                                                <span>Đã nấu: <strong>${m.cooked || 0}</strong></span>
+                                                <span>Đã bán: <strong>${m.sold || 0}</strong></span>
+                                                <span>Tổng: <strong>${totalCount}</strong></span>
+                                            </div>
+                                            <div class="mc-buff-tag ${stars > 0 ? 'active' : ''}">
+                                                ${buffText}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+
+        // Ẩn phím ảo
+        const vc = document.getElementById('virtualControls');
+        if (vc) vc.classList.add('hidden');
+
+        const btnClose = modal.querySelector('#btnCloseMasteryModal');
+        if (btnClose) {
+            btnClose.onclick = () => {
+                modal.classList.add('hidden');
+                if (vc && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)) {
+                    vc.classList.remove('hidden');
+                }
+            };
+        }
+    }
+
+    openOfflineIncomeModal(offlineData) {
+        if (!offlineData || offlineData.amount <= 0) return;
+        let modal = document.getElementById('offlineIncomeModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'offlineIncomeModal';
+            modal.className = 'game-modal-backdrop hidden';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="game-modal-dialog offline-modal-dialog">
+                <div class="offline-modal-content">
+                    <div class="om-crown-icon">👑</div>
+                    <h3>Chào Mừng Vua Cơm Nắm Trở Lại!</h3>
+                    <p class="om-desc">
+                        Trong lúc bạn vắng mặt <strong>${offlineData.minutes || 1} phút</strong>, chuỗi 4 chi nhánh tự động toàn quốc chuẩn ISO & ATVSTP đã miệt mài vận hành và mang về doanh thu:
+                    </p>
+                    <div class="om-amount-banner">
+                        +${(offlineData.amount || 0).toLocaleString('vi-VN')}đ
+                    </div>
+                    <div class="om-branch-summary">
+                        <span>🏢 Tự động tích lũy (Tối đa 8 tiếng) • 100% Cơm Nắm Sạch</span>
+                    </div>
+                    <button type="button" class="btn-claim-offline-income" id="btnClaimOfflineIncome">
+                        💰 Nhận Doanh Thu
+                    </button>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+
+        // Ẩn phím ảo
+        const vc = document.getElementById('virtualControls');
+        if (vc) vc.classList.add('hidden');
+
+        const btnClaim = modal.querySelector('#btnClaimOfflineIncome');
+        if (btnClaim) {
+            btnClaim.onclick = () => {
+                const claimed = state.claimOfflineIncome ? state.claimOfflineIncome() : null;
+                audio.playLevelUp();
+                audio.playTingComplete();
+                sellingManager.showToast(`💰 Đã nhận +${(offlineData.amount || 0).toLocaleString('vi-VN')}đ doanh thu chuỗi chi nhánh!`);
+                modal.classList.add('hidden');
+                if (vc && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)) {
+                    vc.classList.remove('hidden');
+                }
+
+                // Kiểm tra nếu có quà điểm danh chưa nhận thì mở tiếp popup điểm danh
+                const attStatus = state.checkAttendanceStatus ? state.checkAttendanceStatus() : null;
+                if (attStatus && attStatus.canClaim) {
+                    setTimeout(() => {
+                        this.openDailyAttendanceModal();
+                    }, 500);
+                }
+            };
         }
     }
 }
